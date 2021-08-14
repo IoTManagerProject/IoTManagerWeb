@@ -1,9 +1,14 @@
 <script>
-  //роутер =========================================
+  //роутер ==========================================
   import { Route, router, active } from "tinro";
   router.mode.hash(); // enables hash navigation method
   //router.mode.memory(); // enables in-memory navigation method
   import Card from "./Card.svelte";
+  import Input from "./Input.svelte";
+  let text1 = "";
+  let text2 = "";
+  const handleChange1 = value => (text1 = value); 
+  const handleChange2 = value => (text2 = value);
 </script>
 
 <main>
@@ -35,6 +40,9 @@
       </li>
       <li>
         <a class="menu__item" href="/about">{"О проекте"}</a>
+      </li>
+      <li>
+        <a class="menu__item" href="/test">{"Test"}</a>
       </li>
     </ul>
   </ul>
@@ -134,6 +142,17 @@
               <button class="shadow bg-purple-500 hover:bg-purple-400 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded" type="button"> Сохранить </button>
             </div>
           </div>
+        </Card>
+      </Route>
+
+      <Route path="/test">
+        <Card title="Testing card1">
+          <Input onChange={handleChange1} title="Input text1" />
+          <h1>{text1}</h1>
+        </Card>
+        <Card title="Testing card2">
+          <Input onChange={handleChange2} title="Input text2" />
+          <h1>{text2}</h1>
         </Card>
       </Route>
     </div>
