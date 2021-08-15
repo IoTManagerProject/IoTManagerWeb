@@ -6,10 +6,10 @@
   import Card from "./Card.svelte";
   import Input from "./Input.svelte";
   //
-  let text1 = "";
-  let text2 = "";
-  const handleChange1 = value => (text1 = value); 
-  const handleChange2 = value => (text2 = value);
+  let incommingText = "";
+  function handleMessage(event) {
+    incommingText = event.detail.text;
+  }
 </script>
 
 <main>
@@ -148,12 +148,8 @@
 
       <Route path="/test">
         <Card title="Testing card1">
-          <Input onChange={handleChange1} title="Input text1" />
-          <h1>{text1}</h1>
-        </Card>
-        <Card title="Testing card2">
-          <Input onChange={handleChange2} title="Input text2" />
-          <h1>{text2}</h1>
+          <Input on:msg1={handleMessage} title="Input text1" />
+          <h1>{incommingText}</h1>
         </Card>
       </Route>
     </div>
