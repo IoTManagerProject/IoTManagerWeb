@@ -5,6 +5,7 @@
   //router.mode.memory(); // enables in-memory navigation method
   import Card from "./Card.svelte";
   import Input from "./Input.svelte";
+  //
   let text1 = "";
   let text2 = "";
   const handleChange1 = value => (text1 = value); 
