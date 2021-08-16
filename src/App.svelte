@@ -5,10 +5,41 @@
   //router.mode.memory(); // enables in-memory navigation method
   import Card from "./Card.svelte";
   import Input from "./Input.svelte";
-  //
-  let incommingText = "";
-  function handleMessage(event) {
-    incommingText = event.detail.text;
+
+  let wigets = [];
+
+  wigets = [
+    {
+      widget: "input",
+      status: "30",
+      type: "",
+      page: "",
+      order: "1",
+      descr: "Temperature1",
+      topic: "/prefix/00000-00000/temp1",
+    },
+    {
+      widget: "input",
+      status: "31",
+      type: "",
+      page: "",
+      order: "1",
+      descr: "Temperature2",
+      topic: "/prefix/00000-00000/temp2",
+    },
+    {
+      widget: "input",
+      status: "32",
+      type: "",
+      page: "",
+      order: "1",
+      descr: "Temperature3",
+      topic: "/prefix/00000-00000/temp3",
+    },
+  ];
+
+  function WSpush(ws, uri, val) {
+    console.log(ws + " " + uri + " " + val);
   }
 </script>
 
@@ -51,7 +82,13 @@
   <ul class="menu__main">
     <div class="bg-cover bg-gray-50 pt-16">
       <Route path="/">
-        <Card title="Здесь будет dashboard" />
+        <Card title="Testing card1">
+          {#each wigets as widget, i}
+            {#if widget.widget === "input"}
+              <Input title={widget.descr} value={widget.status} />
+            {/if}
+          {/each}
+        </Card>
       </Route>
 
       <Route path="/config">
@@ -146,12 +183,7 @@
         </Card>
       </Route>
 
-      <Route path="/test">
-        <Card title="Testing card1">
-          <Input on:msg1={handleMessage} title="Input text1" />
-          <h1>{incommingText}</h1>
-        </Card>
-      </Route>
+      <Route path="/test" />
     </div>
   </ul>
 </main>

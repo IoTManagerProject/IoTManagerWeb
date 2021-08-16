@@ -1,11 +1,7 @@
 <script>
   export let title;
-  let text;
-  import { createEventDispatcher } from "svelte";
-  const dispatch = createEventDispatcher();
-  function sendInputText() {
-    dispatch("msg1", { text: text });
-  }
+  export let value;
+  //on:input={sendInputText}
 </script>
 
 <div class="container">
@@ -14,7 +10,7 @@
       <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name">{title}</label>
     </div>
     <div class="md:w-2/3">
-      <input bind:value={text} on:input={sendInputText} class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" id="inline-full-name" type="text" />
+      <input bind:value class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" id="inline-full-name" type="text" />
     </div>
   </div>
 </div>
