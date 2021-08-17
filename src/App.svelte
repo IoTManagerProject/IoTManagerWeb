@@ -17,6 +17,19 @@
     WSpush("mounted");
   });
 
+  const syntaxHighlight = (json) => {
+    try {
+      json = JSON.stringify(JSON.parse(json), null, 4);
+    } catch (e) {
+      return json;
+    }
+    json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+      return match;
+    });
+    return json;
+  };
+
   let wigets = [];
 
   wigets = [
@@ -89,6 +102,10 @@
   <ul class="menu__main">
     <div class="bg-cover bg-gray-50 pt-16">
       <Route path="/">
+        <Card title="Редактор JSON">
+          <textarea rows="10" class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
+          <button on:click={(wigets = JSON.parse(document.getElementById("text1").value))} class="shadow bg-purple-500 hover:bg-purple-400 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded" type="button"> Save </button>
+        </Card>
         <Card title="Testing card1">
           {#each wigets as widget, i}
             {#if widget.widget === "input"}
