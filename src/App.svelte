@@ -107,7 +107,7 @@
     <div class="bg-cover bg-gray-50 pt-16">
       <Route path="/">
         <Card title="Редактор JSON">
-          <textarea on:input={SuperDuperFunction} rows="10" class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
+          <textarea on:input={SuperDuperFunction} rows="10" class="input-indigo" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
         </Card>
         <Card title="Testing card1">
           {#each wigets as widget, i}
@@ -124,33 +124,18 @@
 
       <Route path="/connection">
         <Card title="Подключение к WiFi роутеру">
+          <Input title={"Сеть"} value={"your SSID"} />
+          <Input title={"Пароль"} value={"your PASS"} />
+
           <div class="md:flex md:items-center mb-6">
-            <div class="md:w-1/3">
-              <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name"> Сеть </label>
-            </div>
-            <div class="md:w-2/3">
-              <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text" value="your SSID" />
-            </div>
-          </div>
-          <div class="md:flex md:items-center mb-6">
-            <div class="md:w-1/3">
-              <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-password"> Пароль </label>
-            </div>
-            <div class="md:w-2/3">
-              <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="password" placeholder="******************" />
-            </div>
-          </div>
-          <div class="md:flex md:items-center mb-6">
-            <div class="md:w-1/3" />
             <label class="md:w-2/3 block text-gray-500 font-bold">
               <input class="mr-2 leading-tight" type="checkbox" />
               <span class="text-sm"> Включить светодиод статуса подключения </span>
             </label>
           </div>
           <div class="md:flex md:items-center">
-            <div class="md:w-1/3" />
             <div class="md:w-2/3">
-              <button class="shadow bg-purple-500 hover:bg-purple-400 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded" type="button"> Сохранить </button>
+              <button class="btn-indigo" type="button"> Сохранить </button>
             </div>
           </div>
         </Card>
@@ -158,53 +143,53 @@
         <Card title="Подключение к MQTT серверу">
           <div class="md:flex md:items-center mb-6">
             <div class="md:w-1/3">
-              <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name"> Сервер </label>
+              <label class="lable-gray" for="inline-full-name"> Сервер </label>
             </div>
             <div class="md:w-2/3">
-              <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text" value="your SSID" />
+              <input class="input-indigo" type="text" value="your SSID" />
             </div>
           </div>
 
           <div class="md:flex md:items-center mb-6">
             <div class="md:w-1/3">
-              <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name"> Порт </label>
+              <label class="lable-gray" for="inline-full-name"> Порт </label>
             </div>
             <div class="md:w-2/3">
-              <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text" value="your SSID" />
+              <input class="input-indigo" type="text" value="your SSID" />
             </div>
           </div>
 
           <div class="md:flex md:items-center mb-6">
             <div class="md:w-1/3">
-              <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name"> Префикс </label>
+              <label class="lable-gray" for="inline-full-name"> Префикс </label>
             </div>
             <div class="md:w-2/3">
-              <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text" value="your SSID" />
+              <input class="input-indigo" type="text" value="your SSID" />
             </div>
           </div>
 
           <div class="md:flex md:items-center mb-6">
             <div class="md:w-1/3">
-              <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name"> Пользователь </label>
+              <label class="lable-gray" for="inline-full-name"> Пользователь </label>
             </div>
             <div class="md:w-2/3">
-              <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text" value="your SSID" />
+              <input class="input-indigo" type="text" value="your SSID" />
             </div>
           </div>
 
           <div class="md:flex md:items-center mb-6">
             <div class="md:w-1/3">
-              <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-password"> Пароль </label>
+              <label class="lable-gray" for="inline-password"> Пароль </label>
             </div>
             <div class="md:w-2/3">
-              <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="password" placeholder="******************" />
+              <input class="input-indigo" type="password" placeholder="******************" />
             </div>
           </div>
 
           <div class="md:flex md:items-center">
             <div class="md:w-1/3" />
             <div class="md:w-2/3">
-              <button class="shadow bg-purple-500 hover:bg-purple-400 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded" type="button"> Сохранить </button>
+              <button class="btn-indigo" type="button"> Сохранить </button>
             </div>
           </div>
         </Card>
@@ -219,6 +204,18 @@
   @tailwind base;
   @tailwind components;
   @tailwind utilities;
+
+  @layer components {
+    .btn-indigo {
+      @apply py-2 px-4 bg-indigo-500 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75;
+    }
+    .input-indigo {
+      @apply bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
+    }
+    .lable-gray {
+      @apply block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4;
+    }
+  }
 
   #menu__toggle {
     opacity: 0;
