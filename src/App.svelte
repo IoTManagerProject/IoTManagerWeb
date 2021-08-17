@@ -215,6 +215,15 @@
     .lable-gray {
       @apply block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4;
     }
+    .heading-gray {
+      @apply text-center text-lg text-gray-500 font-bold pb-6;
+    }
+    .block-psn-center {
+      @apply grid place-items-center mx-2 sm:my-auto;
+    }
+    .card-normal {
+      @apply w-11/12 p-12 sm:w-8/12 md:w-6/12 lg:w-5/12 2xl:w-4/12 px-6 py-10 my-5 sm:px-10 sm:py-6 bg-white rounded-lg shadow-md lg:shadow-lg;
+    }
   }
 
   #menu__toggle {
