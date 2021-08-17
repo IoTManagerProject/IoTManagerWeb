@@ -68,7 +68,7 @@
 </script>
 
 <main>
-  <div class="fixed h-10 w-full bg-gray-100 shadow-md">
+  <div class="fixed m-0 h-10 w-full bg-gray-100 shadow-md">
     <b class="text-center" />
   </div>
 
@@ -109,7 +109,7 @@
         <Card title="Редактор JSON">
           <textarea on:input={SuperDuperFunction} rows="10" class="input-indigo" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
         </Card>
-        <Card title="Testing card1">
+        <Card title="Dashboard">
           {#each wigets as widget, i}
             {#if widget.widget === "input"}
               <Input title={widget.descr} bind:value={widget.status} />
@@ -127,7 +127,7 @@
           <Input title={"Сеть"} value={"your SSID"} />
           <Input title={"Пароль"} value={"your PASS"} />
 
-          <div class="md:flex md:items-center mb-6">
+          <div class="block-psn-center-when-md">
             <label class="md:w-2/3 block text-gray-500 font-bold">
               <input class="mr-2 leading-tight" type="checkbox" />
               <span class="text-sm"> Включить светодиод статуса подключения </span>
@@ -141,45 +141,45 @@
         </Card>
 
         <Card title="Подключение к MQTT серверу">
-          <div class="md:flex md:items-center mb-6">
+          <div class="block-psn-center-when-md">
             <div class="md:w-1/3">
-              <label class="lable-gray" for="inline-full-name"> Сервер </label>
+              <label class="descr-gray" for="inline-full-name"> Сервер </label>
             </div>
             <div class="md:w-2/3">
               <input class="input-indigo" type="text" value="your SSID" />
             </div>
           </div>
 
-          <div class="md:flex md:items-center mb-6">
+          <div class="block-psn-center-when-md">
             <div class="md:w-1/3">
-              <label class="lable-gray" for="inline-full-name"> Порт </label>
+              <label class="descr-gray" for="inline-full-name"> Порт </label>
             </div>
             <div class="md:w-2/3">
               <input class="input-indigo" type="text" value="your SSID" />
             </div>
           </div>
 
-          <div class="md:flex md:items-center mb-6">
+          <div class="block-psn-center-when-md">
             <div class="md:w-1/3">
-              <label class="lable-gray" for="inline-full-name"> Префикс </label>
+              <label class="descr-gray" for="inline-full-name"> Префикс </label>
             </div>
             <div class="md:w-2/3">
               <input class="input-indigo" type="text" value="your SSID" />
             </div>
           </div>
 
-          <div class="md:flex md:items-center mb-6">
+          <div class="block-psn-center-when-md">
             <div class="md:w-1/3">
-              <label class="lable-gray" for="inline-full-name"> Пользователь </label>
+              <label class="descr-gray" for="inline-full-name"> Пользователь </label>
             </div>
             <div class="md:w-2/3">
               <input class="input-indigo" type="text" value="your SSID" />
             </div>
           </div>
 
-          <div class="md:flex md:items-center mb-6">
+          <div class="block-psn-center-when-md">
             <div class="md:w-1/3">
-              <label class="lable-gray" for="inline-password"> Пароль </label>
+              <label class="descr-gray" for="inline-password"> Пароль </label>
             </div>
             <div class="md:w-2/3">
               <input class="input-indigo" type="password" placeholder="******************" />
@@ -212,17 +212,20 @@
     .input-indigo {
       @apply bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
     }
-    .lable-gray {
+    .descr-gray {
       @apply block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4;
     }
-    .heading-gray {
+    .head-gray {
       @apply text-center text-lg text-gray-500 font-bold pb-6;
     }
     .block-psn-center {
       @apply grid place-items-center mx-2 sm:my-auto;
     }
-    .card-normal {
-      @apply w-11/12 p-12 sm:w-8/12 md:w-6/12 lg:w-5/12 2xl:w-4/12 px-6 py-10 my-5 sm:px-10 sm:py-6 bg-white rounded-lg shadow-md lg:shadow-lg;
+    .block-psn-center-when-md {
+      @apply md:flex md:items-center mb-6;
+    }
+    .card-normal-size {
+      @apply w-11/12 p-12 sm:w-8/12 md:w-6/12 lg:w-5/12 2xl:w-4/12 px-2 py-2 my-2 sm:px-10 sm:py-6 bg-white rounded-lg shadow-md lg:shadow-lg;
     }
   }
 
