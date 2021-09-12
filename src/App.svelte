@@ -44,7 +44,7 @@
       type: "",
       page: "",
       order: "1",
-      descr: "Temperature1",
+      descr: "Boiler temperature",
       topic: "/prefix/00000-00000/temp1",
     },
     {
@@ -53,7 +53,7 @@
       type: "",
       page: "",
       order: "1",
-      descr: "Temperature2",
+      descr: "Room temperature",
       topic: "/prefix/00000-00000/temp2",
     },
     {
@@ -62,7 +62,7 @@
       type: "",
       page: "",
       order: "1",
-      descr: "Temperature3",
+      descr: "Body temperature",
       topic: "/prefix/00000-00000/temp3",
     },
   ];
@@ -211,10 +211,13 @@
       @apply py-2 px-4 bg-indigo-500 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75;
     }
     .input-indigo {
-      @apply bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
+      @apply py-2 px-4 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
     }
     .descr-gray {
       @apply block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4;
+    }
+    .descr-gray-left {
+      @apply block text-gray-500 font-bold md:text-left mb-1 md:mb-0 pr-4;
     }
     .head-gray {
       @apply text-center text-lg text-gray-500 font-bold pb-6;
