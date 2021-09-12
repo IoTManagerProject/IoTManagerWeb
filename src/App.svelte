@@ -12,7 +12,7 @@
   //router.mode.memory(); // enables in-memory navigation method
   import Card from "./Card.svelte";
   import Input from "./Input.svelte";
-  import wInput from "./wInput.svelte";
+  import Myinput from "./Myinput.svelte";
 
   onMount(async () => {
     WSpush("mounted");
@@ -113,7 +113,7 @@
         <Card title="Dashboard">
           {#each wigets as widget, i}
             {#if widget.widget === "input"}
-              <Input title={widget.descr} bind:value={widget.status} />
+              <Myinput title={widget.descr} bind:value={widget.status} />
             {/if}
           {/each}
         </Card>
