@@ -12,6 +12,7 @@
   //router.mode.memory(); // enables in-memory navigation method
   import Card from "./Card.svelte";
   import Input from "./Input.svelte";
+  import wInput from "./wInput.svelte";
 
   onMount(async () => {
     WSpush("mounted");
