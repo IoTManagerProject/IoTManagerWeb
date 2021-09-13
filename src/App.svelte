@@ -1,6 +1,6 @@
 <script context="module">
-  export function WSpush(arg) {
-    console.log(arg);
+  export function WSpush(ws, topic, value) {
+    console.log(ws, topic, value);
   }
 </script>
 
@@ -15,7 +15,7 @@
   import Myinput from "./Myinput.svelte";
 
   onMount(async () => {
-    WSpush("mounted");
+    console.log("mounted");
   });
 
   const syntaxHighlight = (json) => {
@@ -45,7 +45,7 @@
       page: "",
       order: "1",
       descr: "Boiler temperature",
-      topic: "/prefix/00000-00000/temp1",
+      topic: "/prefix/00000-00001/temp1",
     },
     {
       widget: "input",
@@ -54,7 +54,7 @@
       page: "",
       order: "1",
       descr: "Room temperature",
-      topic: "/prefix/00000-00000/temp2",
+      topic: "/prefix/00000-00002/temp2",
     },
     {
       widget: "input",
@@ -63,7 +63,7 @@
       page: "",
       order: "1",
       descr: "Body temperature",
-      topic: "/prefix/00000-00000/temp3",
+      topic: "/prefix/00000-00003/temp3",
     },
   ];
 </script>
@@ -113,7 +113,7 @@
         <Card title="Dashboard">
           {#each wigets as widget, i}
             {#if widget.widget === "input"}
-              <Myinput title={widget.descr} bind:value={widget.status} />
+              <Myinput ws={"ws"} topic={widget.topic} title={widget.descr} bind:value={widget.status} />
             {/if}
           {/each}
         </Card>

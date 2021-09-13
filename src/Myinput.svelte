@@ -5,6 +5,8 @@
 <script>
   export let title;
   export let value;
+  export let topic;
+  export let ws;
 </script>
 
 <div class="container">
@@ -14,10 +16,11 @@
       <label class="descr-gray-left">{title}</label>
     </div>
     <div class="md:w-3/3">
-      <input bind:value on:change={WSpush(value)} class="input-indigo" type="text" />
+      <!-- on:change={WSpush(ws, topic, value)} -->
+      <input bind:value class="input-indigo" type="text" />
     </div>
     <div class="md:w-3/3">
-      <button on:click={WSpush(value)} class="btn-indigo" type="button">Set</button>
+      <button on:click={WSpush(ws, topic, value)} class="btn-indigo" type="button">Set</button>
     </div>
   </div>
 </div>
