@@ -40,6 +40,15 @@
   wigets = [
     {
       widget: "input",
+      type: "time",
+      status: "12:00",
+      page: "",
+      order: "3",
+      descr: "Switch on boiler time",
+      topic: "/prefix/00000-00003/temp3",
+    },
+    {
+      widget: "input",
       type: "number",
       status: "30.5",
       page: "",
@@ -62,17 +71,8 @@
       status: "2021.09.15",
       page: "",
       order: "2",
-      descr: "Switch on boiled date",
+      descr: "Switch on boiler date",
       topic: "/prefix/00000-00002/temp2",
-    },
-    {
-      widget: "input",
-      type: "time",
-      status: "12:00",
-      page: "",
-      order: "3",
-      descr: "Switch on boiler time",
-      topic: "/prefix/00000-00003/temp3",
     },
   ];
 </script>
@@ -116,15 +116,15 @@
   <ul class="menu__main">
     <div class="bg-cover bg-gray-50 pt-16">
       <Route path="/">
-        <Card title="Редактор JSON">
-          <textarea on:input={SuperDuperFunction} rows="10" class="input-indigo" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
-        </Card>
         <Card title="Inputs">
           {#each wigets as widget, i}
             {#if widget.widget === "input"}
               <Myinput type={widget.type} ws={1} topic={widget.topic} title={widget.descr} bind:value={widget.status} />
             {/if}
           {/each}
+        </Card>
+        <Card title="Редактор JSON">
+          <textarea on:input={SuperDuperFunction} rows="10" class="input-indigo" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
         </Card>
       </Route>
 
