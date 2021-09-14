@@ -40,8 +40,8 @@
   wigets = [
     {
       widget: "input",
-      status: "30",
-      type: "",
+      type: "number",
+      status: "30.5",
       page: "",
       order: "1",
       descr: "Boiler temperature",
@@ -49,20 +49,29 @@
     },
     {
       widget: "input",
-      status: "31",
-      type: "",
+      type: "text",
+      status: "Hello",
       page: "",
-      order: "1",
-      descr: "Room temperature",
+      order: "3",
+      descr: "Massage to be send",
+      topic: "/prefix/00000-00003/temp3",
+    },
+    {
+      widget: "input",
+      type: "date",
+      status: "2021.09.15",
+      page: "",
+      order: "2",
+      descr: "Switch on boiled date",
       topic: "/prefix/00000-00002/temp2",
     },
     {
       widget: "input",
-      status: "32",
-      type: "",
+      type: "time",
+      status: "12:00",
       page: "",
-      order: "1",
-      descr: "Body temperature",
+      order: "3",
+      descr: "Switch on boiler time",
       topic: "/prefix/00000-00003/temp3",
     },
   ];
@@ -110,10 +119,10 @@
         <Card title="Редактор JSON">
           <textarea on:input={SuperDuperFunction} rows="10" class="input-indigo" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
         </Card>
-        <Card title="Dashboard">
+        <Card title="Inputs">
           {#each wigets as widget, i}
             {#if widget.widget === "input"}
-              <Myinput ws={"ws"} topic={widget.topic} title={widget.descr} bind:value={widget.status} />
+              <Myinput type={widget.type} ws={1} topic={widget.topic} title={widget.descr} bind:value={widget.status} />
             {/if}
           {/each}
         </Card>
