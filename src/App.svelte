@@ -51,10 +51,7 @@
       widget: "input",
       type: "number",
       status: "30.5",
-<<<<<<< HEAD
       after: "°С",
-=======
->>>>>>> parent of 37f43f0 (changes2)
       page: "",
       order: "1",
       descr: "Boiler temperature",
@@ -123,7 +120,7 @@
         <Card title="Inputs">
           {#each wigets as widget, i}
             {#if widget.widget === "input"}
-              <Myinput type={widget.type} ws={1} topic={widget.topic} title={widget.descr} bind:value={widget.status} />
+              <Myinput bind:value={widget.status} descr={widget.descr} after={widget.after} topic={widget.topic} ws={1} type={widget.type} />
             {/if}
           {/each}
         </Card>
@@ -223,46 +220,27 @@
     .btn-indigo {
       @apply py-2 px-4 bg-indigo-500 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75;
     }
-<<<<<<< HEAD
-
     .block-psn-center {
       @apply grid place-items-center mx-2 sm:my-auto;
     }
+
     .card {
       @apply w-11/12 sm:w-8/12 md:w-6/12 lg:w-5/12 2xl:w-4/12 p-2 sm:px-8 sm:py-4 my-2 bg-white rounded-lg shadow-md lg:shadow-lg;
-    }
-    .card-items {
-      @apply md:items-center md:flex mb-6;
-=======
-    .input-indigo {
-      @apply py-2 px-4 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
-    }
-    .descr-gray {
-      @apply block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4;
-    }
-    .descr-gray-left {
-      @apply block text-gray-500 font-bold md:text-left mb-1 md:mb-0 pr-4;
->>>>>>> parent of 37f43f0 (changes2)
     }
     .card-title-gray {
       @apply text-center text-lg text-gray-500 font-bold pb-6;
     }
+    .card-items {
+      @apply md:items-center md:flex mb-6;
+    }
     .widget-descr-gray-left {
       @apply pr-4 block text-gray-500 font-bold md:text-left;
     }
-<<<<<<< HEAD
     .widget-input-indigo {
       @apply pr-4 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
     }
     .widget-after {
       @apply pr-4 block text-gray-500 font-bold md:text-right;
-=======
-    .block-psn-center-when-md {
-      @apply md:flex md:items-center mb-6;
-    }
-    .card-normal-size {
-      @apply w-11/12 p-12 sm:w-8/12 md:w-6/12 lg:w-5/12 2xl:w-4/12 px-2 py-2 my-2 sm:px-10 sm:py-6 bg-white rounded-lg shadow-md lg:shadow-lg;
->>>>>>> parent of 37f43f0 (changes2)
     }
   }
 
