@@ -234,10 +234,10 @@
       @apply md:items-center md:flex mb-6;
     }
     .widget-descr-gray-left {
-      @apply pr-4 block text-gray-500 font-bold md:text-left;
+      @apply content-center pr-4 block text-gray-500 font-bold md:text-left;
     }
     .widget-input-indigo {
-      @apply pr-4 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
+      @apply content-center text-right pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
     }
     .widget-after {
       @apply pr-4 block text-gray-500 font-bold md:text-right;
@@ -346,5 +346,23 @@
     margin: 0;
     padding: 0;
     box-shadow: 1px 0px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    margin-left: 10px;
+    margin-right: -4px;
+  }
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    margin-left: 10px;
+    margin-right: -4px;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    margin-left: 15px;
+    margin-right: 2px;
+    width: 30px;
+    height: 30px;
+    opacity: 1;
   }
 </style>
