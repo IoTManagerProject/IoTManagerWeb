@@ -1,0 +1,1 @@
+{syntaxHighlight(JSON.stringify(wigets))}
