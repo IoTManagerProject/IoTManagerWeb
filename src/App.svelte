@@ -171,7 +171,7 @@
       @apply text-center text-lg text-gray-500 font-bold pb-6;
     }
     .card-items {
-      @apply md:items-center md:flex mb-6;
+      @apply md:items-center lg:items-end 2xl:items-end md:flex mb-6;
     }
     .widget-descr-gray-left {
       @apply content-center pr-4 block text-gray-500 font-bold md:text-left;
