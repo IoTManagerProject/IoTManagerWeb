@@ -108,9 +108,6 @@
       <li>
         <a class="menu__item" href="/about">{"О проекте"}</a>
       </li>
-      <li>
-        <a class="menu__item" href="/test">{"Test"}</a>
-      </li>
     </ul>
   </ul>
 
@@ -120,7 +117,7 @@
         <Card title="Inputs">
           {#each wigets as widget, i}
             {#if widget.widget === "input"}
-              <Myinput bind:value={widget.status} descr={widget.descr} after={widget.after} topic={widget.topic} ws={1} type={widget.type} />
+              <Myinput bind:value={widget.status} descr={widget.descr} topic={widget.topic} ws={1} type={widget.type} />
             {/if}
           {/each}
         </Card>
@@ -150,63 +147,7 @@
             </div>
           </div>
         </Card>
-
-        <Card title="Подключение к MQTT серверу">
-          <div class="card-items">
-            <div class="md:w-1/3">
-              <label class="descr-gray" for="inline-full-name"> Сервер </label>
-            </div>
-            <div class="md:w-2/3">
-              <input class="widget-input-indigo" type="text" value="your SSID" />
-            </div>
-          </div>
-
-          <div class="card-items">
-            <div class="md:w-1/3">
-              <label class="descr-gray" for="inline-full-name"> Порт </label>
-            </div>
-            <div class="md:w-2/3">
-              <input class="widget-input-indigo" type="text" value="your SSID" />
-            </div>
-          </div>
-
-          <div class="card-items">
-            <div class="md:w-1/3">
-              <label class="descr-gray" for="inline-full-name"> Префикс </label>
-            </div>
-            <div class="md:w-2/3">
-              <input class="widget-input-indigo" type="text" value="your SSID" />
-            </div>
-          </div>
-
-          <div class="card-items">
-            <div class="md:w-1/3">
-              <label class="descr-gray" for="inline-full-name"> Пользователь </label>
-            </div>
-            <div class="md:w-2/3">
-              <input class="widget-input-indigo" type="text" value="your SSID" />
-            </div>
-          </div>
-
-          <div class="card-items">
-            <div class="md:w-1/3">
-              <label class="descr-gray" for="inline-password"> Пароль </label>
-            </div>
-            <div class="md:w-2/3">
-              <input class="widget-input-indigo" type="password" placeholder="******************" />
-            </div>
-          </div>
-
-          <div class="md:flex md:items-center">
-            <div class="md:w-1/3" />
-            <div class="md:w-2/3">
-              <button class="btn-indigo" type="button"> Сохранить </button>
-            </div>
-          </div>
-        </Card>
       </Route>
-
-      <Route path="/test" />
     </div>
   </ul>
 </main>
@@ -223,9 +164,8 @@
     .block-psn-center {
       @apply grid place-items-center mx-2 sm:my-auto;
     }
-
     .card {
-      @apply w-11/12 sm:w-8/12 md:w-6/12 lg:w-5/12 2xl:w-4/12 p-2 sm:px-8 sm:py-4 my-2 bg-white rounded-lg shadow-md lg:shadow-lg;
+      @apply w-11/12 sm:w-8/12 md:w-6/12 lg:w-5/12 2xl:w-4/12 p-2 sm:p-2 md:p-2 lg:p-2 xl:px-8 xl:py-4 2xl:px-8 2xl:py-4 my-2 bg-white rounded-lg shadow-md lg:shadow-lg;
     }
     .card-title-gray {
       @apply text-center text-lg text-gray-500 font-bold pb-6;
@@ -237,7 +177,7 @@
       @apply content-center pr-4 block text-gray-500 font-bold md:text-left;
     }
     .widget-input-indigo {
-      @apply content-center text-right pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
+      @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
     }
     .widget-after {
       @apply pr-4 block text-gray-500 font-bold md:text-right;
@@ -349,18 +289,18 @@
   }
 
   input[type="date"]::-webkit-calendar-picker-indicator {
-    margin-left: 10px;
-    margin-right: -4px;
+    margin-left: 5px;
+    margin-right: -8px;
   }
   input[type="time"]::-webkit-calendar-picker-indicator {
-    margin-left: 10px;
-    margin-right: -4px;
+    margin-left: 5px;
+    margin-right: -8px;
   }
 
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {
-    margin-left: 15px;
-    margin-right: 2px;
+    margin-left: 7px;
+    margin-right: -6px;
     width: 30px;
     height: 30px;
     opacity: 1;
