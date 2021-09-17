@@ -35,6 +35,20 @@
     wigets = JSON.parse(document.getElementById("text1").value);
   }
 
+  let pages = [];
+
+  pages = [
+    {
+      widget: "input",
+      type: "time",
+      status: "12:00",
+      page: "Inputs",
+      order: "3",
+      descr: "Switch on boiler time",
+      topic: "/prefix/00000-00003/temp3",
+    },
+  ];
+
   let wigets = [];
 
   wigets = [
@@ -42,7 +56,7 @@
       widget: "input",
       type: "time",
       status: "12:00",
-      page: "",
+      page: "Inputs",
       order: "3",
       descr: "Switch on boiler time",
       topic: "/prefix/00000-00003/temp3",
@@ -52,7 +66,7 @@
       type: "number",
       status: "30.5",
       after: "°С",
-      page: "",
+      page: "Inputs",
       order: "1",
       descr: "Boiler temperature",
       topic: "/prefix/00000-00001/temp1",
@@ -61,7 +75,7 @@
       widget: "input",
       type: "text",
       status: "Hello",
-      page: "",
+      page: "Inputs",
       order: "3",
       descr: "Massage to be send",
       topic: "/prefix/00000-00003/temp3",
@@ -70,7 +84,7 @@
       widget: "input",
       type: "date",
       status: "2021.09.15",
-      page: "",
+      page: "Inputs",
       order: "2",
       descr: "Switch on boiler date",
       topic: "/prefix/00000-00002/temp2",
@@ -114,16 +128,29 @@
   <ul class="menu__main">
     <div class="bg-cover bg-gray-50 pt-16">
       <Route path="/">
-        <Card title="Inputs">
-          {#each wigets as widget, i}
-            {#if widget.widget === "input"}
-              <Myinput bind:value={widget.status} descr={widget.descr} topic={widget.topic} ws={1} type={widget.type} />
-            {/if}
-          {/each}
-        </Card>
-        <Card title="Редактор JSON">
-          <textarea on:input={SuperDuperFunction} rows="10" class="widget-input-indigo" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
-        </Card>
+        <div class="cards-grid">
+          <Card title="Здесь будет конфигуратор">
+            {#each wigets as widget, i}
+              {#if widget.widget === "input"}
+                <Myinput bind:value={widget.status} descr={widget.descr} topic={widget.topic} ws={1} type={widget.type} />
+              {/if}
+            {/each}
+          </Card>
+          <Card title="Здесь будет конфигуратор">
+            {#each wigets as widget, i}
+              {#if widget.widget === "input"}
+                <Myinput bind:value={widget.status} descr={widget.descr} topic={widget.topic} ws={1} type={widget.type} />
+              {/if}
+            {/each}
+          </Card>
+          <Card title="Здесь будет конфигуратор">
+            {#each wigets as widget, i}
+              {#if widget.widget === "input"}
+                <Myinput bind:value={widget.status} descr={widget.descr} topic={widget.topic} ws={1} type={widget.type} />
+              {/if}
+            {/each}
+          </Card>
+        </div>
       </Route>
 
       <Route path="/config">
@@ -148,6 +175,13 @@
           </div>
         </Card>
       </Route>
+      <Route path="/utilities">
+        <div class="cards-grid">
+          <Card title="Редактор JSON">
+            <textarea on:input={SuperDuperFunction} rows="10" class="widget-input-indigo w-full" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
+          </Card>
+        </div>
+      </Route>
     </div>
   </ul>
 </main>
@@ -164,23 +198,32 @@
     .block-psn-center {
       @apply grid place-items-center mx-2 sm:my-auto;
     }
-    .card {
+    .card2 {
       @apply w-11/12 sm:w-8/12 md:w-6/12 lg:w-5/12 2xl:w-4/12 p-2 sm:p-2 md:p-2 lg:p-2 xl:px-8 xl:py-4 2xl:px-8 2xl:py-4 my-2 bg-white rounded-lg shadow-md lg:shadow-lg;
     }
-    .card-title-gray {
-      @apply text-center text-lg text-gray-500 font-bold pb-6;
-    }
-    .card-items {
-      @apply md:items-center lg:items-end 2xl:items-end md:flex mb-6;
-    }
-    .widget-descr-gray-left {
-      @apply content-center pr-4 block text-gray-500 font-bold md:text-left;
-    }
+
     .widget-input-indigo {
       @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
     }
     .widget-after {
       @apply pr-4 block text-gray-500 font-bold md:text-right;
+    }
+
+    .cards-grid {
+      @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 justify-items-center;
+    }
+    .card {
+      @apply w-11/12 my-2 p-2 sm:p-2 md:p-2 lg:p-2 xl:px-8 xl:py-4 2xl:px-8 2xl:py-4 bg-white rounded-lg shadow-md lg:shadow-lg;
+    }
+    .card-title-gray {
+      @apply text-center text-lg text-gray-500 font-bold pb-6;
+    }
+
+    .card-items {
+      @apply md:items-center md:flex mb-6;
+    }
+    .widget-descr-gray-left {
+      @apply content-center pr-4 block text-gray-500 font-bold md:text-left;
     }
   }
 
@@ -203,12 +246,10 @@
     left: 0;
   }
 
-  /*
   #menu__toggle:checked ~ .menu__main {
-    margin-left: 150px; 
+    margin-left: 150px;
     transition-duration: 0.25s;
   }
-  */
 
   .menu__btn {
     display: flex;
