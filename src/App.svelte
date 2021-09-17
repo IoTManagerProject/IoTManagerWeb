@@ -39,13 +39,8 @@
 
   pages = [
     {
-      widget: "input",
-      type: "time",
-      status: "12:00",
-      page: "Inputs",
-      order: "3",
-      descr: "Switch on boiler time",
-      topic: "/prefix/00000-00003/temp3",
+      1: "page1",
+      2: "page2",
     },
   ];
 
@@ -128,6 +123,10 @@
   <ul class="menu__main">
     <div class="bg-cover bg-gray-50 pt-16">
       <Route path="/">
+        {#each wigets as widget, i}
+          <!-- json.page = widget.page -->
+        {/each}
+
         <div class="cards-grid">
           <Card title="Здесь будет конфигуратор">
             {#each wigets as widget, i}
