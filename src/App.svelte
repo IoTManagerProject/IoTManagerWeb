@@ -237,8 +237,8 @@
   }
 
   #menu__toggle:checked ~ .menu__main {
-    margin-left: 150px;
-    transition-duration: 0.25s;
+    margin-left: 150px; /* насколько сужать правую часть */
+    /* transition-duration: 0.25s; */
   }
 
   .menu__btn {
