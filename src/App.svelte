@@ -35,15 +35,6 @@
     wigets = JSON.parse(document.getElementById("text1").value);
   }
 
-  let pages = [];
-
-  pages = [
-    {
-      1: "page1",
-      2: "page2",
-    },
-  ];
-
   let wigets = [];
 
   wigets = [
