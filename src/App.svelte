@@ -52,7 +52,7 @@
       type: "time",
       status: "12:00",
       page: "Inputs",
-      order: "3",
+      order: "1",
       descr: "Switch on boiler time",
       topic: "/prefix/00000-00003/temp3",
     },
@@ -62,7 +62,7 @@
       status: "30.5",
       after: "°С",
       page: "Inputs",
-      order: "1",
+      order: "2",
       descr: "Boiler temperature",
       topic: "/prefix/00000-00001/temp1",
     },
@@ -72,7 +72,7 @@
       status: "Hello",
       page: "Inputs",
       order: "3",
-      descr: "Massage to be send",
+      descr: "Message to be send",
       topic: "/prefix/00000-00003/temp3",
     },
     {
@@ -80,7 +80,7 @@
       type: "date",
       status: "2021.09.15",
       page: "Inputs",
-      order: "2",
+      order: "4",
       descr: "Switch on boiler date",
       topic: "/prefix/00000-00002/temp2",
     },
@@ -128,21 +128,21 @@
         {/each}
 
         <div class="cards-grid">
-          <Card title="Здесь будет конфигуратор">
+          <Card title="Corridor">
             {#each wigets as widget, i}
               {#if widget.widget === "input"}
                 <Myinput bind:value={widget.status} descr={widget.descr} topic={widget.topic} ws={1} type={widget.type} />
               {/if}
             {/each}
           </Card>
-          <Card title="Здесь будет конфигуратор">
+          <Card title="Living room">
             {#each wigets as widget, i}
               {#if widget.widget === "input"}
                 <Myinput bind:value={widget.status} descr={widget.descr} topic={widget.topic} ws={1} type={widget.type} />
               {/if}
             {/each}
           </Card>
-          <Card title="Здесь будет конфигуратор">
+          <Card title="Bedroom">
             {#each wigets as widget, i}
               {#if widget.widget === "input"}
                 <Myinput bind:value={widget.status} descr={widget.descr} topic={widget.topic} ws={1} type={widget.type} />
