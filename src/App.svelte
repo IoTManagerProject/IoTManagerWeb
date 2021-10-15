@@ -83,32 +83,30 @@
     <b class="text-center" />
   </div>
 
-  <ul class="menu__ham">
-    <input id="menu__toggle" type="checkbox" />
-    <label class="menu__btn" for="menu__toggle">
-      <span />
-    </label>
+  <input id="menu__toggle" type="checkbox" />
+  <label class="menu__btn" for="menu__toggle">
+    <span />
+  </label>
 
-    <ul class="menu__box">
-      <li>
-        <a class="menu__item" href="/">{"Управление"}</a>
-      </li>
-      <li>
-        <a class="menu__item" href="/config">{"Конфигуратор"}</a>
-      </li>
-      <li>
-        <a class="menu__item" href="/connection">{"Подключение"}</a>
-      </li>
-      <li>
-        <a class="menu__item" href="/utilities">{"Утилиты"}</a>
-      </li>
-      <li>
-        <a class="menu__item" href="/log">{"Лог"}</a>
-      </li>
-      <li>
-        <a class="menu__item" href="/about">{"О проекте"}</a>
-      </li>
-    </ul>
+  <ul class="menu__box">
+    <li>
+      <a class="menu__item" href="/">{"Управление"}</a>
+    </li>
+    <li>
+      <a class="menu__item" href="/config">{"Конфигуратор"}</a>
+    </li>
+    <li>
+      <a class="menu__item" href="/connection">{"Подключение"}</a>
+    </li>
+    <li>
+      <a class="menu__item" href="/utilities">{"Утилиты"}</a>
+    </li>
+    <li>
+      <a class="menu__item" href="/log">{"Лог"}</a>
+    </li>
+    <li>
+      <a class="menu__item" href="/about">{"О проекте"}</a>
+    </li>
   </ul>
 
   <ul class="menu__main">
@@ -238,7 +236,7 @@
 
   #menu__toggle:checked ~ .menu__main {
     margin-left: 150px; /* насколько сужать правую часть */
-    /* transition-duration: 0.25s; */
+    transition-duration: 0.25s;
   }
 
   .menu__btn {
@@ -286,10 +284,6 @@
     background-color: #eceff1;
     box-shadow: 1px 0px 6px rgba(0, 0, 0, 0.2);
     transition-duration: 0.25s;
-  }
-
-  .menu__ham {
-    position: fixed;
   }
 
   .menu__item {
