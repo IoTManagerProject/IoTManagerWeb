@@ -120,21 +120,21 @@
           <Card title="Corridor">
             {#each wigets as widget, i}
               {#if widget.widget === "input"}
-                <Myinput bind:value={widget.status} descr={widget.descr} topic={widget.topic} ws={1} type={widget.type} />
+                <Myinput bind:value={widget.status} widget={widget} />
               {/if}
             {/each}
           </Card>
           <Card title="Living room">
             {#each wigets as widget, i}
               {#if widget.widget === "input"}
-                <Myinput bind:value={widget.status} descr={widget.descr} topic={widget.topic} ws={1} type={widget.type} />
+                <Myinput bind:value={widget.status} widget={widget} />
               {/if}
             {/each}
           </Card>
           <Card title="Bedroom">
             {#each wigets as widget, i}
               {#if widget.widget === "input"}
-                <Myinput bind:value={widget.status} descr={widget.descr} topic={widget.topic} ws={1} type={widget.type} />
+                <Myinput bind:value={widget.status} widget={widget} />
               {/if}
             {/each}
           </Card>
