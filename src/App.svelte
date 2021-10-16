@@ -110,7 +110,7 @@
   </ul>
 
   <ul class="menu__main">
-    <div class="bg-cover bg-gray-50 pt-16">
+    <div class="bg-cover bg-gray-50 pt-8">
       <Route path="/">
         {#each wigets as widget, i}
           <!-- json.page = widget.page -->
@@ -142,26 +142,16 @@
       </Route>
 
       <Route path="/config">
-        <Card title="Здесь будет конфигуратор" />
+        <div class="cards-grid">
+          <Card title="Здесь будет конфигуратор" />
+        </div>
       </Route>
 
       <Route path="/connection">
-        <Card title="Подключение к WiFi роутеру">
-          <Input title={"Сеть"} value={"your SSID"} />
-          <Input title={"Пароль"} value={"your PASS"} />
-
-          <div class="card-items">
-            <label class="md:w-2/3 block text-gray-500 font-bold">
-              <input class="mr-2 leading-tight" type="checkbox" />
-              <span class="text-sm"> Включить светодиод статуса подключения </span>
-            </label>
-          </div>
-          <div class="md:flex md:items-center">
-            <div class="md:w-2/3">
-              <button class="btn-indigo" type="button"> Сохранить </button>
-            </div>
-          </div>
-        </Card>
+        <div class="cards-grid">
+          <Card title="Подключение к WiFi роутеру" />
+          <Card title="Подключение к MQTT брокеру" />
+        </div>
       </Route>
       <Route path="/utilities">
         <div class="cards-grid">
