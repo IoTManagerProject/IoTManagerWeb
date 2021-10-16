@@ -142,13 +142,13 @@
       </Route>
 
       <Route path="/config">
-        <div class="cards-grid">
+        <div class="cards-grid-inline">
           <Card title="Здесь будет конфигуратор" />
         </div>
       </Route>
 
       <Route path="/connection">
-        <div class="cards-grid">
+        <div class="cards-grid-auto">
           <Card title="Подключение к WiFi роутеру" />
           <Card title="Подключение к MQTT брокеру" />
         </div>
@@ -179,16 +179,20 @@
     .card2 {
       @apply w-11/12 sm:w-8/12 md:w-6/12 lg:w-5/12 2xl:w-4/12 p-2 sm:p-2 md:p-2 lg:p-2 xl:px-8 xl:py-4 2xl:px-8 2xl:py-4 my-2 bg-white rounded-lg shadow-md lg:shadow-lg;
     }
-
     .widget-input-indigo {
       @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
     }
     .widget-after {
       @apply pr-4 block text-gray-500 font-bold md:text-right;
     }
-
     .cards-grid {
       @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 justify-items-center;
+    }
+    .cards-grid-auto {
+      @apply grid grid-cols-1 sm:grid-flow-col lg:grid-flow-col xl:grid-flow-col 2xl:grid-flow-col 2xl:auto-cols-auto justify-items-center;
+    }
+    .cards-grid-inline {
+      @apply grid grid-cols-1 justify-items-center;
     }
     .card {
       @apply w-11/12 my-2 p-2 sm:p-2 md:p-2 lg:p-2 xl:px-8 xl:py-4 2xl:px-8 2xl:py-4 bg-white rounded-lg shadow-md lg:shadow-lg;
@@ -196,7 +200,6 @@
     .card-title-gray {
       @apply text-center text-lg text-gray-500 font-bold pb-6;
     }
-
     .card-items {
       @apply md:items-center md:flex mb-6;
     }
