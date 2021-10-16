@@ -16,6 +16,7 @@
 
   onMount(async () => {
     console.log("mounted");
+    findNewPage();
   });
 
   const syntaxHighlight = (json) => {
@@ -70,12 +71,34 @@
       widget: "input",
       type: "date",
       status: "2021.09.15",
-      page: "Inputs",
+      page: "Inputs2",
       order: "4",
       descr: "Switch on boiler date",
       topic: "/prefix/00000-00002/temp2",
     },
   ];
+
+  //находит в массиве с виджетами wigets все уникальные названия страниц и сортирует названия по алфавиту
+  //На выходе получаем массив с названиями страниц - pages
+  //[{page:"страница1"},{page:"страница2"},]
+
+  let pages = [];
+  function findNewPage() {
+    pages = [];
+    const newPage = Array.from(new Set(Array.from(wigets, ({ page }) => page)));
+    newPage.forEach(function (item, i, arr) {
+      pages = [...pages, JSON.parse(JSON.stringify({ page: item }))];
+    });
+    pages.sort(function (a, b) {
+      if (a.page < b.page) {
+        return -1;
+      }
+      if (a.page > b.page) {
+        return 1;
+      }
+      return 0;
+    });
+  }
 </script>
 
 <main>
@@ -112,32 +135,16 @@
   <ul class="menu__main">
     <div class="bg-cover bg-gray-50 pt-8">
       <Route path="/">
-        {#each wigets as widget, i}
-          <!-- json.page = widget.page -->
-        {/each}
-
         <div class="cards-grid">
-          <Card title="Corridor">
-            {#each wigets as widget, i}
-              {#if widget.widget === "input"}
-                <Myinput bind:value={widget.status} widget={widget} />
-              {/if}
-            {/each}
-          </Card>
-          <Card title="Living room">
-            {#each wigets as widget, i}
-              {#if widget.widget === "input"}
-                <Myinput bind:value={widget.status} widget={widget} />
-              {/if}
-            {/each}
-          </Card>
-          <Card title="Bedroom">
-            {#each wigets as widget, i}
-              {#if widget.widget === "input"}
-                <Myinput bind:value={widget.status} widget={widget} />
-              {/if}
-            {/each}
-          </Card>
+          {#each pages as pagesName, i}
+            <Card title={pagesName.page}>
+              {#each wigets as widget, i}
+                {#if widget.widget === "input"}
+                  <Myinput bind:value={widget.status} widget={widget} />
+                {/if}
+              {/each}
+            </Card>
+          {/each}
         </div>
       </Route>
 
@@ -148,7 +155,7 @@
       </Route>
 
       <Route path="/connection">
-        <div class="cards-grid-auto">
+        <div class="cards-grid">
           <Card title="Подключение к WiFi роутеру" />
           <Card title="Подключение к MQTT брокеру" />
         </div>
@@ -187,9 +194,6 @@
     }
     .cards-grid {
       @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 justify-items-center;
-    }
-    .cards-grid-auto {
-      @apply grid grid-cols-1 sm:grid-flow-col lg:grid-flow-col xl:grid-flow-col 2xl:grid-flow-col 2xl:auto-cols-auto justify-items-center;
     }
     .cards-grid-inline {
       @apply grid grid-cols-1 justify-items-center;
