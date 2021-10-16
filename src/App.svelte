@@ -43,7 +43,7 @@
       widget: "input",
       type: "time",
       status: "12:00",
-      page: "Inputs",
+      page: "Corridor",
       order: "1",
       descr: "Switch on boiler time",
       topic: "/prefix/00000-00003/temp3",
@@ -53,7 +53,7 @@
       type: "number",
       status: "30.5",
       after: "°С",
-      page: "Inputs",
+      page: "Corridor",
       order: "2",
       descr: "Boiler temperature",
       topic: "/prefix/00000-00001/temp1",
@@ -62,7 +62,7 @@
       widget: "input",
       type: "text",
       status: "Hello",
-      page: "Inputs",
+      page: "Corridor",
       order: "3",
       descr: "Message to be send",
       topic: "/prefix/00000-00003/temp3",
@@ -71,7 +71,25 @@
       widget: "input",
       type: "date",
       status: "2021.09.15",
-      page: "Inputs2",
+      page: "Corridor",
+      order: "4",
+      descr: "Switch on boiler date",
+      topic: "/prefix/00000-00002/temp2",
+    },
+    {
+      widget: "input",
+      type: "date",
+      status: "2021.09.15",
+      page: "Living Room",
+      order: "4",
+      descr: "Switch on boiler date",
+      topic: "/prefix/00000-00002/temp2",
+    },
+    {
+      widget: "input",
+      type: "date",
+      status: "2021.09.15",
+      page: "Bedroom",
       order: "4",
       descr: "Switch on boiler date",
       topic: "/prefix/00000-00002/temp2",
@@ -139,8 +157,10 @@
           {#each pages as pagesName, i}
             <Card title={pagesName.page}>
               {#each wigets as widget, i}
-                {#if widget.widget === "input"}
-                  <Myinput bind:value={widget.status} widget={widget} />
+                {#if widget.page === pagesName.page}
+                  {#if widget.widget === "input"}
+                    <Myinput bind:value={widget.status} widget={widget} />
+                  {/if}
                 {/if}
               {/each}
             </Card>
