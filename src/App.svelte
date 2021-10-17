@@ -11,8 +11,7 @@
   router.mode.hash(); // enables hash navigation method
   //router.mode.memory(); // enables in-memory navigation method
   import Card from "./widgets/Card.svelte";
-  import Input from "./Input.svelte";
-  import Myinput from "./widgets/Input.svelte";
+  import Input from "./widgets/Input.svelte";
 
   onMount(async () => {
     console.log("mounted");
@@ -32,8 +31,9 @@
     return json;
   };
 
-  function SuperDuperFunction() {
+  function wigetsUpdate() {
     wigets = JSON.parse(document.getElementById("text1").value);
+    findNewPage();
   }
 
   let wigets = [];
@@ -41,58 +41,44 @@
   wigets = [
     {
       widget: "input",
+      type: "date",
+      status: "2021-10-17",
+      page: "Set date and time card",
+      order: "4",
+      descr: "Switch on boiler date",
+      topic: "/prefix/00000-00004/date1",
+      ws: 1,
+    },
+    {
+      widget: "input",
       type: "time",
       status: "12:00",
-      page: "Corridor",
+      page: "Set date and time card",
       order: "1",
       descr: "Switch on boiler time",
-      topic: "/prefix/00000-00003/temp3",
+      topic: "/prefix/00000-00001/time",
+      ws: 1,
     },
     {
       widget: "input",
       type: "number",
       status: "30.5",
       after: "°С",
-      page: "Corridor",
+      page: "Set any number card",
       order: "2",
       descr: "Boiler temperature",
-      topic: "/prefix/00000-00001/temp1",
+      topic: "/prefix/00000-00002/temp",
+      ws: 1,
     },
     {
       widget: "input",
       type: "text",
       status: "Hello",
-      page: "Corridor",
+      page: "Set text card",
       order: "3",
       descr: "Message to be send",
-      topic: "/prefix/00000-00003/temp3",
-    },
-    {
-      widget: "input",
-      type: "date",
-      status: "2021.09.15",
-      page: "Corridor",
-      order: "4",
-      descr: "Switch on boiler date",
-      topic: "/prefix/00000-00002/temp2",
-    },
-    {
-      widget: "input",
-      type: "date",
-      status: "2021.09.15",
-      page: "Living Room",
-      order: "4",
-      descr: "Switch on boiler date",
-      topic: "/prefix/00000-00002/temp2",
-    },
-    {
-      widget: "input",
-      type: "date",
-      status: "2021.09.15",
-      page: "Bedroom",
-      order: "4",
-      descr: "Switch on boiler date",
-      topic: "/prefix/00000-00002/temp2",
+      topic: "/prefix/00000-00003/text",
+      ws: 1,
     },
   ];
 
@@ -159,12 +145,16 @@
               {#each wigets as widget, i}
                 {#if widget.page === pagesName.page}
                   {#if widget.widget === "input"}
-                    <Myinput bind:value={widget.status} widget={widget} />
+                    <Input bind:value={widget.status} widget={widget} />
                   {/if}
                 {/if}
               {/each}
             </Card>
           {/each}
+
+          <Card title="Редактор JSON">
+            <textarea on:input={wigetsUpdate} rows="10" class="widget-input-indigo w-full" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
+          </Card>
         </div>
       </Route>
 
@@ -183,7 +173,7 @@
       <Route path="/utilities">
         <div class="cards-grid">
           <Card title="Редактор JSON">
-            <textarea on:input={SuperDuperFunction} rows="10" class="widget-input-indigo w-full" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
+            <textarea on:input={wigetsUpdate} rows="10" class="widget-input-indigo w-full" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
           </Card>
         </div>
       </Route>

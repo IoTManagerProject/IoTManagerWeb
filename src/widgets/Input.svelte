@@ -16,16 +16,16 @@
   <div class="md:w-1/3 lg:w-1/3 2xl:w-1/3">
     <!-- on:change={WSpush(ws, topic, value)} -->
     {#if widget.type == "number"}
-      <input class="widget-input-indigo text-right" step="0.1" on:change={WSpush(widget.ws, widget.topic, widget.value)} bind:value type="number" />
+      <input class="widget-input-indigo text-right" step="0.1" on:change={WSpush(widget.ws, widget.topic, value)} bind:value type="number" />
     {/if}
     {#if widget.type == "text"}
-      <input class="widget-input-indigo text-right" on:change={WSpush(widget.ws, widget.topic, widget.value)} bind:value type="text" />
+      <input class="widget-input-indigo text-right" on:change={WSpush(widget.ws, widget.topic, value)} bind:value type="text" />
     {/if}
     {#if widget.type == "date"}
-      <input class="widget-input-indigo text-right" on:change={WSpush(widget.ws, widget.topic, widget.value)} bind:value type="date" />
+      <input class="widget-input-indigo text-right" on:change={WSpush(widget.ws, widget.topic, value)} bind:value type="date" />
     {/if}
     {#if widget.type == "time"}
-      <input class="widget-input-indigo text-right" on:change={WSpush(widget.ws, widget.topic, widget.value)} bind:value type="time" />
+      <input class="widget-input-indigo text-right" on:change={WSpush(widget.ws, widget.topic, value)} bind:value type="time" />
     {/if}
   </div>
 </div>
