@@ -24,15 +24,23 @@
     } catch (e) {
       return json;
     }
-    json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-      return match;
-    });
+    json = json
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    json = json.replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      function (match) {
+        return match;
+      }
+    );
     return json;
   };
 
   function wigetsUpdate() {
-    wigets = JSON.parse(document.getElementById("text1").value);
+    wigets = JSON.parse(
+      document.getElementById("text1").value
+    );
     findNewPage();
   }
 
@@ -43,7 +51,7 @@
       widget: "input",
       type: "date",
       status: "2021-10-17",
-      page: "Set date and time card",
+      page: "Set date and time",
       order: "4",
       descr: "Switch on boiler date",
       topic: "/prefix/00000-00004/date1",
@@ -53,7 +61,7 @@
       widget: "input",
       type: "time",
       status: "12:00",
-      page: "Set date and time card",
+      page: "Set date and time",
       order: "1",
       descr: "Switch on boiler time",
       topic: "/prefix/00000-00001/time",
@@ -64,7 +72,7 @@
       type: "number",
       status: "30.5",
       after: "°С",
-      page: "Set any number card",
+      page: "Set any number",
       order: "2",
       descr: "Boiler temperature",
       topic: "/prefix/00000-00002/temp",
@@ -74,7 +82,7 @@
       widget: "input",
       type: "text",
       status: "Hello",
-      page: "Set text card",
+      page: "Set text",
       order: "3",
       descr: "Message to be send",
       topic: "/prefix/00000-00003/text",
@@ -89,9 +97,14 @@
   let pages = [];
   function findNewPage() {
     pages = [];
-    const newPage = Array.from(new Set(Array.from(wigets, ({ page }) => page)));
+    const newPage = Array.from(
+      new Set(Array.from(wigets, ({ page }) => page))
+    );
     newPage.forEach(function (item, i, arr) {
-      pages = [...pages, JSON.parse(JSON.stringify({ page: item }))];
+      pages = [
+        ...pages,
+        JSON.parse(JSON.stringify({ page: item })),
+      ];
     });
     pages.sort(function (a, b) {
       if (a.page < b.page) {
@@ -120,13 +133,16 @@
       <a class="menu__item" href="/">{"Управление"}</a>
     </li>
     <li>
-      <a class="menu__item" href="/config">{"Конфигуратор"}</a>
+      <a class="menu__item" href="/config"
+        >{"Конфигуратор"}</a>
     </li>
     <li>
-      <a class="menu__item" href="/connection">{"Подключение"}</a>
+      <a class="menu__item" href="/connection"
+        >{"Подключение"}</a>
     </li>
     <li>
-      <a class="menu__item" href="/utilities">{"Утилиты"}</a>
+      <a class="menu__item" href="/utilities"
+        >{"Утилиты"}</a>
     </li>
     <li>
       <a class="menu__item" href="/log">{"Лог"}</a>
@@ -145,7 +161,9 @@
               {#each wigets as widget, i}
                 {#if widget.page === pagesName.page}
                   {#if widget.widget === "input"}
-                    <Input bind:value={widget.status} widget={widget} />
+                    <Input
+                      bind:value={widget.status}
+                      widget={widget} />
                   {/if}
                 {/if}
               {/each}
@@ -153,7 +171,14 @@
           {/each}
 
           <Card title="Редактор JSON">
-            <textarea on:input={wigetsUpdate} rows="10" class="widget-input-indigo w-full" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
+            <textarea
+              on:input={wigetsUpdate}
+              rows="10"
+              class="json-input w-full"
+              id="text1"
+              >{syntaxHighlight(
+                JSON.stringify(wigets)
+              )}</textarea>
           </Card>
         </div>
       </Route>
@@ -173,7 +198,14 @@
       <Route path="/utilities">
         <div class="cards-grid">
           <Card title="Редактор JSON">
-            <textarea on:input={wigetsUpdate} rows="10" class="widget-input-indigo w-full" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
+            <textarea
+              on:input={wigetsUpdate}
+              rows="10"
+              class="json-input w-full"
+              id="text1"
+              >{syntaxHighlight(
+                JSON.stringify(wigets)
+              )}</textarea>
           </Card>
         </div>
       </Route>
@@ -196,11 +228,11 @@
     .card2 {
       @apply w-11/12 sm:w-8/12 md:w-6/12 lg:w-5/12 2xl:w-4/12 p-2 sm:p-2 md:p-2 lg:p-2 xl:px-8 xl:py-4 2xl:px-8 2xl:py-4 my-2 bg-white rounded-lg shadow-md lg:shadow-lg;
     }
-    .widget-input-indigo {
-      @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
+    .widget-input {
+      @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white text-right;
     }
-    .widget-input-red {
-      @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white border-red-500;
+    .json-input {
+      @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
     }
     .widget-after {
       @apply pr-4 block text-gray-500 font-bold md:text-right;
