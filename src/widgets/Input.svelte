@@ -4,7 +4,7 @@
 
 <script>
   export let widget;
-  export let value;
+  //export let value;
 </script>
 
 <div class="card-items">
@@ -23,7 +23,7 @@
           (widget["send"] = true),
           WSpush(widget.ws, widget.topic, widget.status)
         )}
-        bind:value
+        bind:value={widget.status}
         step="0.1"
         type="number" />
     {/if}
@@ -36,7 +36,7 @@
           (widget["send"] = true),
           WSpush(widget.ws, widget.topic, widget.status)
         )}
-        bind:value
+        bind:value={widget.status}
         type="text" />
     {/if}
     {#if widget.type == "date"}
@@ -48,7 +48,7 @@
           (widget["send"] = true),
           WSpush(widget.ws, widget.topic, widget.status)
         )}
-        bind:value
+        bind:value={widget.status}
         type="date" />
     {/if}
     {#if widget.type == "time"}
@@ -60,7 +60,7 @@
           (widget["send"] = true),
           WSpush(widget.ws, widget.topic, widget.status)
         )}
-        bind:value
+        bind:value={widget.status}
         type="time" />
     {/if}
   </div>
