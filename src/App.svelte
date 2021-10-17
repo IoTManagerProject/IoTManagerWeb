@@ -10,9 +10,9 @@
   import { Route, router, active } from "tinro";
   router.mode.hash(); // enables hash navigation method
   //router.mode.memory(); // enables in-memory navigation method
-  import Card from "./Card.svelte";
+  import Card from "./widgets/Card.svelte";
   import Input from "./Input.svelte";
-  import Myinput from "./Myinput.svelte";
+  import Myinput from "./widgets/Input.svelte";
 
   onMount(async () => {
     console.log("mounted");

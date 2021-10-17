@@ -1,5 +1,5 @@
 <script context="module">
-  import { WSpush } from "./App.svelte";
+  import { WSpush } from "../App.svelte";
 </script>
 
 <script>
