@@ -199,6 +199,9 @@
     .widget-input-indigo {
       @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
     }
+    .widget-input-red {
+      @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white border-red-500;
+    }
     .widget-after {
       @apply pr-4 block text-gray-500 font-bold md:text-right;
     }
