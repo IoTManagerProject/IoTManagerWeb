@@ -4,7 +4,6 @@
 
 <script>
   export let widget;
-  //export let value;
 </script>
 
 <div class="card-items">

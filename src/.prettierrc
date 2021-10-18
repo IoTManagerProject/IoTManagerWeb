@@ -5,5 +5,13 @@
   "svelteAllowShorthand": false,
   "svelteIndentScriptAndStyle": true,
   "printWidth": 600,
-  "sxBracketSameLine": true
+  "sxBracketSameLine": true,
+  "overrides": [
+    {
+      "files": "Input.svelte",
+      "options": {
+        "printWidth": 60
+      }
+    }
+  ]
 }

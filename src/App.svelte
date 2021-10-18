@@ -170,13 +170,7 @@
           <Card title="Подключение к MQTT брокеру" />
         </div>
       </Route>
-      <Route path="/utilities">
-        <div class="cards-grid">
-          <Card title="Редактор JSON">
-            <textarea on:input={wigetsUpdate} rows="10" class="json-input w-full" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
-          </Card>
-        </div>
-      </Route>
+      <Route path="/utilities" />
     </div>
   </ul>
 </main>
