@@ -24,23 +24,15 @@
     } catch (e) {
       return json;
     }
-    json = json
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-    json = json.replace(
-      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
-      function (match) {
-        return match;
-      }
-    );
+    json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+      return match;
+    });
     return json;
   };
 
   function wigetsUpdate() {
-    wigets = JSON.parse(
-      document.getElementById("text1").value
-    );
+    wigets = JSON.parse(document.getElementById("text1").value);
     findNewPage();
   }
 
@@ -97,14 +89,9 @@
   let pages = [];
   function findNewPage() {
     pages = [];
-    const newPage = Array.from(
-      new Set(Array.from(wigets, ({ page }) => page))
-    );
+    const newPage = Array.from(new Set(Array.from(wigets, ({ page }) => page)));
     newPage.forEach(function (item, i, arr) {
-      pages = [
-        ...pages,
-        JSON.parse(JSON.stringify({ page: item })),
-      ];
+      pages = [...pages, JSON.parse(JSON.stringify({ page: item }))];
     });
     pages.sort(function (a, b) {
       if (a.page < b.page) {
@@ -133,16 +120,13 @@
       <a class="menu__item" href="/">{"Управление"}</a>
     </li>
     <li>
-      <a class="menu__item" href="/config"
-        >{"Конфигуратор"}</a>
+      <a class="menu__item" href="/config">{"Конфигуратор"}</a>
     </li>
     <li>
-      <a class="menu__item" href="/connection"
-        >{"Подключение"}</a>
+      <a class="menu__item" href="/connection">{"Подключение"}</a>
     </li>
     <li>
-      <a class="menu__item" href="/utilities"
-        >{"Утилиты"}</a>
+      <a class="menu__item" href="/utilities">{"Утилиты"}</a>
     </li>
     <li>
       <a class="menu__item" href="/log">{"Лог"}</a>
@@ -161,9 +145,7 @@
               {#each wigets as widget, i}
                 {#if widget.page === pagesName.page}
                   {#if widget.widget === "input"}
-                    <Input
-                      bind:value={widget.status}
-                      widget={widget} />
+                    <Input bind:value={widget.status} widget={widget} />
                   {/if}
                 {/if}
               {/each}
@@ -171,14 +153,7 @@
           {/each}
 
           <Card title="Редактор JSON">
-            <textarea
-              on:input={wigetsUpdate}
-              rows="10"
-              class="json-input w-full"
-              id="text1"
-              >{syntaxHighlight(
-                JSON.stringify(wigets)
-              )}</textarea>
+            <textarea on:input={wigetsUpdate} rows="10" class="json-input w-full" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
           </Card>
         </div>
       </Route>
@@ -198,14 +173,7 @@
       <Route path="/utilities">
         <div class="cards-grid">
           <Card title="Редактор JSON">
-            <textarea
-              on:input={wigetsUpdate}
-              rows="10"
-              class="json-input w-full"
-              id="text1"
-              >{syntaxHighlight(
-                JSON.stringify(wigets)
-              )}</textarea>
+            <textarea on:input={wigetsUpdate} rows="10" class="json-input w-full" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
           </Card>
         </div>
       </Route>

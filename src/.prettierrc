@@ -4,6 +4,6 @@
   "svelteBracketNewLine": false,
   "svelteAllowShorthand": false,
   "svelteIndentScriptAndStyle": true,
-  "printWidth": 60,
+  "printWidth": 600,
   "sxBracketSameLine": true
 }
