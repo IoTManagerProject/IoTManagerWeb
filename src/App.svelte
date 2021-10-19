@@ -263,7 +263,7 @@
       @apply items-start sm:items-start md:flex md:items-center lg:items-center xl:items-center 2xl:items-center mb-6;
     }
     .widget-descr-gray {
-      @apply content-center pr-4 block text-gray-500 font-bold;
+      @apply pr-4  text-gray-500 font-bold;
     }
   }
 
