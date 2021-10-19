@@ -12,6 +12,12 @@
       "options": {
         "printWidth": 60
       }
+    },
+    {
+      "files": "Toggle.svelte",
+      "options": {
+        "printWidth": 600
+      }
     }
   ]
 }

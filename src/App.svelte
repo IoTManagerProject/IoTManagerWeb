@@ -12,6 +12,7 @@
   //router.mode.memory(); // enables in-memory navigation method
   import Card from "./widgets/Card.svelte";
   import Input from "./widgets/Input.svelte";
+  import Toggle from "./widgets/Toggle.svelte";
 
   onMount(async () => {
     console.log("mounted");
@@ -43,7 +44,7 @@
       widget: "input",
       type: "date",
       status: "2021-10-17",
-      page: "Set date and time",
+      page: "Inputs",
       order: "4",
       descr: "Switch on boiler date",
       topic: "/prefix/00000-00004/date1",
@@ -53,7 +54,7 @@
       widget: "input",
       type: "time",
       status: "12:00",
-      page: "Set date and time",
+      page: "Inputs",
       order: "1",
       descr: "Switch on boiler time",
       topic: "/prefix/00000-00001/time",
@@ -64,7 +65,7 @@
       type: "number",
       status: "30.5",
       after: "°С",
-      page: "Set any number",
+      page: "Inputs",
       order: "2",
       descr: "Boiler temperature",
       topic: "/prefix/00000-00002/temp",
@@ -74,10 +75,19 @@
       widget: "input",
       type: "text",
       status: "Hello",
-      page: "Set text",
+      page: "Inputs",
       order: "3",
       descr: "Message to be send",
       topic: "/prefix/00000-00003/text",
+      ws: 1,
+    },
+    {
+      widget: "toggle",
+      status: 0,
+      page: "Toggles",
+      order: "3",
+      descr: "Light in my room",
+      topic: "/prefix/00000-00003/btn",
       ws: 1,
     },
   ];
@@ -146,6 +156,9 @@
                 {#if widget.page === pagesName.page}
                   {#if widget.widget === "input"}
                     <Input bind:value={widget.status} widget={widget} />
+                  {/if}
+                  {#if widget.widget === "toggle"}
+                    <Toggle bind:value={widget.status} widget={widget} />
                   {/if}
                 {/if}
               {/each}
@@ -245,11 +258,12 @@
     .card-title-gray {
       @apply text-center text-lg text-gray-500 font-bold pb-6;
     }
+    /* md, lg, xl, 2xl, - по центру, sm и меньше - слева */
     .card-items {
-      @apply md:items-center md:flex mb-6;
+      @apply items-start sm:items-start md:flex md:items-center lg:items-center xl:items-center 2xl:items-center mb-6;
     }
-    .widget-descr-gray-left {
-      @apply content-center pr-4 block text-gray-500 font-bold md:text-left;
+    .widget-descr-gray {
+      @apply content-center pr-4 block text-gray-500 font-bold;
     }
   }
 
@@ -369,13 +383,7 @@
     opacity: 1;
   }
 
-  /* Toggle A */
-  input:checked ~ .dot {
-    transform: translateX(100%);
-    background-color: #48bb78;
-  }
-
-  /* Toggle B */
+  /* Toggle */
   input:checked ~ .dot {
     transform: translateX(100%);
     background-color: #48bb78;

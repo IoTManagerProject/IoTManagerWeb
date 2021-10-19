@@ -7,12 +7,12 @@
 </script>
 
 <div class="card-items">
-  <div class="md:w-2/3 lg:w-2/3 2xl:w-2/3">
+  <div class="w-full md:w-2/3 lg:w-2/3 2xl:w-2/3">
     <!-- svelte-ignore a11y-label-has-associated-control -->
-    <label class="widget-descr-gray-left"
+    <label class="widget-descr-gray"
       >{!widget.descr ? "" : widget.descr}</label>
   </div>
-  <div class="md:w-1/3 lg:w-1/3 2xl:w-1/3">
+  <div class="w-full md:w-1/3 lg:w-1/3 2xl:w-1/3">
     {#if widget.type == "number"}
       <input
         class={widget["send"] == true
