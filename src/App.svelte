@@ -90,6 +90,24 @@
       topic: "/prefix/00000-00003/btn",
       ws: 1,
     },
+    {
+      widget: "toggle",
+      status: 0,
+      page: "Toggles",
+      order: "3",
+      descr: "Light in my room",
+      topic: "/prefix/00000-00003/btn",
+      ws: 1,
+    },
+    {
+      widget: "toggle",
+      status: 0,
+      page: "Toggles",
+      order: "3",
+      descr: "Light in my room",
+      topic: "/prefix/00000-00003/btn",
+      ws: 1,
+    },
   ];
 
   //находит в массиве с виджетами wigets все уникальные названия страниц и сортирует названия по алфавиту
