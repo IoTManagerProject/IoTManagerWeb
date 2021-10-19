@@ -87,7 +87,7 @@
       page: "Toggles",
       order: "3",
       descr: "Light in my room",
-      topic: "/prefix/00000-00003/btn",
+      topic: "/prefix/00000-00003/btn1",
       ws: 1,
     },
     {
@@ -96,7 +96,7 @@
       page: "Toggles",
       order: "3",
       descr: "Light in my room",
-      topic: "/prefix/00000-00003/btn",
+      topic: "/prefix/00000-00003/btn2",
       ws: 1,
     },
     {
@@ -105,7 +105,7 @@
       page: "Toggles",
       order: "3",
       descr: "Light in my room",
-      topic: "/prefix/00000-00003/btn",
+      topic: "/prefix/00000-00003/btn3",
       ws: 1,
     },
   ];
