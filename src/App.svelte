@@ -270,18 +270,41 @@
     .cards-grid-inline {
       @apply grid grid-cols-1 justify-items-center;
     }
+    /*==================================================cards grid=====================================================*/
+
+    /*=============================================card and items inside===============================================*/
+    /* 1. paddig and style for card */
     .card {
       @apply w-full p-2 sm:p-2 md:p-2 lg:p-2 xl:px-8 xl:py-4 2xl:px-8 2xl:py-4 bg-white rounded-lg shadow-md lg:shadow-lg;
     }
-    .card-title-gray {
+    /* 2. style for card header */
+    .card-header-gray {
       @apply text-center text-lg text-gray-500 font-bold pb-6;
     }
-    /* md, lg, xl, 2xl, - по центру, sm и меньше - слева */
-    .card-items {
-      @apply items-start sm:items-start md:flex md:items-center lg:items-center xl:items-center 2xl:items-center mb-6;
+    /* 3. card items positioning*/
+    .card-items-psn {
+      @apply flex flex-col sm:flex-row lg:flex-row xl:flex-row 2xl:flex-row mb-6;
     }
-    .widget-descr-gray {
-      @apply pr-4  text-gray-500 font-bold;
+    .card-items-psn-inline {
+      @apply flex mb-6;
+    }
+    /* 4. widget description width*/
+    .widget-descr-width {
+      @apply w-full sm:w-2/3 lg:w-2/3 xl:w-2/3 2xl:w-2/3;
+    }
+    .widget-descr-width-2-3 {
+      @apply w-2/3;
+    }
+    /* 5. widget descr style*/
+    .widget-descr-style {
+      @apply pr-4 text-gray-500 font-bold;
+    }
+    /* 6. widget width*/
+    .widget-width {
+      @apply w-full sm:w-1/3 lg:w-1/3 xl:w-1/3 2xl:w-1/3;
+    }
+    .widget-width-1-3 {
+      @apply w-1/3;
     }
   }
 

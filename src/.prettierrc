@@ -10,7 +10,7 @@
     {
       "files": "Input.svelte",
       "options": {
-        "printWidth": 60
+        "printWidth": 600
       }
     },
     {
