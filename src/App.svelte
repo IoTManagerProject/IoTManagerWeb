@@ -13,6 +13,7 @@
   import Card from "./widgets/Card.svelte";
   import Input from "./widgets/Input.svelte";
   import Toggle from "./widgets/Toggle.svelte";
+  import Anydata from "./widgets/Anydata.svelte";
 
   onMount(async () => {
     console.log("mounted");
@@ -108,6 +109,36 @@
       topic: "/prefix/00000-00003/btn3",
       ws: 1,
     },
+    {
+      widget: "anydata",
+      status: 30.5,
+      after: "C",
+      page: "Any data",
+      order: "3",
+      descr: "Temperature",
+      topic: "/prefix/00000-00003/tmp10",
+      ws: 1,
+    },
+    {
+      widget: "anydata",
+      status: 1032,
+      after: "mm",
+      page: "Any data",
+      order: "3",
+      descr: "Pressure",
+      topic: "/prefix/00000-00003/tmp10",
+      ws: 1,
+    },
+    {
+      widget: "anydata",
+      status: 50,
+      after: "%",
+      page: "Any data",
+      order: "3",
+      descr: "Level",
+      topic: "/prefix/00000-00003/tmp10",
+      ws: 1,
+    },
   ];
 
   //находит в массиве с виджетами wigets все уникальные названия страниц и сортирует названия по алфавиту
@@ -177,6 +208,9 @@
                   {/if}
                   {#if widget.widget === "toggle"}
                     <Toggle bind:value={widget.status} widget={widget} />
+                  {/if}
+                  {#if widget.widget === "anydata"}
+                    <Anydata bind:value={widget.status} widget={widget} />
                   {/if}
                 {/if}
               {/each}
@@ -266,16 +300,16 @@
     }
     /* 3. card items positioning*/
     .card-items-psn {
-      @apply flex flex-col sm:flex-row lg:flex-row xl:flex-row 2xl:flex-row mb-6;
+      @apply flex flex-col sm:flex-row lg:flex-row xl:flex-row 2xl:flex-row mb-6 h-8 items-center;
     }
     .card-items-psn-inline {
-      @apply flex mb-6;
+      @apply flex mb-6 h-8 items-center;
     }
     /* 4. widget description width*/
-    .widget-descr-width {
+    .widget-descr-width-ajustable {
       @apply w-full sm:w-2/3 lg:w-2/3 xl:w-2/3 2xl:w-2/3;
     }
-    .widget-descr-width-2-3 {
+    .widget-descr-width-inline {
       @apply w-2/3;
     }
     /* 5. widget descr style*/
@@ -283,10 +317,10 @@
       @apply pr-4 text-gray-500 font-bold;
     }
     /* 6. widget width*/
-    .widget-width-input {
+    .widget-width-ajustable {
       @apply w-full sm:w-1/3 lg:w-1/3 xl:w-1/3 2xl:w-1/3;
     }
-    .widget-width-toggle {
+    .widget-width-inline {
       @apply flex justify-end w-1/3;
     }
     /*====================================================others=====================================================*/
@@ -298,6 +332,9 @@
     }
     .json-input {
       @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
+    }
+    .widget-anydata-style {
+      @apply text-center text-lg text-gray-500 font-bold;
     }
   }
 
