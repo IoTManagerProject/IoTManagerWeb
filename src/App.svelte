@@ -139,6 +139,15 @@
       topic: "/prefix/00000-00003/tmp10",
       ws: 1,
     },
+    {
+      widget: "anydata",
+      status: "opened",
+      page: "Any data",
+      order: "3",
+      descr: "Status",
+      topic: "/prefix/00000-00003/tmp10",
+      ws: 1,
+    },
   ];
 
   //находит в массиве с виджетами wigets все уникальные названия страниц и сортирует названия по алфавиту
@@ -295,11 +304,11 @@
       @apply w-full p-2 sm:p-2 md:p-2 lg:p-2 xl:px-8 xl:py-4 2xl:px-8 2xl:py-4 bg-white rounded-lg shadow-md lg:shadow-lg;
     }
     /* 2. style for card header */
-    .card-header-gray {
+    .card-header {
       @apply text-center text-lg text-gray-500 font-bold pb-6;
     }
     /* 3. card items positioning*/
-    .card-items-psn {
+    .card-items-psn-ajustable {
       @apply flex flex-col sm:flex-row lg:flex-row xl:flex-row 2xl:flex-row mb-6 h-8 items-center;
     }
     .card-items-psn-inline {

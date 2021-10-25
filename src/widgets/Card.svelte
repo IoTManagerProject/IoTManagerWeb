@@ -3,6 +3,6 @@
 </script>
 
 <div class="card">
-  <h1 class="card-header-gray">{title}</h1>
+  <h1 class="card-header">{title}</h1>
   <slot />
 </div>

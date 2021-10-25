@@ -6,7 +6,7 @@
   export let widget;
 </script>
 
-<div class="card-items-psn">
+<div class="card-items-psn-ajustable">
   <div class="widget-descr-width-ajustable">
     <!-- svelte-ignore a11y-label-has-associated-control -->
     <label class="widget-descr-style">{!widget.descr ? "" : widget.descr}</label>
