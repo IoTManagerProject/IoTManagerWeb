@@ -11,7 +11,7 @@
     <!-- svelte-ignore a11y-label-has-associated-control -->
     <label class="widget-descr-style">{!widget.descr ? "" : widget.descr}</label>
   </div>
-  <div class="widget-width">
+  <div class="widget-width-input">
     {#if widget.type == "number"}
       <input class={widget["send"] == true ? "widget-input border-red-500" : "widget-input focus:border-indigo-500"} on:change={() => ((widget["send"] = true), WSpush(widget.ws, widget.topic, widget.status))} bind:value={widget.status} step="0.1" type="number" />
     {/if}

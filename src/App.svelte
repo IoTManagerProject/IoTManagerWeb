@@ -246,32 +246,15 @@
   @tailwind utilities;
 
   @layer components {
-    .btn-indigo {
-      @apply py-2 px-4 bg-indigo-500 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75;
-    }
-    .block-psn-center {
-      @apply grid place-items-center mx-2 sm:my-auto;
-    }
-    .card2 {
-      @apply w-11/12 sm:w-8/12 md:w-6/12 lg:w-5/12 2xl:w-4/12 p-2 sm:p-2 md:p-2 lg:p-2 xl:px-8 xl:py-4 2xl:px-8 2xl:py-4 my-2 bg-white rounded-lg shadow-md lg:shadow-lg;
-    }
-    .widget-input {
-      @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white text-right;
-    }
-    .json-input {
-      @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
-    }
-    .widget-after {
-      @apply pr-4 block text-gray-500 font-bold md:text-right;
-    }
+    /*==================================================cards grid=====================================================*/
+    /* grid for cards */
     .cards-grid {
       @apply grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 justify-items-center;
     }
+    /* grid for cards for full screen */
     .cards-grid-inline {
       @apply grid grid-cols-1 justify-items-center;
     }
-    /*==================================================cards grid=====================================================*/
-
     /*=============================================card and items inside===============================================*/
     /* 1. paddig and style for card */
     .card {
@@ -300,11 +283,21 @@
       @apply pr-4 text-gray-500 font-bold;
     }
     /* 6. widget width*/
-    .widget-width {
+    .widget-width-input {
       @apply w-full sm:w-1/3 lg:w-1/3 xl:w-1/3 2xl:w-1/3;
     }
-    .widget-width-1-3 {
-      @apply w-1/3;
+    .widget-width-toggle {
+      @apply flex justify-end w-1/3;
+    }
+    /*====================================================others=====================================================*/
+    .btn-indigo {
+      @apply py-2 px-4 bg-indigo-500 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75;
+    }
+    .widget-input {
+      @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white text-right;
+    }
+    .json-input {
+      @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
     }
   }
 
@@ -427,6 +420,6 @@
   /* Toggle */
   input:checked ~ .dot {
     transform: translateX(100%);
-    background-color: #48bb78;
+    /* background-color: #48bb78;*/
   }
 </style>
