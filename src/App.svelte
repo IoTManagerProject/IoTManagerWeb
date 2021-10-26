@@ -244,41 +244,7 @@
           <Card title="Подключение к MQTT брокеру" />
         </div>
       </Route>
-      <Route path="/utilities">
-        <!-- Toggle A -->
-        <div class="flex items-center justify-center w-full mb-12">
-          <label for="toogleA" class="flex items-center cursor-pointer">
-            <!-- toggle -->
-            <div class="relative">
-              <!-- input -->
-              <input id="toogleA" type="checkbox" class="sr-only" />
-              <!-- line -->
-              <div class="w-10 h-4 bg-gray-400 rounded-full shadow-inner" />
-              <!-- dot -->
-              <div class="dot absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-1 transition" />
-            </div>
-            <!-- label -->
-            <div class="ml-3 text-gray-700 font-medium">Toggle Me!</div>
-          </label>
-        </div>
-
-        <!-- Toggle B -->
-        <div class="flex items-center justify-center w-full mb-12">
-          <label for="toggleB" class="flex items-center cursor-pointer">
-            <!-- toggle -->
-            <div class="relative">
-              <!-- input -->
-              <input type="checkbox" id="toggleB" class="sr-only" />
-              <!-- line -->
-              <div class="block bg-gray-600 w-14 h-8 rounded-full" />
-              <!-- dot -->
-              <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition" />
-            </div>
-            <!-- label -->
-            <div class="ml-3 text-gray-700 font-medium">Toggle Me!</div>
-          </label>
-        </div>
-      </Route>
+      <Route path="/utilities" />
     </div>
   </ul>
 </main>
@@ -305,20 +271,14 @@
     }
     /* 2. style for card header */
     .card-header {
-      @apply text-center text-lg text-gray-500 font-bold pb-6;
+      @apply text-center text-lg text-gray-500 font-bold pb-4;
     }
     /* 3. card items positioning*/
-    .card-items-psn-ajustable {
-      @apply flex flex-col sm:flex-row lg:flex-row xl:flex-row 2xl:flex-row mb-6 h-8 items-center;
-    }
-    .card-items-psn-inline {
-      @apply flex mb-6 h-8 items-center;
+    .card-items-psn {
+      @apply flex mb-4 h-8 items-center;
     }
     /* 4. widget description width*/
-    .widget-descr-width-ajustable {
-      @apply w-full sm:w-2/3 lg:w-2/3 xl:w-2/3 2xl:w-2/3;
-    }
-    .widget-descr-width-inline {
+    .widget-descr-width {
       @apply w-2/3;
     }
     /* 5. widget descr style*/
@@ -326,10 +286,7 @@
       @apply pr-4 text-gray-500 font-bold;
     }
     /* 6. widget width*/
-    .widget-width-ajustable {
-      @apply w-full sm:w-1/3 lg:w-1/3 xl:w-1/3 2xl:w-1/3;
-    }
-    .widget-width-inline {
+    .widget-width {
       @apply flex justify-end w-1/3;
     }
     /*====================================================others=====================================================*/

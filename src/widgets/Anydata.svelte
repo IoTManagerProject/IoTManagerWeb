@@ -6,12 +6,12 @@
   export let widget;
 </script>
 
-<div class="card-items-psn-inline">
-  <div class="widget-descr-width-inline">
+<div class="card-items-psn">
+  <div class="widget-descr-width">
     <!-- svelte-ignore a11y-label-has-associated-control -->
     <label class="widget-descr-style">{!widget.descr ? "" : widget.descr}</label>
   </div>
-  <div class="widget-width-inline">
+  <div class="widget-width">
     <!-- svelte-ignore a11y-label-has-associated-control -->
     <label class="widget-anydata-style">{!widget.status ? "" : widget.status}</label>
     <!-- svelte-ignore a11y-label-has-associated-control -->
