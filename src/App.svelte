@@ -6,10 +6,12 @@
 
 <script>
   import { onMount } from "svelte";
-  //роутер ==========================================
   import { Route, router, active } from "tinro";
   router.mode.hash(); // enables hash navigation method
   //router.mode.memory(); // enables in-memory navigation method
+  //import Chart from "svelte-frappe-charts";
+
+  //import components
   import Card from "./widgets/Card.svelte";
   import Input from "./widgets/Input.svelte";
   import Toggle from "./widgets/Toggle.svelte";
