@@ -112,7 +112,7 @@
     {
       widget: "anydata",
       status: 30.5,
-      after: "C",
+      after: "°С",
       page: "Any data",
       order: "3",
       descr: "Temperature",
@@ -343,7 +343,7 @@
       @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
     }
     .widget-anydata-style {
-      @apply text-center text-lg text-gray-500 font-bold;
+      @apply text-center text-gray-500 font-bold;
     }
   }
 
