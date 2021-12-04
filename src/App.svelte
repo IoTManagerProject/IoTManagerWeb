@@ -1,6 +1,9 @@
 <script context="module">
   export function WSpush(ws, topic, value) {
     console.log(ws, topic, value);
+    //if (socketConnected) {
+    //  socket[ws].send('{"path":"' + topic + '/control", "status":"' + value.toString() + '"}');
+    //}
   }
 </script>
 
@@ -17,31 +20,9 @@
   import Toggle from "./widgets/Toggle.svelte";
   import Anydata from "./widgets/Anydata.svelte";
 
-  onMount(async () => {
-    console.log("mounted");
-    findNewPage();
-  });
-
-  const syntaxHighlight = (json) => {
-    try {
-      json = JSON.stringify(JSON.parse(json), null, 4);
-    } catch (e) {
-      return json;
-    }
-    json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-      return match;
-    });
-    return json;
-  };
-
-  function wigetsUpdate() {
-    wigets = JSON.parse(document.getElementById("text1").value);
-    findNewPage();
-  }
-
+  //секция переменных==========================================================================
+  let myip = document.location.hostname;
   let wigets = [];
-
   wigets = [
     {
       widget: "input",
@@ -151,12 +132,51 @@
       ws: 1,
     },
   ];
+  let config = [];
+  let socket = [];
+  let socketConnected = false;
+  let pages = [];
+  let messages = [];
+  let LOG_MAX_MESSAGES = 10;
+  //секция функций=========================================================================
+
+  function wsConnect() {
+    socket[0] = new WebSocket("ws://" + myip + "/ws");
+    socket[0].addEventListener("open", function (event) {
+      console.log("WS CONNECTED! " + myip);
+      socketConnected = true;
+      socket[0].send("HELLO");
+    });
+    socket[0].addEventListener("message", function (event) {
+      console.log("NEW data packet " + myip, event.data);
+      onMessage("test", event.data);
+    });
+    socket[0].addEventListener("close", (event) => {
+      socketConnected = false;
+      console.log("ws close " + myip);
+    });
+    socket[0].addEventListener("error", function (event) {
+      socketConnected = false;
+      console.log(myip + " WebSocket error: ", event);
+    });
+  }
+
+  const syntaxHighlight = (json) => {
+    try {
+      json = JSON.stringify(JSON.parse(json), null, 4);
+    } catch (e) {
+      return json;
+    }
+    json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+      return match;
+    });
+    return json;
+  };
 
   //находит в массиве с виджетами wigets все уникальные названия страниц и сортирует названия по алфавиту
   //На выходе получаем массив с названиями страниц - pages
   //[{page:"страница1"},{page:"страница2"},]
-
-  let pages = [];
   function findNewPage() {
     pages = [];
     const newPage = Array.from(new Set(Array.from(wigets, ({ page }) => page)));
@@ -173,6 +193,41 @@
       return 0;
     });
   }
+
+  onMount(async () => {
+    console.log("mounted");
+    wsConnect();
+    findNewPage();
+  });
+
+  function wigetsUpdate() {
+    wigets = JSON.parse(document.getElementById("text1").value);
+    findNewPage();
+  }
+
+  const onMessage = (topic, message) => {
+    const msg = message.toString();
+    const time = new Date().getTime();
+    addMessage(topic, msg, time);
+    // client.end();
+  };
+
+  const addMessage = (topic, msg, time) => {
+    if (messages.length > Number(LOG_MAX_MESSAGES)) {
+      messages = messages.slice(0);
+    }
+    messages = [...messages, { topic, msg, time, colored: syntaxHighlight(msg), closed: true }];
+    messages.sort(function (a, b) {
+      a.closed = true;
+      if (a.time > b.time) {
+        return -1;
+      }
+      if (a.time < b.time) {
+        return 1;
+      }
+      return 0;
+    });
+  };
 </script>
 
 <main>
@@ -247,6 +302,14 @@
         </div>
       </Route>
       <Route path="/utilities" />
+      <Route path="/log">
+        <Card title={"Лог"}>
+          {#each messages as message, i}
+            <h2>{message.msg}</h2>
+          {/each}
+        </Card>
+      </Route>
+      <Route path="/about" />
     </div>
   </ul>
 </main>
