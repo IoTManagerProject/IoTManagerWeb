@@ -161,6 +161,37 @@
     });
   }
 
+  // Make the function wait until the connection is made...
+  //function waitForSocketConnection(socket, callback) {
+  //  setTimeout(function () {
+  //    if (socket.readyState === 1) {
+  //      console.log("Connection is made");
+  //      if (callback != null) {
+  //        callback();
+  //      }
+  //    } else {
+  //      console.log("wait for connection...");
+  //      waitForSocketConnection(socket, callback);
+  //    }
+  //  }, 5); // wait 5 milisecond for the connection...
+  //}
+
+  var reconnectTimer;
+  function tryReconnect() {
+    reconnectTimer = setInterval(reconnect, 3000);
+  }
+  function reconnect() {
+    if (socket[0].readyState == 1) {
+      console.log("web socket connected");
+    } else {
+      console.log("Try reconnect to web socket");
+      wsConnect();
+    }
+  }
+  function myStopFunction() {
+    clearInterval(reconnectTimer);
+  }
+
   const syntaxHighlight = (json) => {
     try {
       json = JSON.stringify(JSON.parse(json), null, 4);
@@ -198,6 +229,7 @@
     console.log("mounted");
     wsConnect();
     findNewPage();
+    tryReconnect();
   });
 
   function wigetsUpdate() {
@@ -232,7 +264,9 @@
 
 <main>
   <div class="fixed m-0 h-10 w-full bg-gray-100 shadow-md">
-    <b class="text-center" />
+    <div class="flex justify-end content-center px-6 py-1">
+      <svg class="h-8 w-8 {socketConnected == true ? 'text-green-500' : 'text-red-500'}" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path stroke="none" d="M0 0h24v24H0z" /> <path d="M7 18a4.6 4.4 0 0 1 0 -9h0a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-12" /></svg>
+    </div>
   </div>
 
   <input id="menu__toggle" type="checkbox" />
@@ -303,11 +337,13 @@
       </Route>
       <Route path="/utilities" />
       <Route path="/log">
-        <Card title={"Лог"}>
-          {#each messages as message, i}
-            <h2>{message.msg}</h2>
-          {/each}
-        </Card>
+        <div class="flex justify-center w-2/3">
+          <Card title={"Лог"}>
+            {#each messages as message, i}
+              <div class={message.msg.toString().includes("[E]") ? "text-red-500" : "text-black"}>{message.msg}</div>
+            {/each}
+          </Card>
+        </div>
       </Route>
       <Route path="/about" />
     </div>
