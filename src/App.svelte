@@ -1,9 +1,6 @@
 <script context="module">
   export function WSpush(ws, topic, value) {
     console.log(ws, topic, value);
-    //if (socketConnected) {
-    //  socket[ws].send('{"path":"' + topic + '/control", "status":"' + value.toString() + '"}');
-    //}
   }
 </script>
 
@@ -136,60 +133,62 @@
   let socket = [];
   let socketConnected = false;
   let pages = [];
-  let messages = [];
+  let coreMessages = [];
   let LOG_MAX_MESSAGES = 10;
   //секция функций=========================================================================
 
   function wsConnect() {
     socket[0] = new WebSocket("ws://" + myip + "/ws");
+  }
+
+  function wsEventAdd() {
     socket[0].addEventListener("open", function (event) {
       console.log("WS CONNECTED! " + myip);
       socketConnected = true;
-      socket[0].send("HELLO");
+      //socket[0].send("HELLO");
     });
     socket[0].addEventListener("message", function (event) {
-      console.log("NEW data packet " + myip, event.data);
-      onMessage("test", event.data);
+      let data = event.data.toString();
+      //console.log("NEW data packet " + myip, event.data);
+      if (data.includes("/core/")) {
+        data = data.replace("/core/", "");
+        addCoreMsg(data);
+      }
     });
     socket[0].addEventListener("close", (event) => {
       socketConnected = false;
+      wsConnect();
       console.log("ws close " + myip);
     });
     socket[0].addEventListener("error", function (event) {
       socketConnected = false;
-      console.log(myip + " WebSocket error: ", event);
+      wsConnect();
+      console.log(myip + " ws error: ", event);
     });
   }
 
-  // Make the function wait until the connection is made...
-  //function waitForSocketConnection(socket, callback) {
-  //  setTimeout(function () {
-  //    if (socket.readyState === 1) {
-  //      console.log("Connection is made");
-  //      if (callback != null) {
-  //        callback();
-  //      }
-  //    } else {
-  //      console.log("wait for connection...");
-  //      waitForSocketConnection(socket, callback);
-  //    }
-  //  }, 5); // wait 5 milisecond for the connection...
-  //}
-
-  var reconnectTimer;
-  function tryReconnect() {
-    reconnectTimer = setInterval(reconnect, 3000);
+  function WSpushLocal(ws, topic, value) {
+    //console.log(ws, topic, value);
+    //wsSendMsg(topic);
+    //if (socketConnected) {
+    //  socket[ws].send('{"path":"' + topic + '/control", "status":"' + value.toString() + '"}');
+    //}
   }
-  function reconnect() {
-    if (socket[0].readyState == 1) {
-      console.log("web socket connected");
-    } else {
-      console.log("Try reconnect to web socket");
-      wsConnect();
+
+  function wsSendMsg(msg) {
+    if (!socket[0]) return;
+    if (socket[0].readyState === 1) {
+      socket[0].send(msg);
     }
   }
-  function myStopFunction() {
-    clearInterval(reconnectTimer);
+
+  function wsTestMsgTask() {
+    setTimeout(wsTestMsgTask, 10000);
+    if (!socket[0]) return;
+    if (socket[0].readyState === 1) {
+      console.log("test");
+      socket[0].send("test");
+    }
   }
 
   const syntaxHighlight = (json) => {
@@ -205,9 +204,6 @@
     return json;
   };
 
-  //находит в массиве с виджетами wigets все уникальные названия страниц и сортирует названия по алфавиту
-  //На выходе получаем массив с названиями страниц - pages
-  //[{page:"страница1"},{page:"страница2"},]
   function findNewPage() {
     pages = [];
     const newPage = Array.from(new Set(Array.from(wigets, ({ page }) => page)));
@@ -228,8 +224,9 @@
   onMount(async () => {
     console.log("mounted");
     wsConnect();
+    wsEventAdd();
+    wsTestMsgTask();
     findNewPage();
-    tryReconnect();
   });
 
   function wigetsUpdate() {
@@ -237,20 +234,13 @@
     findNewPage();
   }
 
-  const onMessage = (topic, message) => {
-    const msg = message.toString();
-    const time = new Date().getTime();
-    addMessage(topic, msg, time);
-    // client.end();
-  };
-
-  const addMessage = (topic, msg, time) => {
-    if (messages.length > Number(LOG_MAX_MESSAGES)) {
-      messages = messages.slice(0);
+  const addCoreMsg = (msg) => {
+    if (coreMessages.length > Number(LOG_MAX_MESSAGES)) {
+      coreMessages = coreMessages.slice(0);
     }
-    messages = [...messages, { topic, msg, time, colored: syntaxHighlight(msg), closed: true }];
-    messages.sort(function (a, b) {
-      a.closed = true;
+    const time = new Date().getTime();
+    coreMessages = [...coreMessages, { time, msg }];
+    coreMessages.sort(function (a, b) {
       if (a.time > b.time) {
         return -1;
       }
@@ -337,13 +327,11 @@
       </Route>
       <Route path="/utilities" />
       <Route path="/log">
-        <div class="flex justify-center w-2/3">
-          <Card title={"Лог"}>
-            {#each messages as message, i}
-              <div class={message.msg.toString().includes("[E]") ? "text-red-500" : "text-black"}>{message.msg}</div>
-            {/each}
-          </Card>
-        </div>
+        <Card title={"Лог"}>
+          {#each coreMessages as message, i}
+            <div class={message.msg.toString().includes("[E]") ? "text-red-500" : "text-black"}>{message.msg}</div>
+          {/each}
+        </Card>
       </Route>
       <Route path="/about" />
     </div>
