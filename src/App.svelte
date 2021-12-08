@@ -1,9 +1,3 @@
-<script context="module">
-  export function WSpush(ws, topic, value) {
-    console.log(ws, topic, value);
-  }
-</script>
-
 <script>
   import { onMount } from "svelte";
   import { Route, router, active } from "tinro";
@@ -18,6 +12,9 @@
   import Anydata from "./widgets/Anydata.svelte";
 
   //секция переменных==========================================================================
+  let debug = true;
+  let LOG_MAX_MESSAGES = 10;
+  //===========================================================================================
   let myip = document.location.hostname;
   let wigets = [];
   wigets = [
@@ -29,7 +26,7 @@
       order: "4",
       descr: "Switch on boiler date",
       topic: "/prefix/00000-00004/date1",
-      ws: 1,
+      ws: 0,
     },
     {
       widget: "input",
@@ -39,7 +36,7 @@
       order: "1",
       descr: "Switch on boiler time",
       topic: "/prefix/00000-00001/time",
-      ws: 1,
+      ws: 0,
     },
     {
       widget: "input",
@@ -50,7 +47,7 @@
       order: "2",
       descr: "Boiler temperature",
       topic: "/prefix/00000-00002/temp",
-      ws: 1,
+      ws: 0,
     },
     {
       widget: "input",
@@ -60,7 +57,7 @@
       order: "3",
       descr: "Message to be send",
       topic: "/prefix/00000-00003/text",
-      ws: 1,
+      ws: 0,
     },
     {
       widget: "toggle",
@@ -69,7 +66,7 @@
       order: "3",
       descr: "Light in my room",
       topic: "/prefix/00000-00003/btn1",
-      ws: 1,
+      ws: 0,
     },
     {
       widget: "toggle",
@@ -78,7 +75,7 @@
       order: "3",
       descr: "Light in my room",
       topic: "/prefix/00000-00003/btn2",
-      ws: 1,
+      ws: 0,
     },
     {
       widget: "toggle",
@@ -87,7 +84,7 @@
       order: "3",
       descr: "Light in my room",
       topic: "/prefix/00000-00003/btn3",
-      ws: 1,
+      ws: 0,
     },
     {
       widget: "anydata",
@@ -97,7 +94,7 @@
       order: "3",
       descr: "Temperature",
       topic: "/prefix/00000-00003/tmp10",
-      ws: 1,
+      ws: 0,
     },
     {
       widget: "anydata",
@@ -107,7 +104,7 @@
       order: "3",
       descr: "Pressure",
       topic: "/prefix/00000-00003/tmp10",
-      ws: 1,
+      ws: 0,
     },
     {
       widget: "anydata",
@@ -117,7 +114,7 @@
       order: "3",
       descr: "Level",
       topic: "/prefix/00000-00003/tmp10",
-      ws: 1,
+      ws: 0,
     },
     {
       widget: "anydata",
@@ -126,68 +123,91 @@
       order: "3",
       descr: "Status",
       topic: "/prefix/00000-00003/tmp10",
-      ws: 1,
+      ws: 0,
     },
   ];
   let config = [];
   let socket = [];
   let socketConnected = false;
+
+  let deviceList = [];
+
+  deviceList = [
+    {
+      id: "987654321",
+      ip: "192.168.88.231",
+      name: "test ESP 2",
+    },
+  ];
+
   let pages = [];
   let coreMessages = [];
-  let LOG_MAX_MESSAGES = 10;
+
   //секция функций=========================================================================
-
-  function wsConnect() {
-    socket[0] = new WebSocket("ws://" + myip + "/ws");
-  }
-
-  function wsEventAdd() {
-    socket[0].addEventListener("open", function (event) {
-      console.log("WS CONNECTED! " + myip);
-      socketConnected = true;
-      //socket[0].send("HELLO");
-    });
-    socket[0].addEventListener("message", function (event) {
-      let data = event.data.toString();
-      //console.log("NEW data packet " + myip, event.data);
-      if (data.includes("/core/")) {
-        data = data.replace("/core/", "");
-        addCoreMsg(data);
-      }
-    });
-    socket[0].addEventListener("close", (event) => {
-      socketConnected = false;
-      wsConnect();
-      console.log("ws close " + myip);
-    });
-    socket[0].addEventListener("error", function (event) {
-      socketConnected = false;
-      wsConnect();
-      console.log(myip + " ws error: ", event);
+  function connectToAllDevices() {
+    let ws = 0;
+    deviceList.forEach((device) => {
+      if (debug) console.log(device.name, ws, device.ip, device.id);
+      wsConnect(ws, device.ip);
+      wsEventAdd(ws);
+      //if (device.ip === myip) {
+      //  if (debug) console.log("My device found in list:", device.name);
+      //}
+      ws++;
     });
   }
 
-  function WSpushLocal(ws, topic, value) {
-    //console.log(ws, topic, value);
-    //wsSendMsg(topic);
-    //if (socketConnected) {
-    //  socket[ws].send('{"path":"' + topic + '/control", "status":"' + value.toString() + '"}');
-    //}
+  function wsConnect(ws, ip) {
+    socket[ws] = new WebSocket("ws://" + ip + "/ws");
   }
 
-  function wsSendMsg(msg) {
-    if (!socket[0]) return;
-    if (socket[0].readyState === 1) {
-      socket[0].send(msg);
+  function wsEventAdd(ws) {
+    if (socket[ws]) {
+      socket[ws].addEventListener("open", function (event) {
+        if (debug) console.log("WS CONNECTED! " + myip);
+        socketConnected = true;
+        //socket[ws].send("HELLO");
+      });
+      socket[ws].addEventListener("message", function (event) {
+        let data = event.data.toString();
+        //console.log("NEW data packet " + myip, event.data);
+        if (data.includes("/core/")) {
+          data = data.replace("/core/", "");
+          addCoreMsg(data);
+        }
+      });
+      socket[ws].addEventListener("close", (event) => {
+        socketConnected = false;
+        wsConnect(ws);
+        console.log("ws close " + myip);
+      });
+      socket[ws].addEventListener("error", function (event) {
+        socketConnected = false;
+        wsConnect(ws);
+        console.log(myip + " ws error: ", event);
+      });
     }
+  }
+
+  function wsPush(ws, topic, status) {
+    let msg = topic + " " + status;
+    if (debug) console.log(ws, msg);
+    wsSendMsg(ws, msg);
+    //socket[ws].send('{"path":"' + topic + '/control", "status":"' + value.toString() + '"}');
   }
 
   function wsTestMsgTask() {
     setTimeout(wsTestMsgTask, 10000);
-    if (!socket[0]) return;
-    if (socket[0].readyState === 1) {
-      console.log("test");
-      socket[0].send("test");
+    wsSendMsg(0, "test");
+  }
+
+  function wsSendMsg(ws, msg) {
+    if (socket[ws] && socket[ws].readyState === 1) {
+      socket[ws].send(msg);
+      if (debug) console.log("[ws:" + ws + "]", "msg send success:", msg);
+    } else {
+      if (debug) console.log("[ws:" + ws + "]", "msg not send, try reconnected...", msg);
+      wsConnect(ws);
     }
   }
 
@@ -221,14 +241,6 @@
     });
   }
 
-  onMount(async () => {
-    console.log("mounted");
-    wsConnect();
-    wsEventAdd();
-    wsTestMsgTask();
-    findNewPage();
-  });
-
   function wigetsUpdate() {
     wigets = JSON.parse(document.getElementById("text1").value);
     findNewPage();
@@ -250,6 +262,15 @@
       return 0;
     });
   };
+
+  onMount(async () => {
+    console.log("mounted");
+    connectToAllDevices();
+    //wsTestMsgTask();
+    //wsEventAdd();
+    findNewPage();
+    //deviceListExecution();
+  });
 </script>
 
 <main>
@@ -294,10 +315,10 @@
               {#each wigets as widget, i}
                 {#if widget.page === pagesName.page}
                   {#if widget.widget === "input"}
-                    <Input bind:value={widget.status} widget={widget} />
+                    <Input bind:value={widget.status} widget={widget} wsPushProp={(ws, topic, status) => wsPush(ws, topic, status)} />
                   {/if}
                   {#if widget.widget === "toggle"}
-                    <Toggle bind:value={widget.status} widget={widget} />
+                    <Toggle bind:value={widget.status} widget={widget} wsPushProp={(ws, topic, status) => wsPush(ws, topic, status)} />
                   {/if}
                   {#if widget.widget === "anydata"}
                     <Anydata bind:value={widget.status} widget={widget} />

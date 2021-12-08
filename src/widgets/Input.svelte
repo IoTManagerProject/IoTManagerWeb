@@ -1,9 +1,6 @@
-<script context="module">
-  import { WSpush } from "../App.svelte";
-</script>
-
 <script>
   export let widget;
+  export let wsPushProp = (ws, topic, status) => {};
 </script>
 
 <div class="card-items-psn">
@@ -13,16 +10,16 @@
   </div>
   <div class="widget-width">
     {#if widget.type == "number"}
-      <input class={widget["send"] == true ? "widget-input border-red-500" : "widget-input focus:border-indigo-500"} on:change={() => ((widget["send"] = true), WSpush(widget.ws, widget.topic, widget.status))} bind:value={widget.status} step="0.1" type="number" />
+      <input class={widget["send"] == true ? "widget-input border-red-500" : "widget-input focus:border-indigo-500"} on:change={() => ((widget["send"] = true), wsPushProp(widget.ws, widget.topic, widget.status))} bind:value={widget.status} step="0.1" type="number" />
     {/if}
     {#if widget.type == "text"}
-      <input class={widget["send"] == true ? "widget-input border-red-500" : "widget-input focus:border-indigo-500"} on:change={() => ((widget["send"] = true), WSpush(widget.ws, widget.topic, widget.status))} bind:value={widget.status} type="text" />
+      <input class={widget["send"] == true ? "widget-input border-red-500" : "widget-input focus:border-indigo-500"} on:change={() => ((widget["send"] = true), wsPushProp(widget.ws, widget.topic, widget.status))} bind:value={widget.status} type="text" />
     {/if}
     {#if widget.type == "date"}
-      <input class={widget["send"] == true ? "widget-input border-red-500" : "widget-input focus:border-indigo-500"} on:change={() => ((widget["send"] = true), WSpush(widget.ws, widget.topic, widget.status))} bind:value={widget.status} type="date" />
+      <input class={widget["send"] == true ? "widget-input border-red-500" : "widget-input focus:border-indigo-500"} on:change={() => ((widget["send"] = true), wsPushProp(widget.ws, widget.topic, widget.status))} bind:value={widget.status} type="date" />
     {/if}
     {#if widget.type == "time"}
-      <input class={widget["send"] == true ? "widget-input border-red-500" : "widget-input focus:border-indigo-500"} on:change={() => ((widget["send"] = true), WSpush(widget.ws, widget.topic, widget.status))} bind:value={widget.status} type="time" />
+      <input class={widget["send"] == true ? "widget-input border-red-500" : "widget-input focus:border-indigo-500"} on:change={() => ((widget["send"] = true), wsPushProp(widget.ws, widget.topic, widget.status))} bind:value={widget.status} type="time" />
     {/if}
   </div>
 </div>
