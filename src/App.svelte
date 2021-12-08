@@ -134,9 +134,16 @@
 
   deviceList = [
     {
+      name: "Устройство 1",
+      id: "987654321",
+      ip: "192.168.88.230",
+      status: false,
+    },
+    {
+      name: "Устройство 2",
       id: "987654321",
       ip: "192.168.88.231",
-      name: "test ESP 2",
+      status: false,
     },
   ];
 
@@ -150,10 +157,20 @@
       if (debug) console.log(device.name, ws, device.ip, device.id);
       wsConnect(ws, device.ip);
       wsEventAdd(ws);
+      device.ws = ws;
       //if (device.ip === myip) {
       //  if (debug) console.log("My device found in list:", device.name);
       //}
       ws++;
+    });
+  }
+
+  function markDeviceStatus(ws, status) {
+    deviceList.forEach((device) => {
+      if (device.ws === ws) {
+        device.status = status;
+        if (debug) console.log(device.name, ws, device.ip, device.id, device.status);
+      }
     });
   }
 
@@ -166,6 +183,7 @@
       socket[ws].addEventListener("open", function (event) {
         if (debug) console.log("WS CONNECTED! " + myip);
         socketConnected = true;
+        markDeviceStatus(ws, true);
         //socket[ws].send("HELLO");
       });
       socket[ws].addEventListener("message", function (event) {
@@ -178,11 +196,13 @@
       });
       socket[ws].addEventListener("close", (event) => {
         socketConnected = false;
+        markDeviceStatus(ws, false);
         wsConnect(ws);
         console.log("ws close " + myip);
       });
       socket[ws].addEventListener("error", function (event) {
         socketConnected = false;
+        markDeviceStatus(ws, false);
         wsConnect(ws);
         console.log(myip + " ws error: ", event);
       });
@@ -275,8 +295,19 @@
 
 <main>
   <div class="fixed m-0 h-10 w-full bg-gray-100 shadow-md">
-    <div class="flex justify-end content-center px-6 py-1">
-      <svg class="h-8 w-8 {socketConnected == true ? 'text-green-500' : 'text-red-500'}" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path stroke="none" d="M0 0h24v24H0z" /> <path d="M7 18a4.6 4.4 0 0 1 0 -9h0a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-12" /></svg>
+    <div class="flex justify-end content-center">
+      <div class="px-15 py-2">
+        <select>
+          {#each deviceList as device}
+            <option value={device}>
+              {device.name}
+            </option>
+          {/each}
+        </select>
+      </div>
+      <div class="px-10 py-1">
+        <svg class="h-8 w-8 {socketConnected == true ? 'text-green-500' : 'text-red-500'}" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path stroke="none" d="M0 0h24v24H0z" /> <path d="M7 18a4.6 4.4 0 0 1 0 -9h0a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-12" /></svg>
+      </div>
     </div>
   </div>
 
@@ -300,6 +331,9 @@
     </li>
     <li>
       <a class="menu__item" href="/log">{"Лог"}</a>
+    </li>
+    <li>
+      <a class="menu__item" href="/list">{"Устройства"}</a>
     </li>
     <li>
       <a class="menu__item" href="/about">{"О проекте"}</a>
@@ -351,6 +385,16 @@
         <Card title={"Лог"}>
           {#each coreMessages as message, i}
             <div class={message.msg.toString().includes("[E]") ? "text-red-500" : "text-black"}>{message.msg}</div>
+          {/each}
+        </Card>
+      </Route>
+      <Route path="/list">
+        <Card title={"Список устройств"}>
+          {#each deviceList as device}
+            <div>
+              <input class="focus:border-indigo-500" bind:value={device.name} />
+              <input class="focus:border-indigo-500" bind:value={device.ip} />
+            </div>
           {/each}
         </Card>
       </Route>
