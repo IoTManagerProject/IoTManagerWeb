@@ -129,7 +129,7 @@
   let config = [];
   let socket = [];
   let socketConnected = false;
-
+  let selectedDeviceData;
   let deviceList = [];
 
   deviceList = [
@@ -154,13 +154,10 @@
   function connectToAllDevices() {
     let ws = 0;
     deviceList.forEach((device) => {
-      if (debug) console.log(device.name, ws, device.ip, device.id);
+      if (debug) console.log("[i]", device.name, ws, device.ip, device.id);
       wsConnect(ws, device.ip);
       wsEventAdd(ws);
       device.ws = ws;
-      //if (device.ip === myip) {
-      //  if (debug) console.log("My device found in list:", device.name);
-      //}
       ws++;
     });
   }
@@ -169,9 +166,16 @@
     deviceList.forEach((device) => {
       if (device.ws === ws) {
         device.status = status;
-        if (debug) console.log(device.name, ws, device.ip, device.id, device.status);
+        if (debug) {
+          if (device.status) {
+            console.log("[i]", device.name, device.ip, "dev status online");
+          } else {
+            console.log("[i]", device.name, device.ip, "dev status offline");
+          }
+        }
       }
     });
+    deviceList = deviceList;
   }
 
   function wsConnect(ws, ip) {
@@ -181,39 +185,35 @@
   function wsEventAdd(ws) {
     if (socket[ws]) {
       socket[ws].addEventListener("open", function (event) {
-        if (debug) console.log("WS CONNECTED! " + myip);
-        socketConnected = true;
+        if (debug) console.log("[i]", "ws connected", myip);
         markDeviceStatus(ws, true);
         //socket[ws].send("HELLO");
       });
       socket[ws].addEventListener("message", function (event) {
         let data = event.data.toString();
-        //console.log("NEW data packet " + myip, event.data);
+        //if (debug) console.log("[i]", "new data:", event.data);
         if (data.includes("/core/")) {
           data = data.replace("/core/", "");
           addCoreMsg(data);
         }
       });
       socket[ws].addEventListener("close", (event) => {
-        socketConnected = false;
+        if (debug) console.log("[e]", "ws close", myip);
         markDeviceStatus(ws, false);
         wsConnect(ws);
-        console.log("ws close " + myip);
       });
       socket[ws].addEventListener("error", function (event) {
-        socketConnected = false;
+        if (debug) console.log("[e]", "ws error", myip);
         markDeviceStatus(ws, false);
         wsConnect(ws);
-        console.log(myip + " ws error: ", event);
       });
     }
   }
 
   function wsPush(ws, topic, status) {
     let msg = topic + " " + status;
-    if (debug) console.log(ws, msg);
+    if (debug) console.log("[i]", "send to ws msg:", msg);
     wsSendMsg(ws, msg);
-    //socket[ws].send('{"path":"' + topic + '/control", "status":"' + value.toString() + '"}');
   }
 
   function wsTestMsgTask() {
@@ -224,9 +224,9 @@
   function wsSendMsg(ws, msg) {
     if (socket[ws] && socket[ws].readyState === 1) {
       socket[ws].send(msg);
-      if (debug) console.log("[ws:" + ws + "]", "msg send success:", msg);
+      if (debug) console.log("[i]", "msg send success:", msg);
     } else {
-      if (debug) console.log("[ws:" + ws + "]", "msg not send, try reconnected...", msg);
+      if (debug) console.log("[i]", "msg not send, try reconnected...", msg);
       wsConnect(ws);
     }
   }
@@ -283,8 +283,13 @@
     });
   };
 
+  function dropdownChange() {
+    socketConnected = selectedDeviceData.status;
+    if (debug) console.log("[i]", "user choose dev:", selectedDeviceData.name);
+  }
+
   onMount(async () => {
-    console.log("mounted");
+    console.log("[i]", "mounted");
     connectToAllDevices();
     //wsTestMsgTask();
     //wsEventAdd();
@@ -297,7 +302,7 @@
   <div class="fixed m-0 h-10 w-full bg-gray-100 shadow-md">
     <div class="flex justify-end content-center">
       <div class="px-15 py-2">
-        <select>
+        <select bind:value={selectedDeviceData} on:change={() => dropdownChange()}>
           {#each deviceList as device}
             <option value={device}>
               {device.name}
@@ -306,7 +311,7 @@
         </select>
       </div>
       <div class="px-10 py-1">
-        <svg class="h-8 w-8 {socketConnected == true ? 'text-green-500' : 'text-red-500'}" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path stroke="none" d="M0 0h24v24H0z" /> <path d="M7 18a4.6 4.4 0 0 1 0 -9h0a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-12" /></svg>
+        <svg class="h-8 w-8 {socketConnected === true ? 'text-green-500' : 'text-red-500'}" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path stroke="none" d="M0 0h24v24H0z" /> <path d="M7 18a4.6 4.4 0 0 1 0 -9h0a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-12" /></svg>
       </div>
     </div>
   </div>
@@ -390,12 +395,26 @@
       </Route>
       <Route path="/list">
         <Card title={"Список устройств"}>
-          {#each deviceList as device}
-            <div>
-              <input class="focus:border-indigo-500" bind:value={device.name} />
-              <input class="focus:border-indigo-500" bind:value={device.ip} />
-            </div>
-          {/each}
+          <table class="table-fixed w-full">
+            <thead>
+              <tr>
+                <th class="border border-gray-300 w-1/4">Название устройства</th>
+                <th class="border border-gray-300 w-1/4">IP адрес</th>
+                <th class="border border-gray-300 w-1/4">Идентификатор</th>
+                <th class="border border-gray-300 w-1/4">Состояние</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each deviceList as device}
+                <tr>
+                  <td class="border border-gray-300 w-1/4">{device.name}</td>
+                  <td class="border border-gray-300 w-1/4">{device.ip}</td>
+                  <td class="border border-gray-300 w-1/4">{device.id}</td>
+                  <td class="border border-gray-300 w-1/4 {device.status ? 'text-green-500' : 'text-red-500'}">{device.status ? "online" : "offline"}</td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
         </Card>
       </Route>
       <Route path="/about" />
