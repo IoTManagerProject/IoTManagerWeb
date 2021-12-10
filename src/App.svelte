@@ -170,9 +170,9 @@
         device.status = status;
         if (debug) {
           if (device.status) {
-            console.log("[i]", device.ip, "status online:");
+            console.log("[i]", device.ip, "status online");
           } else {
-            console.log("[i]", device.ip, "status offline:");
+            console.log("[i]", device.ip, "status offline");
           }
         }
       }
