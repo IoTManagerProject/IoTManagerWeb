@@ -198,7 +198,7 @@
       if (debug) console.log("[e]", "device list wrong");
     } else {
       socket[ws] = new WebSocket("ws://" + ip + "/ws");
-      if (debug) console.log("[i]", ip, "started connecting");
+      if (debug) console.log("[i]", ip, "started connecting...");
     }
   }
 
@@ -214,6 +214,7 @@
 
   function wsEventAdd(ws) {
     if (socket[ws]) {
+      if (debug) console.log("[i]", getIP(ws), "web socket events added");
       socket[ws].addEventListener("open", function (event) {
         if (debug) console.log("[i]", getIP(ws), "completed connecting");
         markDeviceStatus(ws, true);
@@ -230,12 +231,10 @@
       socket[ws].addEventListener("close", (event) => {
         if (debug) console.log("[e]", getIP(ws), "connection closed");
         markDeviceStatus(ws, false);
-        wsConnect(ws);
       });
       socket[ws].addEventListener("error", function (event) {
         if (debug) console.log("[e]", getIP(ws), "connection error");
         markDeviceStatus(ws, false);
-        wsConnect(ws);
       });
     } else {
       if (debug) console.log("[e]", "socket not exist");
@@ -249,7 +248,8 @@
   }
 
   function wsTestMsgTask() {
-    setTimeout(wsTestMsgTask, 5000);
+    setTimeout(wsTestMsgTask, 60000);
+    if (debug) console.log("[i]", "----timer tick----");
     if (!flag) {
       deviceList.forEach((device) => {
         if (!getDeviceStatus(device.ws)) {
