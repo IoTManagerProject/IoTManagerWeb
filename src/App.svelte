@@ -134,12 +134,6 @@
 
   deviceList = [
     {
-      name: "Устройство 1",
-      id: "987654321",
-      ip: "192.168.88.230",
-      status: false,
-    },
-    {
       name: "Устройство 2",
       id: "987654321",
       ip: "192.168.88.231",
@@ -154,12 +148,13 @@
   function connectToAllDevices() {
     let ws = 0;
     deviceList.forEach((device) => {
-      if (debug) console.log("[i]", device.name, ws, device.ip, device.id);
-      wsConnect(ws, device.ip);
-      wsEventAdd(ws);
+      if (debug) console.log("[i] list", device.name, ws, device.ip, device.id);
       device.ws = ws;
+      wsConnect(ws);
+      wsEventAdd(ws);
       ws++;
     });
+    deviceList = deviceList;
   }
 
   function markDeviceStatus(ws, status) {
@@ -178,14 +173,29 @@
     deviceList = deviceList;
   }
 
-  function wsConnect(ws, ip) {
-    socket[ws] = new WebSocket("ws://" + ip + "/ws");
+  function wsConnect(ws) {
+    let ip = getIP(ws);
+    if (ip === "error") {
+      if (debug) console.log("[e]", "device list wrong");
+    } else {
+      socket[ws] = new WebSocket("ws://" + ip + "/ws");
+    }
+  }
+
+  function getIP(ws) {
+    let ret = "error";
+    deviceList.forEach((device) => {
+      if (ws === device.ws) {
+        ret = device.ip;
+      }
+    });
+    return ret;
   }
 
   function wsEventAdd(ws) {
     if (socket[ws]) {
       socket[ws].addEventListener("open", function (event) {
-        if (debug) console.log("[i]", "ws connected", myip);
+        if (debug) console.log("[i]", "ws connected", getIP(ws));
         markDeviceStatus(ws, true);
         //socket[ws].send("HELLO");
       });
@@ -198,15 +208,17 @@
         }
       });
       socket[ws].addEventListener("close", (event) => {
-        if (debug) console.log("[e]", "ws close", myip);
+        if (debug) console.log("[e]", "ws close", getIP(ws));
         markDeviceStatus(ws, false);
         wsConnect(ws);
       });
       socket[ws].addEventListener("error", function (event) {
-        if (debug) console.log("[e]", "ws error", myip);
+        if (debug) console.log("[e]", "ws error", getIP(ws));
         markDeviceStatus(ws, false);
         wsConnect(ws);
       });
+    } else {
+      if (debug) console.log("[e]", "socket not exist");
     }
   }
 
@@ -218,16 +230,17 @@
 
   function wsTestMsgTask() {
     setTimeout(wsTestMsgTask, 10000);
-    wsSendMsg(0, "test");
+    deviceList.forEach((device) => {
+      wsSendMsg(device.ws, "test");
+    });
   }
 
   function wsSendMsg(ws, msg) {
     if (socket[ws] && socket[ws].readyState === 1) {
       socket[ws].send(msg);
-      if (debug) console.log("[i]", "msg send success:", msg);
+      if (debug) console.log("[i]", ws, "msg send success:", msg);
     } else {
-      if (debug) console.log("[i]", "msg not send, try reconnected...", msg);
-      wsConnect(ws);
+      if (debug) console.log("[e]", ws, "msg not send", msg);
     }
   }
 
@@ -291,10 +304,8 @@
   onMount(async () => {
     console.log("[i]", "mounted");
     connectToAllDevices();
-    //wsTestMsgTask();
-    //wsEventAdd();
+    wsTestMsgTask();
     findNewPage();
-    //deviceListExecution();
   });
 </script>
 
