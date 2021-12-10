@@ -162,6 +162,7 @@
       ws++;
     });
     deviceList = deviceList;
+    socketConnected = selectedDeviceData.status;
   }
 
   function markDeviceStatus(ws, status) {
@@ -178,6 +179,7 @@
       }
     });
     deviceList = deviceList;
+    socketConnected = selectedDeviceData.status;
   }
 
   function getDeviceStatus(ws) {
@@ -247,7 +249,7 @@
   }
 
   function wsTestMsgTask() {
-    setTimeout(wsTestMsgTask, 10000);
+    setTimeout(wsTestMsgTask, 5000);
     if (!flag) {
       deviceList.forEach((device) => {
         if (!getDeviceStatus(device.ws)) {
@@ -331,6 +333,7 @@
     console.log("[i]", "mounted");
     connectToAllDevices();
     wsTestMsgTask();
+    socketConnected = selectedDeviceData.status;
     findNewPage();
   });
 </script>
