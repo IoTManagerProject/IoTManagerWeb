@@ -214,9 +214,10 @@
 
   function wsEventAdd(ws) {
     if (socket[ws]) {
-      if (debug) console.log("[i]", getIP(ws), "web socket events added");
+      let ip = getIP(ws);
+      if (debug) console.log("[i]", ip, "web socket events added");
       socket[ws].addEventListener("open", function (event) {
-        if (debug) console.log("[i]", getIP(ws), "completed connecting");
+        if (debug) console.log("[i]", ip, "completed connecting");
         markDeviceStatus(ws, true);
         //socket[ws].send("HELLO");
       });
@@ -229,11 +230,11 @@
         }
       });
       socket[ws].addEventListener("close", (event) => {
-        if (debug) console.log("[e]", getIP(ws), "connection closed");
+        if (debug) console.log("[e]", ip, "connection closed");
         markDeviceStatus(ws, false);
       });
       socket[ws].addEventListener("error", function (event) {
-        if (debug) console.log("[e]", getIP(ws), "connection error");
+        if (debug) console.log("[e]", ip, "connection error");
         markDeviceStatus(ws, false);
       });
     } else {
@@ -326,7 +327,7 @@
 
   function dropdownChange() {
     socketConnected = selectedDeviceData.status;
-    if (debug) console.log("[i]", "user choose dev:", selectedDeviceData.name);
+    if (debug) console.log("[i]", "user selected device:", selectedDeviceData.name);
   }
 
   onMount(async () => {
@@ -438,23 +439,24 @@
           <table class="table-fixed w-full">
             <thead>
               <tr>
-                <th class="border border-gray-300 w-1/4">Название устройства</th>
-                <th class="border border-gray-300 w-1/4">IP адрес</th>
-                <th class="border border-gray-300 w-1/4">Идентификатор</th>
-                <th class="border border-gray-300 w-1/4">Состояние</th>
+                <th class="table-head-element">Название устройства</th>
+                <th class="table-head-element">IP адрес</th>
+                <th class="table-head-element">Идентификатор</th>
+                <th class="table-head-element">Состояние</th>
               </tr>
             </thead>
             <tbody>
               {#each deviceList as device}
                 <tr>
-                  <td class="border border-gray-300 w-1/4">{device.name}</td>
-                  <td class="border border-gray-300 w-1/4">{device.ip}</td>
-                  <td class="border border-gray-300 w-1/4">{device.id}</td>
-                  <td class="border border-gray-300 w-1/4 {device.status ? 'text-green-500' : 'text-red-500'}">{device.status ? "online" : "offline"}</td>
+                  <td class="table-body-element">{device.name}</td>
+                  <td class="table-body-element"><a href={"http://" + device.ip}>{device.ip}</a></td>
+                  <td class="table-body-element">{device.id}</td>
+                  <td class="table-body-element {device.status ? 'bg-green-100' : 'bg-red-100'}">{device.status ? "online" : "offline"}</td>
                 </tr>
               {/each}
             </tbody>
           </table>
+          <button class="flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold h-8 w-full mt-4 border border-gray-300 rounded">Добавить устройство</button>
         </Card>
       </Route>
       <Route path="/about" />
@@ -514,6 +516,13 @@
     }
     .widget-anydata-style {
       @apply text-center text-gray-500 font-bold;
+    }
+    /*====================================================table=====================================================*/
+    .table-head-element {
+      @apply border border-gray-300 text-center break-words w-1/4 text-gray-500 font-bold;
+    }
+    .table-body-element {
+      @apply border border-gray-300 text-center break-words w-1/4;
     }
   }
 
