@@ -15,6 +15,7 @@
   let debug = true;
   let LOG_MAX_MESSAGES = 10;
   //===========================================================================================
+  let showInput = false;
   let myip = document.location.hostname;
   let wigets = [];
   wigets = [
@@ -129,30 +130,33 @@
   let config = [];
   let socket = [];
   let socketConnected = false;
-  let selectedDeviceData;
+  let selectedDeviceData = {};
   let deviceList = [];
   let flag = true;
 
-  deviceList = [
-    {
-      name: "Устройство 1",
-      id: "987654321",
-      ip: "192.168.88.230",
-      status: false,
-    },
-    {
-      name: "Устройство 2",
-      id: "987654321",
-      ip: "192.168.88.231",
-      status: false,
-    },
-  ];
+  //deviceList = [
+  //  {
+  //    name: "Устройство 1",
+  //    id: "987654321",
+  //    ip: "192.168.88.230",
+  //    status: false,
+  //  },
+  //  {
+  //    name: "Устройство 2",
+  //    id: "987654321",
+  //    ip: "192.168.88.231",
+  //    status: false,
+  //  },
+  //];
+
+  let newDevice = {};
 
   let pages = [];
   let coreMessages = [];
 
   //секция функций==========================================================================
   function connectToAllDevices() {
+    socket = [];
     let ws = 0;
     deviceList.forEach((device) => {
       //if (debug) console.log("[i]", device.name, ws, device.ip, device.id);
@@ -251,6 +255,7 @@
   function wsTestMsgTask() {
     setTimeout(wsTestMsgTask, 60000);
     if (debug) console.log("[i]", "----timer tick----");
+
     if (!flag) {
       deviceList.forEach((device) => {
         if (!getDeviceStatus(device.ws)) {
@@ -328,6 +333,21 @@
   function dropdownChange() {
     socketConnected = selectedDeviceData.status;
     if (debug) console.log("[i]", "user selected device:", selectedDeviceData.name);
+  }
+
+  function devListSave() {
+    if (!showInput) {
+      if (newDevice.name !== undefined && newDevice.ip !== undefined && newDevice.id !== undefined) {
+        newDevice.status = false;
+        deviceList.push(newDevice);
+        deviceList = deviceList;
+        newDevice = {};
+        connectToAllDevices();
+        socketConnected = selectedDeviceData.status;
+      } else {
+        if (debug) console.log("[e]", "wrong data");
+      }
+    }
   }
 
   onMount(async () => {
@@ -454,9 +474,17 @@
                   <td class="table-body-element {device.status ? 'bg-green-100' : 'bg-red-100'}">{device.status ? "online" : "offline"}</td>
                 </tr>
               {/each}
+              {#if showInput}
+                <tr>
+                  <td class="table-body-element"><input bind:value={newDevice.name} class="table-input" type="text" /></td>
+                  <td class="table-body-element"><input bind:value={newDevice.ip} class="table-input" type="text" /></td>
+                  <td class="table-body-element"><input bind:value={newDevice.id} class="table-input" type="text" /></td>
+                  <td class="table-body-element" />
+                </tr>
+              {/if}
             </tbody>
           </table>
-          <button class="flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold h-8 w-full mt-4 border border-gray-300 rounded">Добавить устройство</button>
+          <button class="long-button" on:click={() => ((showInput = !showInput), devListSave())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
         </Card>
       </Route>
       <Route path="/about" />
@@ -523,6 +551,13 @@
     }
     .table-body-element {
       @apply border border-gray-300 text-center break-words w-1/4;
+    }
+    .table-input {
+      @apply content-center bg-gray-100 appearance-none border-2 border-gray-200 w-full text-gray-700 leading-tight focus:outline-none focus:bg-white text-center focus:border-indigo-500;
+    }
+    /*====================================================buttons=====================================================*/
+    .long-button {
+      @apply flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold h-8 w-full mt-4 border border-gray-300 rounded;
     }
   }
 
