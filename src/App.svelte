@@ -156,17 +156,39 @@
 
   //секция функций==========================================================================
   function connectToAllDevices() {
-    socket = [];
+    //closeAllConnection();
+    //socket = [];
     let ws = 0;
     deviceList.forEach((device) => {
       //if (debug) console.log("[i]", device.name, ws, device.ip, device.id);
       device.ws = ws;
-      wsConnect(ws);
-      wsEventAdd(ws);
+      if (!device.status) {
+        wsConnect(ws);
+        wsEventAdd(ws);
+      }
       ws++;
     });
     deviceList = deviceList;
     socketConnected = selectedDeviceData.status;
+  }
+
+  function closeAllConnection() {
+    let s;
+    for (s in socket) {
+      socket[s].close();
+    }
+  }
+
+  function getJsonObject(array, number) {
+    let num = 0;
+    let out = {};
+    array.forEach((object) => {
+      if (num === number) {
+        out = object;
+      }
+      num++;
+    });
+    return out;
   }
 
   function markDeviceStatus(ws, status) {
@@ -253,16 +275,15 @@
   }
 
   function wsTestMsgTask() {
-    setTimeout(wsTestMsgTask, 60000);
+    setTimeout(wsTestMsgTask, 20000);
     if (debug) console.log("[i]", "----timer tick----");
-
     if (!flag) {
       deviceList.forEach((device) => {
         if (!getDeviceStatus(device.ws)) {
           wsConnect(device.ws);
           wsEventAdd(device.ws);
         } else {
-          wsSendMsg(device.ws, "");
+          //wsSendMsg(device.ws, "");
         }
       });
     }
@@ -333,6 +354,9 @@
   function dropdownChange() {
     socketConnected = selectedDeviceData.status;
     if (debug) console.log("[i]", "user selected device:", selectedDeviceData.name);
+    if (selectedDeviceData.ip === myip) {
+      if (debug) console.log("[i]", "user selected original device", selectedDeviceData.name);
+    }
   }
 
   function devListSave() {
@@ -343,7 +367,9 @@
         deviceList = deviceList;
         newDevice = {};
         connectToAllDevices();
-        socketConnected = selectedDeviceData.status;
+        if (debug) console.log("[i]", "selected device:", selectedDeviceData);
+        //socketConnected = selectedDeviceData.status;
+        //socketConnected = socketConnected;
       } else {
         if (debug) console.log("[e]", "wrong data");
       }
@@ -355,6 +381,7 @@
     connectToAllDevices();
     wsTestMsgTask();
     socketConnected = selectedDeviceData.status;
+    dropdownChange();
     findNewPage();
   });
 </script>
