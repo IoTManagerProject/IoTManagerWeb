@@ -3,6 +3,8 @@
   import { Route, router, active } from "tinro";
   router.mode.hash(); // enables hash navigation method
   //router.mode.memory(); // enables in-memory navigation method
+  let wsSelected = undefined;
+  router.subscribe(handleNavigation);
   //import Chart from "svelte-frappe-charts";
 
   //import components
@@ -134,20 +136,20 @@
   let deviceList = [];
   let flag = true;
 
-  //deviceList = [
-  //  {
-  //    name: "Устройство 1",
-  //    id: "987654321",
-  //    ip: "192.168.88.230",
-  //    status: false,
-  //  },
-  //  {
-  //    name: "Устройство 2",
-  //    id: "987654321",
-  //    ip: "192.168.88.231",
-  //    status: false,
-  //  },
-  //];
+  deviceList = [
+    {
+      name: "Устройство 1",
+      id: "987654321",
+      ip: "192.168.88.230",
+      status: false,
+    },
+    {
+      name: "Устройство 2",
+      id: "987654321",
+      ip: "192.168.88.231",
+      status: false,
+    },
+  ];
 
   let newDevice = {};
 
@@ -249,7 +251,7 @@
       });
       socket[ws].addEventListener("message", function (event) {
         let data = event.data.toString();
-        //if (debug) console.log("[i]", "new data:", event.data);
+        if (debug) console.log("[i]", "new data:", event.data);
         if (data.includes("/core/")) {
           data = data.replace("/core/", "");
           addCoreMsg(data);
@@ -275,7 +277,7 @@
   }
 
   function wsTestMsgTask() {
-    setTimeout(wsTestMsgTask, 20000);
+    setTimeout(wsTestMsgTask, 60000);
     if (debug) console.log("[i]", "----timer tick----");
     if (!flag) {
       deviceList.forEach((device) => {
@@ -283,7 +285,7 @@
           wsConnect(device.ws);
           wsEventAdd(device.ws);
         } else {
-          //wsSendMsg(device.ws, "");
+          wsSendMsg(device.ws, "tst");
         }
       });
     }
@@ -353,6 +355,7 @@
 
   function dropdownChange() {
     socketConnected = selectedDeviceData.status;
+    wsSelected = selectedDeviceData.ws;
     if (debug) console.log("[i]", "user selected device:", selectedDeviceData.name);
     if (selectedDeviceData.ip === myip) {
       if (debug) console.log("[i]", "user selected original device", selectedDeviceData.name);
@@ -372,6 +375,16 @@
         //socketConnected = socketConnected;
       } else {
         if (debug) console.log("[e]", "wrong data");
+      }
+    }
+  }
+
+  function handleNavigation() {
+    let page = $router.path.toString();
+    console.log("[i]", "user on page:", page);
+    if (page === "/config") {
+      if (wsSelected !== undefined) {
+        wsSendMsg(wsSelected, "config");
       }
     }
   }
