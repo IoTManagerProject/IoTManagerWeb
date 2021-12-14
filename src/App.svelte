@@ -1,4 +1,5 @@
 <script>
+  //==============================components import section====================================
   import { onMount } from "svelte";
   import { Route, router, active } from "tinro";
   router.mode.hash(); // enables hash navigation method
@@ -7,19 +8,23 @@
   router.subscribe(handleNavigation);
   //import Chart from "svelte-frappe-charts";
 
-  //import components
   import Card from "./widgets/Card.svelte";
   import Input from "./widgets/Input.svelte";
   import Toggle from "./widgets/Toggle.svelte";
   import Anydata from "./widgets/Anydata.svelte";
 
-  //секция переменных==========================================================================
+  //==================================constants section========================================
   let debug = true;
   let LOG_MAX_MESSAGES = 10;
-  //===========================================================================================
-  let showInput = false;
+
+  //=================================variable section==========================================
   let myip = document.location.hostname;
+  let showInput = false;
+
+  //dashboard
   let wigets = [];
+  let pages = [];
+
   wigets = [
     {
       widget: "input",
@@ -129,12 +134,18 @@
       ws: 0,
     },
   ];
+
+  //configuration
   let config = [];
+
+  //web sockets
   let socket = [];
   let socketConnected = false;
   let selectedDeviceData = {};
   let deviceList = [];
   let flag = true;
+  let newDevice = {};
+  let coreMessages = [];
 
   deviceList = [
     {
@@ -151,12 +162,8 @@
     },
   ];
 
-  let newDevice = {};
-
-  let pages = [];
-  let coreMessages = [];
-
-  //секция функций==========================================================================
+  //=================================functions section========================================
+  //web socket functions======================================================================
   function connectToAllDevices() {
     //closeAllConnection();
     //socket = [];
@@ -179,18 +186,6 @@
     for (s in socket) {
       socket[s].close();
     }
-  }
-
-  function getJsonObject(array, number) {
-    let num = 0;
-    let out = {};
-    array.forEach((object) => {
-      if (num === number) {
-        out = object;
-      }
-      num++;
-    });
-    return out;
   }
 
   function markDeviceStatus(ws, status) {
@@ -301,19 +296,7 @@
     }
   }
 
-  const syntaxHighlight = (json) => {
-    try {
-      json = JSON.stringify(JSON.parse(json), null, 4);
-    } catch (e) {
-      return json;
-    }
-    json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-      return match;
-    });
-    return json;
-  };
-
+  //dashboard functions====================================================================================
   function findNewPage() {
     pages = [];
     const newPage = Array.from(new Set(Array.from(wigets, ({ page }) => page)));
@@ -336,6 +319,7 @@
     findNewPage();
   }
 
+  //logging execution======================================================================================
   const addCoreMsg = (msg) => {
     if (coreMessages.length > Number(LOG_MAX_MESSAGES)) {
       coreMessages = coreMessages.slice(0);
@@ -353,6 +337,7 @@
     });
   };
 
+  //device list handle======================================================================================
   function dropdownChange() {
     socketConnected = selectedDeviceData.status;
     wsSelected = selectedDeviceData.ws;
@@ -379,6 +364,7 @@
     }
   }
 
+  //navigation===========================================================================================
   function handleNavigation() {
     let page = $router.path.toString();
     console.log("[i]", "user on page:", page);
@@ -389,6 +375,33 @@
     }
   }
 
+  //json=================================================================================================
+  function getJsonObject(array, number) {
+    let num = 0;
+    let out = {};
+    array.forEach((object) => {
+      if (num === number) {
+        out = object;
+      }
+      num++;
+    });
+    return out;
+  }
+
+  const syntaxHighlight = (json) => {
+    try {
+      json = JSON.stringify(JSON.parse(json), null, 4);
+    } catch (e) {
+      return json;
+    }
+    json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+      return match;
+    });
+    return json;
+  };
+
+  //initialisation=======================================================================================
   onMount(async () => {
     console.log("[i]", "mounted");
     connectToAllDevices();
