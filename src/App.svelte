@@ -4,8 +4,7 @@
   import { Route, router, active } from "tinro";
   router.mode.hash(); // enables hash navigation method
   //router.mode.memory(); // enables in-memory navigation method
-  let wsSelected = undefined;
-  router.subscribe(handleNavigation);
+
   //import Chart from "svelte-frappe-charts";
 
   import Card from "./widgets/Card.svelte";
@@ -146,21 +145,20 @@
   let flag = true;
   let newDevice = {};
   let coreMessages = [];
+  let wsSelected = undefined;
 
   deviceList = [
     {
       name: "Устройство 1",
       id: "987654321",
-      ip: "192.168.88.230",
-      status: false,
-    },
-    {
-      name: "Устройство 2",
-      id: "987654321",
-      ip: "192.168.88.231",
+      ip: "192.168.88.235",
       status: false,
     },
   ];
+
+  //navigation
+  let currentPageName = undefined;
+  router.subscribe(handleNavigation);
 
   //=================================functions section========================================
   //web socket functions======================================================================
@@ -242,14 +240,21 @@
       socket[ws].addEventListener("open", function (event) {
         if (debug) console.log("[i]", ip, "completed connecting");
         markDeviceStatus(ws, true);
+        sendCurrentPageName();
         //socket[ws].send("HELLO");
       });
       socket[ws].addEventListener("message", function (event) {
         let data = event.data.toString();
-        if (debug) console.log("[i]", "new data:", event.data);
-        if (data.includes("/core/")) {
-          data = data.replace("/core/", "");
+        if (data.includes("[log]")) {
+          data = data.replace("[log]", "");
           addCoreMsg(data);
+          //if (debug) console.log("[i]", "log data:", data);
+        } else if (data.includes("[config]")) {
+          data = data.replace("[config]", "");
+          data = JSON.parse(data);
+          config.push(data);
+          config = config;
+          //if (debug) console.log("[i]", "config data:", data);
         }
       });
       socket[ws].addEventListener("close", (event) => {
@@ -366,12 +371,15 @@
 
   //navigation===========================================================================================
   function handleNavigation() {
-    let page = $router.path.toString();
-    console.log("[i]", "user on page:", page);
-    if (page === "/config") {
-      if (wsSelected !== undefined) {
-        wsSendMsg(wsSelected, "config");
-      }
+    config = [];
+    currentPageName = $router.path.toString();
+    console.log("[i]", "user on page:", currentPageName);
+    sendCurrentPageName();
+  }
+
+  function sendCurrentPageName() {
+    if (wsSelected !== undefined) {
+      wsSendMsg(wsSelected, currentPageName);
     }
   }
 
@@ -489,7 +497,29 @@
 
       <Route path="/config">
         <div class="cards-grid-inline">
-          <Card title="Здесь будет конфигуратор" />
+          <Card title="Конфигуратор">
+            <table class="table-fixed w-full">
+              <thead>
+                <tr>
+                  <th class="table-head-element">Тип</th>
+                  <th class="table-head-element">Подтип</th>
+                  <th class="table-head-element">Id</th>
+                  <th class="table-head-element">4</th>
+                </tr>
+              </thead>
+              <tbody>
+                {#each config as element}
+                  <tr>
+                    <td class="table-body-element">{element.type}</td>
+                    <td class="table-body-element">{element.subtype}</td>
+                    <td class="table-body-element">{element.id}</td>
+                    <td class="table-body-element">4</td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+            <button class="long-button">{"Сохранить"}</button>
+          </Card>
         </div>
       </Route>
 
