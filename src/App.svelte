@@ -250,11 +250,11 @@
           addCoreMsg(data);
           //if (debug) console.log("[i]", "log data:", data);
         } else if (data.includes("[config]")) {
+          if (debug) console.log("[i]", "config data:", data);
           data = data.replace("[config]", "");
           data = JSON.parse(data);
           config.push(data);
           config = config;
-          //if (debug) console.log("[i]", "config data:", data);
         }
       });
       socket[ws].addEventListener("close", (event) => {
