@@ -15,6 +15,7 @@
   //==================================constants section========================================
   let debug = true;
   let LOG_MAX_MESSAGES = 10;
+  let reconnectTimeout = 10000;
 
   //=================================variable section==========================================
   let myip = document.location.hostname;
@@ -245,6 +246,7 @@
       });
       socket[ws].addEventListener("message", function (event) {
         let data = event.data.toString();
+        if (debug) console.log("[i]", "data:", data);
         if (data.includes("[log]")) {
           data = data.replace("[log]", "");
           addCoreMsg(data);
@@ -277,7 +279,7 @@
   }
 
   function wsTestMsgTask() {
-    setTimeout(wsTestMsgTask, 60000);
+    setTimeout(wsTestMsgTask, reconnectTimeout);
     if (debug) console.log("[i]", "----timer tick----");
     if (!flag) {
       deviceList.forEach((device) => {
