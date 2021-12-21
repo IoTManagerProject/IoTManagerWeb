@@ -246,14 +246,14 @@
       });
       socket[ws].addEventListener("message", function (event) {
         let data = event.data.toString();
-        if (debug) console.log("[i]", "data:", data);
+        //if (debug) console.log("[i]", "data:", data);
         if (data.includes("[log]")) {
           data = data.replace("[log]", "");
           addCoreMsg(data);
           //if (debug) console.log("[i]", "log data:", data);
-        } else if (data.includes("[config]")) {
+        } else if (data.includes("[/setup.json]")) {
           if (debug) console.log("[i]", "config data:", data);
-          data = data.replace("[config]", "");
+          data = data.replace("[/setup.json]", "");
           data = JSON.parse(data);
           config.push(data);
           config = config;
@@ -410,6 +410,53 @@
     });
     return json;
   };
+
+  //post и get запросы=================================================================================
+  //запрос с помощью которого можно отредактировать любой файл на esp
+  //editRequest("192.168.88.235", "data data data data", "file.json")
+
+  function editRequest(url, data, filename) {
+    if (debug) console.log("[i]", "request for edit file");
+    var xmlHttp = new XMLHttpRequest();
+    var formData = new FormData();
+    formData.append("data", new Blob([data], { type: "text/json" }), "/" + filename);
+    xmlHttp.open("POST", "http://" + url + "/edit");
+    xmlHttp.onload = function () {
+      //во время загрузки
+    };
+    xmlHttp.send(formData);
+  }
+
+  async function handleSubmit(url) {
+    try {
+      console.log(url);
+      let res = await fetch(url, {
+        mode: "no-cors",
+        method: "GET",
+      });
+      if (res.ok) {
+        console.log("OK", res.status);
+        //console.log(url);
+      } else {
+        console.log("error", res.status);
+        //console.log(url);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  async function getRequestJson(url) {
+    let res = await fetch(url, {
+      mode: "no-cors",
+      method: "GET",
+    });
+    if (res.ok) {
+      configSetupJson = await res.json();
+    } else {
+      console.log("error", res.status);
+    }
+  }
 
   //initialisation=======================================================================================
   onMount(async () => {
