@@ -246,18 +246,19 @@
       });
       socket[ws].addEventListener("message", function (event) {
         let data = event.data.toString();
-        //if (debug) console.log("[i]", "data:", data);
-        if (data.includes("[log]")) {
-          data = data.replace("[log]", "");
-          addCoreMsg(data);
-          //if (debug) console.log("[i]", "log data:", data);
-        } else if (data.includes("[/setup.json]")) {
-          if (debug) console.log("[i]", "config data:", data);
-          data = data.replace("[/setup.json]", "");
-          data = JSON.parse(data);
-          config.push(data);
-          config = config;
-        }
+        if (debug) console.log("[i]", "data:", data);
+
+        //if (data.includes("[log]")) {
+        //  data = data.replace("[log]", "");
+        //  addCoreMsg(data);
+        //  //if (debug) console.log("[i]", "log data:", data);
+        //} else if (data.includes("[/setup.json]")) {
+        //  if (debug) console.log("[i]", "config data:", data);
+        //  data = data.replace("[/setup.json]", "");
+        //  data = JSON.parse(data);
+        //  config.push(data);
+        //  config = config;
+        //}
       });
       socket[ws].addEventListener("close", (event) => {
         if (debug) console.log("[e]", ip, "connection closed");
