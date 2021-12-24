@@ -15,7 +15,7 @@
   //==================================constants section========================================
   let debug = true;
   let LOG_MAX_MESSAGES = 10;
-  let reconnectTimeout = 10000;
+  let reconnectTimeout = 60000;
 
   //=================================variable section==========================================
   let myip = document.location.hostname;
@@ -137,6 +137,7 @@
 
   //configuration
   let config = [];
+  let buf = [];
 
   //web sockets
   let socket = [];
@@ -219,7 +220,8 @@
     if (ip === "error") {
       if (debug) console.log("[e]", "device list wrong");
     } else {
-      socket[ws] = new WebSocket("ws://" + ip + "/ws");
+      socket[ws] = new WebSocket("ws://" + ip + ":81");
+      //socket[ws] = new WebSocket("ws://" + ip + "/ws");
       if (debug) console.log("[i]", ip, "started connecting...");
     }
   }
@@ -246,19 +248,24 @@
       });
       socket[ws].addEventListener("message", function (event) {
         let data = event.data.toString();
-        if (debug) console.log("[i]", "data:", data);
-
-        //if (data.includes("[log]")) {
-        //  data = data.replace("[log]", "");
-        //  addCoreMsg(data);
-        //  //if (debug) console.log("[i]", "log data:", data);
-        //} else if (data.includes("[/setup.json]")) {
-        //  if (debug) console.log("[i]", "config data:", data);
-        //  data = data.replace("[/setup.json]", "");
-        //  data = JSON.parse(data);
-        //  config.push(data);
-        //  config = config;
-        //}
+        //if (debug) console.log("[i]", "data:", data);
+        if (data.includes("[log]")) {
+          data = data.replace("[log]", "");
+          addCoreMsg(data);
+          //if (debug) console.log("[i]", "log data:", data);
+        } else if (data.includes("/config.json")) {
+          data = data.replace("/config.json", "");
+          buf = buf + data;
+          if (data.includes("]}")) {
+            buf = buf.replace("]}", "]");
+            if (IsJsonParse(buf)) {
+              config = JSON.parse(buf);
+              buf = [];
+              config = config;
+              if (debug) console.log("[i]", "parsed");
+            }
+          }
+        }
       });
       socket[ws].addEventListener("close", (event) => {
         if (debug) console.log("[e]", ip, "connection closed");
@@ -349,6 +356,8 @@
   function dropdownChange() {
     socketConnected = selectedDeviceData.status;
     wsSelected = selectedDeviceData.ws;
+    clearData();
+    sendCurrentPageName();
     if (debug) console.log("[i]", "user selected device:", selectedDeviceData.name);
     if (selectedDeviceData.ip === myip) {
       if (debug) console.log("[i]", "user selected original device", selectedDeviceData.name);
@@ -372,9 +381,13 @@
     }
   }
 
+  function clearData() {
+    config = [];
+  }
+
   //navigation===========================================================================================
   function handleNavigation() {
-    config = [];
+    clearData();
     currentPageName = $router.path.toString();
     console.log("[i]", "user on page:", currentPageName);
     sendCurrentPageName();
@@ -411,6 +424,15 @@
     });
     return json;
   };
+
+  function IsJsonParse(str) {
+    try {
+      JSON.parse(str);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
 
   //post и get запросы=================================================================================
   //запрос с помощью которого можно отредактировать любой файл на esp
@@ -457,6 +479,12 @@
     } else {
       console.log("error", res.status);
     }
+  }
+
+  function pushConfigToEsp() {
+    //config.forEach((element) => {
+    wsSendMsg(wsSelected, JSON.stringify(config));
+    //});
   }
 
   //initialisation=======================================================================================
@@ -568,7 +596,7 @@
                 {/each}
               </tbody>
             </table>
-            <button class="long-button">{"Сохранить"}</button>
+            <button class="long-button" on:click={() => pushConfigToEsp()}>{"Сохранить"}</button>
           </Card>
         </div>
       </Route>
