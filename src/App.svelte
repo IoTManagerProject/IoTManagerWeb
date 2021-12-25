@@ -150,7 +150,7 @@
   //web sockets
   let socket = [];
   let socketConnected = false;
-  let selectedDeviceData;
+  let selectedDeviceData = undefined;
   let deviceList = [];
   let flag = true;
   let newDevice = {};
@@ -496,6 +496,10 @@
     }
   }
 
+  function showAdditionalParams(id) {
+    if (debug) console.log("[i]", "user open add params ", id);
+  }
+
   function pushConfigToEsp() {
     //config.forEach((element) => {
     wsSendMsg(wsSelected, "/changed" + JSON.stringify(config));
@@ -622,7 +626,7 @@
                       </select></td>
                     <td class="table-body-element"><input bind:value={element.page} class="table-input" type="text" /></td>
                     <td class="table-body-element"><input bind:value={element.descr} class="table-input" type="text" /></td>
-                    <td class="table-body-element"><button class="table-button bg-green-100 hover:bg-green-400" /></td>
+                    <td class="table-body-element"><button on:click={() => showAdditionalParams(element.id)} class="table-button bg-green-100 hover:bg-green-400" /></td>
                     <td class="table-body-element"><button class="table-button bg-red-100 hover:bg-red-400" /></td>
                   </tr>
                 {/each}
