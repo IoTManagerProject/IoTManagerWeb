@@ -150,7 +150,7 @@
   //web sockets
   let socket = [];
   let socketConnected = false;
-  let selectedDeviceData = {};
+  let selectedDeviceData;
   let deviceList = [];
   let flag = true;
   let newDevice = {};
@@ -622,8 +622,8 @@
                       </select></td>
                     <td class="table-body-element"><input bind:value={element.page} class="table-input" type="text" /></td>
                     <td class="table-body-element"><input bind:value={element.descr} class="table-input" type="text" /></td>
-                    <td class="table-body-element"><button class="table-button bg-green-100 hover:bg-green-200" /></td>
-                    <td class="table-body-element"><button class="table-button bg-red-100 hover:bg-red-200" /></td>
+                    <td class="table-body-element"><button class="table-button bg-green-100 hover:bg-green-400" /></td>
+                    <td class="table-body-element"><button class="table-button bg-red-100 hover:bg-red-400" /></td>
                   </tr>
                 {/each}
               </tbody>
