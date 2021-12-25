@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "daisyui": "^1.16.4",
-    "sirv-cli": "^1.0.14"
+    "sirv-cli": "^1.0.14",
+    "svelte-frappe-charts": "^1.9.1"
   }
 }

@@ -5,12 +5,12 @@
   router.mode.hash(); // enables hash navigation method
   //router.mode.memory(); // enables in-memory navigation method
 
-  //import Chart from "svelte-frappe-charts";
-
   import Card from "./widgets/Card.svelte";
   import Input from "./widgets/Input.svelte";
   import Toggle from "./widgets/Toggle.svelte";
   import Anydata from "./widgets/Anydata.svelte";
+  //import Modal from "svelte-simple-modal";
+  import Chart from "svelte-frappe-charts";
 
   //==================================constants section========================================
   let debug = true;
@@ -134,6 +134,15 @@
       ws: 0,
     },
   ];
+
+  let datachart = {
+    labels: ["Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"],
+    datasets: [
+      {
+        values: [10, 12, 3, 9, 8, 15, 9],
+      },
+    ],
+  };
 
   let widgetCollection = {};
 
@@ -685,7 +694,9 @@
         </Card>
       </Route>
       <Route path="/about">
-        <Card title={"Список устройств"} />
+        <Card title={"Пример графика"}>
+          <Chart data={datachart} type="line" />
+        </Card>
       </Route>
     </div>
   </ul>
