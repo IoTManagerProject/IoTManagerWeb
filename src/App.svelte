@@ -594,7 +594,7 @@
         <div class="cards-grid-inline">
           <Card title="Конфигуратор">
             <table class="table-fixed w-full">
-              <thead>
+              <thead class="bg-gray-50">
                 <tr>
                   <th class="table-head-element">Тип</th>
                   <th class="table-head-element">Подтип</th>
@@ -602,15 +602,15 @@
                   <th class="table-head-element">Виджет</th>
                   <th class="table-head-element">Вкладка</th>
                   <th class="table-head-element">Название</th>
-                  <th class="table-head-element">Остальное</th>
-                  <th class="table-head-element">Удалить</th>
+                  <th class="table-head-element w-12" />
+                  <th class="table-head-element w-12" />
                 </tr>
               </thead>
-              <tbody>
+              <tbody class="bg-white">
                 {#each config as element}
                   <tr>
                     <td class="table-body-element">{element.type}</td>
-                    <td class="table-body-element"><input bind:value={element.subtype} class="table-input" type="text" /></td>
+                    <td class="table-body-element">{element.subtype}</td>
                     <td class="table-body-element"><input bind:value={element.id} class="table-input" type="text" /></td>
                     <td class="table-body-element"
                       ><select class="table-input" bind:value={selectedDeviceData}>
@@ -620,6 +620,10 @@
                           </option>
                         {/each}
                       </select></td>
+                    <td class="table-body-element"><input bind:value={element.page} class="table-input" type="text" /></td>
+                    <td class="table-body-element"><input bind:value={element.descr} class="table-input" type="text" /></td>
+                    <td class="table-body-element"><button class="table-button bg-green-100 hover:bg-green-200" /></td>
+                    <td class="table-body-element"><button class="table-button bg-red-100 hover:bg-red-200" /></td>
                   </tr>
                 {/each}
               </tbody>
@@ -646,7 +650,7 @@
       <Route path="/list">
         <Card title={"Список устройств"}>
           <table class="table-fixed w-full">
-            <thead>
+            <thead class="bg-gray-50">
               <tr>
                 <th class="table-head-element">Название устройства</th>
                 <th class="table-head-element">IP адрес</th>
@@ -654,13 +658,13 @@
                 <th class="table-head-element">Состояние</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody class="bg-white">
               {#each deviceList as device}
                 <tr>
                   <td class="table-body-element">{device.name}</td>
                   <td class="table-body-element"><a href={"http://" + device.ip}>{device.ip}</a></td>
                   <td class="table-body-element">{device.id}</td>
-                  <td class="table-body-element {device.status ? 'bg-green-100' : 'bg-red-100'}">{device.status ? "online" : "offline"}</td>
+                  <td class="table-body-element {device.status ? 'bg-green-50' : 'bg-red-50'}">{device.status ? "online" : "offline"}</td>
                 </tr>
               {/each}
               {#if showInput}
@@ -676,7 +680,9 @@
           <button class="long-button" on:click={() => ((showInput = !showInput), devListSave())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
         </Card>
       </Route>
-      <Route path="/about" />
+      <Route path="/about">
+        <Card title={"Список устройств"} />
+      </Route>
     </div>
   </ul>
 </main>
@@ -736,17 +742,20 @@
     }
     /*====================================================table=====================================================*/
     .table-head-element {
-      @apply border border-gray-300 text-center break-words w-1/4 text-gray-500 font-bold;
+      @apply px-2 py-2 text-center break-words text-gray-500 font-bold;
     }
     .table-body-element {
-      @apply border border-gray-300 text-center break-words w-1/4;
+      @apply px-2 py-2 text-center break-words;
     }
     .table-input {
-      @apply content-center bg-gray-100 appearance-none border-2 border-gray-200 w-full text-gray-700 leading-tight focus:outline-none focus:bg-white text-center focus:border-indigo-500;
+      @apply content-center h-8 bg-gray-50 focus:bg-white appearance-none border-2 border-gray-100 w-full text-gray-700 leading-tight focus:outline-none text-center focus:border-indigo-500;
     }
     /*====================================================buttons=====================================================*/
     .long-button {
       @apply flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold h-8 w-full mt-4 border border-gray-300 rounded;
+    }
+    .table-button {
+      @apply flex justify-center content-center text-gray-500 font-bold w-10 h-8 border border-gray-300;
     }
   }
 
