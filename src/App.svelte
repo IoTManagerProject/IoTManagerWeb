@@ -135,6 +135,14 @@
     },
   ];
 
+  let widgetCollection = {};
+
+  widgetCollection = {
+    toggle: "Тогл",
+    button: "Кнопка",
+    input: "Окно ввода",
+  };
+
   //configuration
   let config = [];
   let buf = [];
@@ -591,6 +599,11 @@
                   <th class="table-head-element">Тип</th>
                   <th class="table-head-element">Подтип</th>
                   <th class="table-head-element">Id</th>
+                  <th class="table-head-element">Виджет</th>
+                  <th class="table-head-element">Вкладка</th>
+                  <th class="table-head-element">Название</th>
+                  <th class="table-head-element">Остальное</th>
+                  <th class="table-head-element">Удалить</th>
                 </tr>
               </thead>
               <tbody>
@@ -599,6 +612,14 @@
                     <td class="table-body-element">{element.type}</td>
                     <td class="table-body-element"><input bind:value={element.subtype} class="table-input" type="text" /></td>
                     <td class="table-body-element"><input bind:value={element.id} class="table-input" type="text" /></td>
+                    <td class="table-body-element"
+                      ><select class="table-input" bind:value={selectedDeviceData}>
+                        {#each deviceList as device}
+                          <option value={device}>
+                            {device.name}
+                          </option>
+                        {/each}
+                      </select></td>
                   </tr>
                 {/each}
               </tbody>
