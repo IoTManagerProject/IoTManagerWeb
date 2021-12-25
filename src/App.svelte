@@ -153,6 +153,12 @@
     {
       name: "Устройство 1",
       id: "987654321",
+      ip: "192.168.88.233",
+      status: false,
+    },
+    {
+      name: "Устройство 2",
+      id: "987654321",
       ip: "192.168.88.235",
       status: false,
     },
@@ -483,7 +489,9 @@
 
   function pushConfigToEsp() {
     //config.forEach((element) => {
-    wsSendMsg(wsSelected, JSON.stringify(config));
+    wsSendMsg(wsSelected, "/changed" + JSON.stringify(config));
+    clearData();
+    sendCurrentPageName();
     //});
   }
 
@@ -582,16 +590,14 @@
                   <th class="table-head-element">Тип</th>
                   <th class="table-head-element">Подтип</th>
                   <th class="table-head-element">Id</th>
-                  <th class="table-head-element">4</th>
                 </tr>
               </thead>
               <tbody>
                 {#each config as element}
                   <tr>
                     <td class="table-body-element">{element.type}</td>
-                    <td class="table-body-element">{element.subtype}</td>
-                    <td class="table-body-element">{element.id}</td>
-                    <td class="table-body-element">4</td>
+                    <td class="table-body-element"><input bind:value={element.subtype} class="table-input" type="text" /></td>
+                    <td class="table-body-element"><input bind:value={element.id} class="table-input" type="text" /></td>
                   </tr>
                 {/each}
               </tbody>
