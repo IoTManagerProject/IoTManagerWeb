@@ -9,8 +9,14 @@
   import Input from "./widgets/Input.svelte";
   import Toggle from "./widgets/Toggle.svelte";
   import Anydata from "./widgets/Anydata.svelte";
+
   //import Modal from "svelte-simple-modal";
+
   import Chart from "svelte-frappe-charts";
+
+  //как ставить и удалять
+  //npm install --save svelte-simple-modal
+  //npm uninstall svelte-simple-modal
 
   //==================================constants section========================================
   let debug = true;
@@ -505,7 +511,10 @@
     }
   }
 
+  let additionalParams = false;
+
   function showAdditionalParams(id) {
+    additionalParams = true;
     if (debug) console.log("[i]", "user open add params ", id);
   }
 
