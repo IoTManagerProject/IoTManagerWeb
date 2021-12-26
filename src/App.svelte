@@ -10,7 +10,8 @@
   import Toggle from "./widgets/Toggle.svelte";
   import Anydata from "./widgets/Anydata.svelte";
 
-  //import Modal from "svelte-simple-modal";
+  import Content from "./Content.svelte";
+  import Modal from "svelte-simple-modal";
 
   import Chart from "svelte-frappe-charts";
 
@@ -705,6 +706,9 @@
       <Route path="/about">
         <Card title={"Пример графика"}>
           <Chart data={datachart} type="line" />
+          <Modal>
+            <Content />
+          </Modal>
         </Card>
       </Route>
     </div>
