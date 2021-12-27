@@ -618,7 +618,6 @@
             <table class="table-fixed w-full">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="table-head-element">Тип</th>
                   <th class="table-head-element">Подтип</th>
                   <th class="table-head-element">Id</th>
                   <th class="table-head-element">Виджет</th>
@@ -631,7 +630,6 @@
               <tbody class="bg-white">
                 {#each config as element}
                   <tr>
-                    <td class="table-body-element">{element.type}</td>
                     <td class="table-body-element">{element.subtype}</td>
                     <td class="table-body-element"><input bind:value={element.id} class="table-input" type="text" /></td>
                     <td class="table-body-element"
