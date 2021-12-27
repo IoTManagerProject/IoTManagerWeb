@@ -1,5 +1,7 @@
 <script>
   export let widget;
+  export let value;
+  value = value;
 </script>
 
 <div class="card-items-psn">

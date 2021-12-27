@@ -25,7 +25,7 @@
   let myip = document.location.hostname;
   let showInput = false;
 
-  let showModal = false;
+  let showModalFlag = false;
 
   //dashboard
   let wigets = [];
@@ -526,6 +526,10 @@
     //});
   }
 
+  function showModal() {
+    showModalFlag = !showModalFlag;
+  }
+
   //initialisation=======================================================================================
   onMount(async () => {
     console.log("[i]", "mounted");
@@ -538,6 +542,7 @@
 </script>
 
 <main>
+  <Modal show={showModalFlag} />
   <div class="fixed m-0 h-10 w-full bg-gray-100 shadow-md">
     <div class="flex justify-end content-center">
       <div class="px-15 py-2">
@@ -705,9 +710,7 @@
         </Card>
       </Route>
       <Route path="/about">
-        <!-- Modal toggle -->
-        <button on:click={() => (showModal = !showModal)} type="button"> Toggle modal </button>
-        <Modal show={showModal} />
+        <button on:click={() => showModal()} type="button"> Toggle modal </button>
       </Route>
     </div>
   </ul>

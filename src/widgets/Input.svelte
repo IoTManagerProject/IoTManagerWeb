@@ -1,6 +1,8 @@
 <script>
   export let widget;
   export let wsPushProp = (ws, topic, status) => {};
+  export let value;
+  value = value;
 </script>
 
 <div class="card-items-psn">

@@ -1,5 +1,7 @@
 <script>
   export let widget;
+  export let value;
+  value = value;
   export let wsPushProp = (ws, topic, status) => {};
 </script>
 
