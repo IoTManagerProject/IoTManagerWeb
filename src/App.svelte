@@ -4,16 +4,13 @@
   import { Route, router, active } from "tinro";
   router.mode.hash(); // enables hash navigation method
   //router.mode.memory(); // enables in-memory navigation method
+  import Chart from "svelte-frappe-charts";
 
   import Card from "./widgets/Card.svelte";
+  import Modal from "./components/Modal.svelte";
   import Input from "./widgets/Input.svelte";
   import Toggle from "./widgets/Toggle.svelte";
   import Anydata from "./widgets/Anydata.svelte";
-
-  import Content from "./Content.svelte";
-  import Modal from "svelte-simple-modal";
-
-  import Chart from "svelte-frappe-charts";
 
   //как ставить и удалять
   //npm install --save svelte-simple-modal
@@ -27,6 +24,8 @@
   //=================================variable section==========================================
   let myip = document.location.hostname;
   let showInput = false;
+
+  let showModal = false;
 
   //dashboard
   let wigets = [];
@@ -662,7 +661,11 @@
           <Card title="Подключение к MQTT брокеру" />
         </div>
       </Route>
-      <Route path="/utilities" />
+      <Route path="/utilities">
+        <Card title={"Пример графика"}>
+          <Chart data={datachart} type="line" />
+        </Card>
+      </Route>
       <Route path="/log">
         <Card title={"Лог"}>
           {#each coreMessages as message, i}
@@ -704,12 +707,9 @@
         </Card>
       </Route>
       <Route path="/about">
-        <Card title={"Пример графика"}>
-          <Chart data={datachart} type="line" />
-          <Modal>
-            <Content />
-          </Modal>
-        </Card>
+        <!-- Modal toggle -->
+        <button on:click={() => (showModal = !showModal)} type="button"> Toggle modal </button>
+        <Modal show={showModal} />
       </Route>
     </div>
   </ul>
