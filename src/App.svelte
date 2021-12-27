@@ -6,7 +6,7 @@
   //router.mode.memory(); // enables in-memory navigation method
   import Chart from "svelte-frappe-charts";
 
-  import Card from "./widgets/Card.svelte";
+  import Card from "./components/Card.svelte";
   import Modal from "./components/Modal.svelte";
   import Input from "./widgets/Input.svelte";
   import Toggle from "./widgets/Toggle.svelte";
@@ -176,13 +176,13 @@
     {
       name: "Устройство 1",
       id: "987654321",
-      ip: "192.168.88.233",
+      ip: "192.168.88.235",
       status: false,
     },
     {
       name: "Устройство 2",
       id: "987654321",
-      ip: "192.168.88.235",
+      ip: "192.168.88.233",
       status: false,
     },
   ];
@@ -623,33 +623,49 @@
             <table class="table-fixed w-full">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="table-head-element">Подтип</th>
-                  <th class="table-head-element">Id</th>
-                  <th class="table-head-element">Виджет</th>
-                  <th class="table-head-element">Вкладка</th>
-                  <th class="table-head-element">Название</th>
-                  <th class="table-head-element w-12" />
-                  <th class="table-head-element w-12" />
+                  <th class="table-head-element text-center">Тип</th>
+                  <th class="table-head-element text-center">Id</th>
+                  <th class="table-head-element text-center">Виджет</th>
+                  <th class="table-head-element text-center">Вкладка</th>
+                  <th class="table-head-element text-center">Название</th>
+                  <th class="table-head-element text-center w-12" />
+                  <th class="table-head-element text-center w-12" />
                 </tr>
               </thead>
               <tbody class="bg-white">
                 {#each config as element}
                   <tr>
-                    <td class="table-body-element">{element.subtype}</td>
-                    <td class="table-body-element"><input bind:value={element.id} class="table-input" type="text" /></td>
-                    <td class="table-body-element"
-                      ><select class="table-input" bind:value={selectedDeviceData}>
+                    <td class="table-body-element text-center">{element.subtype}</td>
+                    <td class="table-body-element text-center"><input bind:value={element.id} class="table-input w-full" type="text" /></td>
+                    <td class="table-body-element text-center"
+                      ><select class="table-input w-full" bind:value={selectedDeviceData}>
                         {#each deviceList as device}
                           <option value={device}>
                             {device.name}
                           </option>
                         {/each}
                       </select></td>
-                    <td class="table-body-element"><input bind:value={element.page} class="table-input" type="text" /></td>
-                    <td class="table-body-element"><input bind:value={element.descr} class="table-input" type="text" /></td>
-                    <td class="table-body-element"><button on:click={() => showAdditionalParams(element.id)} class="table-button bg-green-100 hover:bg-green-400" /></td>
-                    <td class="table-body-element"><button class="table-button bg-red-100 hover:bg-red-400" /></td>
+                    <td class="table-body-element text-center"><input bind:value={element.page} class="table-input w-full" type="text" /></td>
+                    <td class="table-body-element text-center"><input bind:value={element.descr} class="table-input w-full" type="text" /></td>
+                    <td class="table-body-element text-center"><button on:click={() => showAdditionalParams(element.id)} class="table-button bg-green-100 hover:bg-green-400" /></td>
+                    <td class="table-body-element text-center"><button class="table-button bg-red-100 hover:bg-red-400" /></td>
                   </tr>
+                  <!-- {#each Object.values(element) as d}-->
+                  {#each Object.entries(element) as [key, param]}
+                    {#if key != "type" && key != "subtype" && key != "id" && key != "widget" && key != "page" && key != "descr"}
+                      <tr>
+                        <td />
+                        <td />
+                        <td />
+                        <td class="table-body-element text-right">
+                          <p class="table-sub-text">{key}</p>
+                        </td>
+                        <td class="table-body-element text-center">
+                          <input bind:value={element[key]} class="table-sub-input w-full" type="text" />
+                        </td>
+                      </tr>
+                    {/if}
+                  {/each}
                 {/each}
               </tbody>
             </table>
@@ -681,27 +697,27 @@
           <table class="table-fixed w-full">
             <thead class="bg-gray-50">
               <tr>
-                <th class="table-head-element">Название устройства</th>
-                <th class="table-head-element">IP адрес</th>
-                <th class="table-head-element">Идентификатор</th>
-                <th class="table-head-element">Состояние</th>
+                <th class="table-head-element text-center">Название устройства</th>
+                <th class="table-head-element text-center">IP адрес</th>
+                <th class="table-head-element text-center">Идентификатор</th>
+                <th class="table-head-element text-center">Состояние</th>
               </tr>
             </thead>
             <tbody class="bg-white">
               {#each deviceList as device}
                 <tr>
-                  <td class="table-body-element">{device.name}</td>
-                  <td class="table-body-element"><a href={"http://" + device.ip}>{device.ip}</a></td>
-                  <td class="table-body-element">{device.id}</td>
-                  <td class="table-body-element {device.status ? 'bg-green-50' : 'bg-red-50'}">{device.status ? "online" : "offline"}</td>
+                  <td class="table-body-element text-center">{device.name}</td>
+                  <td class="table-body-element text-center"><a href={"http://" + device.ip}>{device.ip}</a></td>
+                  <td class="table-body-element text-center">{device.id}</td>
+                  <td class="table-body-element text-center {device.status ? 'bg-green-50' : 'bg-red-50'}">{device.status ? "online" : "offline"}</td>
                 </tr>
               {/each}
               {#if showInput}
                 <tr>
-                  <td class="table-body-element"><input bind:value={newDevice.name} class="table-input" type="text" /></td>
-                  <td class="table-body-element"><input bind:value={newDevice.ip} class="table-input" type="text" /></td>
-                  <td class="table-body-element"><input bind:value={newDevice.id} class="table-input" type="text" /></td>
-                  <td class="table-body-element" />
+                  <td class="table-body-element text-center"><input bind:value={newDevice.name} class="table-input w-full" type="text" /></td>
+                  <td class="table-body-element text-center"><input bind:value={newDevice.ip} class="table-input w-full" type="text" /></td>
+                  <td class="table-body-element text-center"><input bind:value={newDevice.id} class="table-input w-full" type="text" /></td>
+                  <td class="table-body-element text-center" />
                 </tr>
               {/if}
             </tbody>
@@ -771,13 +787,19 @@
     }
     /*====================================================table=====================================================*/
     .table-head-element {
-      @apply px-2 py-2 text-center break-words text-gray-500 font-bold;
+      @apply px-2 py-2 break-words text-gray-500 font-bold;
     }
     .table-body-element {
-      @apply px-2 py-2 text-center break-words;
+      @apply px-2 py-2 break-words;
     }
     .table-input {
-      @apply content-center h-8 bg-gray-50 focus:bg-white appearance-none border-2 border-gray-100 w-full text-gray-700 leading-tight focus:outline-none text-center focus:border-indigo-500;
+      @apply content-center h-8 bg-gray-50 focus:bg-white appearance-none border-2 border-gray-100 text-gray-700 leading-tight focus:outline-none text-center focus:border-indigo-500;
+    }
+    .table-sub-text {
+      @apply text-sm inline-block italic align-top text-right text-gray-500;
+    }
+    .table-sub-input {
+      @apply content-center h-6 bg-gray-50 focus:bg-white appearance-none border-2 border-gray-100 text-gray-700 leading-tight focus:outline-none text-center focus:border-indigo-500 rounded-sm;
     }
     /*====================================================buttons=====================================================*/
     .long-button {
