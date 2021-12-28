@@ -651,7 +651,7 @@
                       </select></td>
                     <td class="table-body-element text-center"><input bind:value={element.page} class="table-input w-full" type="text" /></td>
                     <td class="table-body-element text-center"><input bind:value={element.descr} class="table-input w-full" type="text" /></td>
-                    <td class="table-body-element text-center"><button on:click={() => showAdditionalParams(element.id)} class="table-button bg-green-100 hover:bg-green-400" /></td>
+                    <td class="table-body-element text-center"><button on:click={() => (hideAllSubParams = !hideAllSubParams)} class="table-button bg-green-100 hover:bg-green-400" /></td>
                     <td class="table-body-element text-center"><button class="table-button bg-red-100 hover:bg-red-400" /></td>
                   </tr>
                   {#if !hideAllSubParams}
