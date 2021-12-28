@@ -5,12 +5,12 @@
   export let wsPushProp = (ws, topic, status) => {};
 </script>
 
-<div class="card-items-psn">
-  <div class="widget-descr-width">
+<div class="crd-itm-psn">
+  <div class="wgt-dscr-w">
     <!-- svelte-ignore a11y-label-has-associated-control -->
-    <label class="widget-descr-style">{!widget.descr ? "" : widget.descr}</label>
+    <label class="wgt-dscr-stl">{!widget.descr ? "" : widget.descr}</label>
   </div>
-  <div class="widget-width">
+  <div class="wgt-w">
     <label for={widget.topic} class="items-center cursor-pointer">
       <div class="relative">
         <input on:change={() => ((widget["send"] = true), wsPushProp(widget.ws, widget.topic, widget.status))} bind:value={widget.status} id={widget.topic} type="checkbox" class="sr-only" />

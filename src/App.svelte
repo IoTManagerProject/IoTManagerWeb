@@ -626,7 +626,7 @@
   <ul class="menu__main">
     <div class="bg-cover bg-gray-50 pt-8 px-4">
       <Route path="/">
-        <div class="cards-grid">
+        <div class="crd-grd">
           {#each pages as pagesName, i}
             <Card title={pagesName.page}>
               {#each wigets as widget, i}
@@ -646,57 +646,57 @@
           {/each}
 
           <Card title="Редактор JSON">
-            <textarea on:input={wigetsUpdate} rows="10" class="json-input w-full" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
+            <textarea on:input={wigetsUpdate} rows="10" class="jsn-ipt w-full" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
           </Card>
         </div>
       </Route>
       <Route path="/config">
-        <div class="cards-grid-inline">
+        <div class="crd-grd-ln">
           <Card>
-            <!--<select class="long-select">{"Выберите элемент"}</select>-->
-            <!--<select class="long-select">{"Выберите пресет"}</select>-->
+            <!--<select class="slct-lg">{"Выберите элемент"}</select>-->
+            <!--<select class="slct-lg">{"Выберите пресет"}</select>-->
             <table class="table-fixed w-full">
               <thead class="bg-gray-50">
-                <tr>
-                  <th class="table-head-element text-center">Тип</th>
-                  <th class="table-head-element text-center">Id</th>
-                  <th class="table-head-element text-center">Виджет</th>
-                  <th class="table-head-element text-center">Вкладка</th>
-                  <th class="table-head-element text-center">Название</th>
-                  <th class="table-head-element text-center w-12"><button class="table-button bg-green-100 hover:bg-green-400" /></th>
-                  <th class="table-head-element text-center w-12" />
+                <tr class="tbl-txt-sz tbl-txt-p">
+                  <th class="tbl-hd">Тип</th>
+                  <th class="tbl-hd">Id</th>
+                  <th class="tbl-hd">Виджет</th>
+                  <th class="tbl-hd">Вкладка</th>
+                  <th class="tbl-hd">Название</th>
+                  <th class="tbl-hd w-12"><button class="btn-tbl bg-green-100 hover:bg-green-400" /></th>
+                  <th class="tbl-hd w-12" />
                 </tr>
               </thead>
               <tbody class="bg-white">
                 {#each config as element}
-                  <tr>
-                    <td class="table-body-element text-center">{element.subtype}</td>
-                    <td class="table-body-element text-center"><input bind:value={element.id} class="table-input w-full" type="text" /></td>
-                    <td class="table-body-element text-center"
-                      ><select class="table-input w-full" bind:value={selectedDeviceData}>
+                  <tr class="tbl-txt-sz tbl-txt-p">
+                    <td class="tbl-bdy">{element.subtype}</td>
+                    <td class="tbl-bdy"><input bind:value={element.id} class="tbl-ipt w-full" type="text" /></td>
+                    <td class="tbl-bdy"
+                      ><select class="tbl-ipt w-full" bind:value={selectedDeviceData}>
                         {#each deviceList as device}
                           <option value={device}>
                             {device.name}
                           </option>
                         {/each}
                       </select></td>
-                    <td class="table-body-element text-center"><input bind:value={element.page} class="table-input w-full" type="text" /></td>
-                    <td class="table-body-element text-center"><input bind:value={element.descr} class="table-input w-full" type="text" /></td>
-                    <td class="table-body-element text-center"><button on:click={() => (hideAllSubParams = !hideAllSubParams)} class="table-button bg-green-100 hover:bg-green-400" /></td>
-                    <td class="table-body-element text-center"><button class="table-button bg-red-100 hover:bg-red-400" /></td>
+                    <td class="tbl-bdy"><input bind:value={element.page} class="tbl-ipt w-full" type="text" /></td>
+                    <td class="tbl-bdy"><input bind:value={element.descr} class="tbl-ipt w-full" type="text" /></td>
+                    <td class="tbl-bdy"><button on:click={() => (hideAllSubParams = !hideAllSubParams)} class="btn-tbl bg-green-100 hover:bg-green-400" /></td>
+                    <td class="tbl-bdy"><button class="btn-tbl bg-red-100 hover:bg-red-400" /></td>
                   </tr>
                   {#if !hideAllSubParams}
                     {#each Object.entries(element) as [key, param]}
                       {#if key != "type" && key != "subtype" && key != "id" && key != "widget" && key != "page" && key != "descr"}
-                        <tr>
+                        <tr class="tbl-txt-sz tbl-txt-p">
                           <td />
                           <td />
                           <td />
-                          <td class="table-sub-body-element text-right">
-                            <p class="table-sub-text">{key}</p>
+                          <td class="tbl-s-bdy text-right">
+                            <p class="tbl-s-txt">{key}</p>
                           </td>
-                          <td class="table-sub-body-element text-center">
-                            <input bind:value={element[key]} class="table-sub-input w-full" type="text" />
+                          <td class="tbl-s-bdy text-center">
+                            <input bind:value={element[key]} class="tbl-s-ipt w-full" type="text" />
                           </td>
                         </tr>
                       {/if}
@@ -706,12 +706,12 @@
                 {/each}
               </tbody>
             </table>
-            <button class="long-button" on:click={() => pushConfigToEsp()}>{"Сохранить"}</button>
+            <button class="btn-lg" on:click={() => pushConfigToEsp()}>{"Сохранить"}</button>
           </Card>
         </div>
       </Route>
       <Route path="/connection">
-        <div class="cards-grid">
+        <div class="crd-grd">
           <Card title="Подключение к WiFi роутеру" />
           <Card title="Подключение к MQTT брокеру" />
         </div>
@@ -731,34 +731,34 @@
       <Route path="/list">
         <Card title={"Список устройств"}>
           <table class="table-fixed w-full">
-            <thead class="bg-gray-50">
+            <thead class="bg-gray-50 ">
               <tr>
-                <th class="table-head-element text-center">Название устройства</th>
-                <th class="table-head-element text-center">IP адрес</th>
-                <th class="table-head-element text-center">Идентификатор</th>
-                <th class="table-head-element text-center">Состояние</th>
+                <th class="tbl-hd">Название устройства</th>
+                <th class="tbl-hd">IP адрес</th>
+                <th class="tbl-hd">Идентификатор</th>
+                <th class="tbl-hd">Состояние</th>
               </tr>
             </thead>
             <tbody class="bg-white">
               {#each deviceList as device}
                 <tr>
-                  <td class="table-body-element text-center">{device.name}</td>
-                  <td class="table-body-element text-center"><a href={"http://" + device.ip}>{device.ip}</a></td>
-                  <td class="table-body-element text-center">{device.id}</td>
-                  <td class="table-body-element text-center {device.status ? 'bg-green-50' : 'bg-red-50'}">{device.status ? "online" : "offline"}</td>
+                  <td class="tbl-bdy">{device.name}</td>
+                  <td class="tbl-bdy"><a href={"http://" + device.ip}>{device.ip}</a></td>
+                  <td class="tbl-bdy">{device.id}</td>
+                  <td class="tbl-bdy {device.status ? 'bg-green-50' : 'bg-red-50'}">{device.status ? "online" : "offline"}</td>
                 </tr>
               {/each}
               {#if showInput}
                 <tr>
-                  <td class="table-body-element text-center"><input bind:value={newDevice.name} class="table-input w-full" type="text" /></td>
-                  <td class="table-body-element text-center"><input bind:value={newDevice.ip} class="table-input w-full" type="text" /></td>
-                  <td class="table-body-element text-center"><input bind:value={newDevice.id} class="table-input w-full" type="text" /></td>
-                  <td class="table-body-element text-center" />
+                  <td class="tbl-bdy"><input bind:value={newDevice.name} class="tbl-ipt w-full" type="text" /></td>
+                  <td class="tbl-bdy"><input bind:value={newDevice.ip} class="tbl-ipt w-full" type="text" /></td>
+                  <td class="tbl-bdy"><input bind:value={newDevice.id} class="tbl-ipt w-full" type="text" /></td>
+                  <td class="tbl-bdy" />
                 </tr>
               {/if}
             </tbody>
           </table>
-          <button class="long-button" on:click={() => ((showInput = !showInput), devListSave())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
+          <button class="btn-lg" on:click={() => ((showInput = !showInput), devListSave())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
         </Card>
       </Route>
       <Route path="/about">
@@ -776,85 +776,85 @@
   @layer components {
     /*==================================================cards grid=====================================================*/
     /* grid for cards */
-    .cards-grid {
+    .crd-grd {
       @apply grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 justify-items-center;
     }
     /* grid for cards for full screen */
-    .cards-grid-inline {
+    .crd-grd-ln {
       @apply grid grid-cols-1 justify-items-center;
     }
     /*=============================================card and items inside===============================================*/
     /* 1. paddig and style for card */
-    .card {
+    .crd {
       @apply w-full p-2 sm:p-2 md:p-2 lg:p-2 xl:px-8 xl:py-4 2xl:px-8 2xl:py-4 bg-white rounded-lg shadow-md lg:shadow-lg border border-gray-100;
     }
     /* 2. style for card header */
-    .card-header {
+    .crd-hdr {
       @apply text-center text-lg text-gray-500 font-bold pb-4;
     }
     /* 3. card items positioning*/
-    .card-items-psn {
+    .crd-itm-psn {
       @apply flex mb-4 h-8 items-center;
     }
     /* 4. widget description width*/
-    .widget-descr-width {
+    .wgt-dscr-w {
       @apply w-2/3;
     }
     /* 5. widget descr style*/
-    .widget-descr-style {
+    .wgt-dscr-stl {
       @apply pr-4 text-gray-500 font-bold;
     }
     /* 6. widget width*/
-    .widget-width {
+    .wgt-w {
       @apply flex justify-end w-1/3;
     }
     /*====================================================others=====================================================*/
-    .btn-indigo {
+    .btn-i {
       @apply py-2 px-4 bg-indigo-500 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75;
     }
-    .widget-input {
+    .wgt-ipt {
       @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white text-right;
     }
-    .json-input {
+    .jsn-ipt {
       @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
     }
-    .widget-anydata-style {
+    .wgt-adt-stl {
       @apply text-center text-gray-500 font-bold;
     }
     /*====================================================table=====================================================*/
-    .table-head-element {
-      @apply px-2 py-2 break-words text-gray-500 font-bold;
+    .tbl-hd {
+      @apply text-center px-2 py-2 break-words text-gray-500 font-bold;
     }
-    .table-body-element {
-      @apply px-2 py-2 break-words;
+    .tbl-bdy {
+      @apply text-center px-2 py-2 break-words;
     }
-    .table-sub-body-element {
+    .tbl-s-bdy {
       @apply px-2 py-1 break-words;
     }
-    .table-input {
+    .tbl-ipt {
       @apply content-center h-8 bg-gray-50 focus:bg-white appearance-none border-2 border-gray-100 text-gray-700 leading-tight focus:outline-none text-center focus:border-indigo-500;
     }
-    .table-sub-text {
+    .tbl-s-txt {
       @apply text-sm inline-block italic align-top text-right text-gray-500;
     }
-    .table-sub-input {
+    .tbl-s-ipt {
       @apply content-center h-6 bg-gray-50 focus:bg-white appearance-none border-2 border-gray-100 text-gray-700 leading-tight focus:outline-none text-center focus:border-indigo-500 rounded-sm;
     }
-    .table-text-padding {
+    .tbl-txt-p {
       @apply px-2 py-0 sm:py-0 md:py-0 lg:py-1 xl:py-2 2xl:py-2;
     }
-    .table-text-sizing {
+    .tbl-txt-sz {
       @apply text-xxs sm:text-xxs md:text-base lg:text-base xl:text-base 2xl:text-base;
     }
     /*====================================================buttons=====================================================*/
-    .long-button {
+    .btn-lg {
       @apply flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold h-8 w-full mt-4 border border-gray-300 rounded;
     }
-    .table-button {
+    .btn-tbl {
       @apply flex justify-center content-center text-gray-500 font-bold w-10 h-8 border border-gray-300;
     }
     /*====================================================select=====================================================*/
-    .long-select {
+    .slct-lg {
       @apply flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold h-8 w-1/4 mb-6 border border-gray-300 rounded;
     }
   }

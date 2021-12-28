@@ -4,15 +4,15 @@
   value = value;
 </script>
 
-<div class="card-items-psn">
-  <div class="widget-descr-width">
+<div class="crd-itm-psn">
+  <div class="wgt-dscr-w">
     <!-- svelte-ignore a11y-label-has-associated-control -->
-    <label class="widget-descr-style">{!widget.descr ? "" : widget.descr}</label>
+    <label class="wgt-dscr-stl">{!widget.descr ? "" : widget.descr}</label>
   </div>
-  <div class="widget-width">
+  <div class="wgt-w">
     <!-- svelte-ignore a11y-label-has-associated-control -->
-    <label class="widget-anydata-style">{!widget.status ? "" : widget.status}</label>
+    <label class="wgt-adt-stl">{!widget.status ? "" : widget.status}</label>
     <!-- svelte-ignore a11y-label-has-associated-control -->
-    <label class="widget-anydata-style">&nbsp;{!widget.after ? "" : widget.after}</label>
+    <label class="wgt-adt-stl">&nbsp;{!widget.after ? "" : widget.after}</label>
   </div>
 </div>

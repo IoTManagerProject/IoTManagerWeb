@@ -2,9 +2,9 @@
   export let title;
 </script>
 
-<div class="card">
+<div class="crd">
   {#if title}
-    <h1 class="card-header">{title}</h1>
+    <h1 class="crd-hdr">{title}</h1>
   {/if}
   <slot />
 </div>
