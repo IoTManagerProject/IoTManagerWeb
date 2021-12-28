@@ -840,6 +840,12 @@
     .table-sub-input {
       @apply content-center h-6 bg-gray-50 focus:bg-white appearance-none border-2 border-gray-100 text-gray-700 leading-tight focus:outline-none text-center focus:border-indigo-500 rounded-sm;
     }
+    .table-text-padding {
+      @apply px-2 py-0 sm:py-0 md:py-0 lg:py-1 xl:py-2 2xl:py-2;
+    }
+    .table-text-sizing {
+      @apply text-xxs sm:text-xxs md:text-base lg:text-base xl:text-base 2xl:text-base;
+    }
     /*====================================================buttons=====================================================*/
     .long-button {
       @apply flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold h-8 w-full mt-4 border border-gray-300 rounded;
