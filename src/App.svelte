@@ -27,6 +27,8 @@
 
   let showModalFlag = false;
 
+  let hideAllSubParams = false;
+
   //dashboard
   let wigets = [];
   let pages = [];
@@ -619,7 +621,9 @@
 
       <Route path="/config">
         <div class="cards-grid-inline">
-          <Card title="Конфигуратор">
+          <Card>
+            <!--<select class="long-select">{"Выберите элемент"}</select>-->
+            <!--<select class="long-select">{"Выберите пресет"}</select>-->
             <table class="table-fixed w-full">
               <thead class="bg-gray-50">
                 <tr>
@@ -628,7 +632,7 @@
                   <th class="table-head-element text-center">Виджет</th>
                   <th class="table-head-element text-center">Вкладка</th>
                   <th class="table-head-element text-center">Название</th>
-                  <th class="table-head-element text-center w-12" />
+                  <th class="table-head-element text-center w-12"><button class="table-button bg-green-100 hover:bg-green-400" /></th>
                   <th class="table-head-element text-center w-12" />
                 </tr>
               </thead>
@@ -650,22 +654,24 @@
                     <td class="table-body-element text-center"><button on:click={() => showAdditionalParams(element.id)} class="table-button bg-green-100 hover:bg-green-400" /></td>
                     <td class="table-body-element text-center"><button class="table-button bg-red-100 hover:bg-red-400" /></td>
                   </tr>
-                  <!-- {#each Object.values(element) as d}-->
-                  {#each Object.entries(element) as [key, param]}
-                    {#if key != "type" && key != "subtype" && key != "id" && key != "widget" && key != "page" && key != "descr"}
-                      <tr>
-                        <td />
-                        <td />
-                        <td />
-                        <td class="table-body-element text-right">
-                          <p class="table-sub-text">{key}</p>
-                        </td>
-                        <td class="table-body-element text-center">
-                          <input bind:value={element[key]} class="table-sub-input w-full" type="text" />
-                        </td>
-                      </tr>
-                    {/if}
-                  {/each}
+                  {#if !hideAllSubParams}
+                    {#each Object.entries(element) as [key, param]}
+                      {#if key != "type" && key != "subtype" && key != "id" && key != "widget" && key != "page" && key != "descr"}
+                        <tr>
+                          <td />
+                          <td />
+                          <td />
+                          <td class="table-sub-body-element text-right">
+                            <p class="table-sub-text">{key}</p>
+                          </td>
+                          <td class="table-sub-body-element text-center">
+                            <input bind:value={element[key]} class="table-sub-input w-full" type="text" />
+                          </td>
+                        </tr>
+                      {/if}
+                    {/each}
+                    <!--<br />-->
+                  {/if}
                 {/each}
               </tbody>
             </table>
@@ -750,7 +756,7 @@
     /*=============================================card and items inside===============================================*/
     /* 1. paddig and style for card */
     .card {
-      @apply w-full p-2 sm:p-2 md:p-2 lg:p-2 xl:px-8 xl:py-4 2xl:px-8 2xl:py-4 bg-white rounded-lg shadow-md lg:shadow-lg;
+      @apply w-full p-2 sm:p-2 md:p-2 lg:p-2 xl:px-8 xl:py-4 2xl:px-8 2xl:py-4 bg-white rounded-lg shadow-md lg:shadow-lg border border-gray-100;
     }
     /* 2. style for card header */
     .card-header {
@@ -792,6 +798,9 @@
     .table-body-element {
       @apply px-2 py-2 break-words;
     }
+    .table-sub-body-element {
+      @apply px-2 py-1 break-words;
+    }
     .table-input {
       @apply content-center h-8 bg-gray-50 focus:bg-white appearance-none border-2 border-gray-100 text-gray-700 leading-tight focus:outline-none text-center focus:border-indigo-500;
     }
@@ -807,6 +816,10 @@
     }
     .table-button {
       @apply flex justify-center content-center text-gray-500 font-bold w-10 h-8 border border-gray-300;
+    }
+    /*====================================================select=====================================================*/
+    .long-select {
+      @apply flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold h-8 w-1/4 mb-6 border border-gray-300 rounded;
     }
   }
 

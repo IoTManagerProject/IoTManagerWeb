@@ -3,6 +3,8 @@
 </script>
 
 <div class="card">
-  <h1 class="card-header">{title}</h1>
+  {#if title}
+    <h1 class="card-header">{title}</h1>
+  {/if}
   <slot />
 </div>
