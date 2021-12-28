@@ -1,5 +1,6 @@
 <script>
-  //==============================components import section====================================
+  //******************************************************import section*********************************************************/
+  //*****************************************************************************************************************************/
   import { onMount } from "svelte";
   import { Route, router, active } from "tinro";
   router.mode.hash(); // enables hash navigation method
@@ -16,18 +17,21 @@
   //npm install --save svelte-simple-modal
   //npm uninstall svelte-simple-modal
 
-  //==================================constants section========================================
+  //****************************************************constants section*********************************************************/
+  //******************************************************************************************************************************/
   let debug = true;
   let LOG_MAX_MESSAGES = 10;
   let reconnectTimeout = 60000;
 
-  //=================================variable section==========================================
+  //****************************************************variable section**********************************************************/
+  //******************************************************************************************************************************/
   let myip = document.location.hostname;
+
+  //Flags
   let showInput = false;
-
   let showModalFlag = false;
-
   let hideAllSubParams = false;
+  let additionalParams = false;
 
   //dashboard
   let wigets = [];
@@ -153,11 +157,40 @@
   };
 
   let widgetCollection = {};
-
   widgetCollection = {
-    toggle: "Тогл",
-    button: "Кнопка",
-    input: "Окно ввода",
+    undef: "Ошибка",
+    toggleBtn: "Переключатель",
+    btn: "Кнопка",
+    select: "Кнопка переключатель",
+    range: "Ползунок",
+    inputDate: "Окно ввода даты",
+    inputTime: "Окно ввода времени 1",
+    inputTimeClock: "Окно ввода времени 2",
+    inputDigit: "Окно ввода цифры",
+    inputDigitTemp: "Окно ввода температуры",
+    inputText: "Окно ввода текста",
+    chart: "График без точек",
+    chart2: "График с точками",
+    chart3: "График дневного расхода (столбики)",
+    chart4: "График дневного расхода (плавный)",
+    fillgauge: "Бочка",
+    progressline: "Линия",
+    progressround: "Круг",
+    anydata: "Текст",
+    anydataHum: "Влажность (%)",
+    anydataPress: "Давление (mm)",
+    anydataTemp: "Температура (°С)",
+    anydataPpb: "Части на миллиард (ppb)",
+    anydataPpm: "Части на миллион (ppm)",
+    anydataVlt: "Напряжение (Vlt)",
+    anydataAmp: "Сила тока (Amp)",
+    anydataWtt: "Мощность (Wtt)",
+    anydataWhr: "Энергия (Whr)",
+    anydataHtz: "Частота (Htz)",
+    anydataTime: "Манометр",
+    alarm: "Тревожное сообщение 1",
+    anydataAlarm: "Тревожное сообщение 2",
+    na: "Без виджета",
   };
 
   //configuration
@@ -193,8 +226,10 @@
   let currentPageName = undefined;
   router.subscribe(handleNavigation);
 
-  //=================================functions section========================================
-  //web socket functions======================================================================
+  //****************************************************functions section********************************************************/
+  //*****************************************************************************************************************************/
+
+  //****************************************************web sockets section******************************************************/
   function connectToAllDevices() {
     //closeAllConnection();
     //socket = [];
@@ -342,7 +377,7 @@
     }
   }
 
-  //dashboard functions====================================================================================
+  //***********************************************************dashboard************************************************************/
   function findNewPage() {
     pages = [];
     const newPage = Array.from(new Set(Array.from(wigets, ({ page }) => page)));
@@ -365,7 +400,7 @@
     findNewPage();
   }
 
-  //logging execution======================================================================================
+  //***********************************************************logging************************************************************/
   const addCoreMsg = (msg) => {
     if (coreMessages.length > Number(LOG_MAX_MESSAGES)) {
       coreMessages = coreMessages.slice(0);
@@ -383,7 +418,7 @@
     });
   };
 
-  //device list handle======================================================================================
+  //***********************************************************dev list************************************************************/
   function dropdownChange() {
     socketConnected = selectedDeviceData.status;
     wsSelected = selectedDeviceData.ws;
@@ -417,7 +452,7 @@
     buf = [];
   }
 
-  //navigation===========================================================================================
+  //***********************************************************navigation************************************************************/
   function handleNavigation() {
     clearData();
     currentPageName = $router.path.toString();
@@ -431,7 +466,7 @@
     }
   }
 
-  //json=================================================================================================
+  //****************************************************************json************************************************************/
   function getJsonObject(array, number) {
     let num = 0;
     let out = {};
@@ -466,8 +501,7 @@
     return true;
   }
 
-  //post и get запросы=================================================================================
-  //запрос с помощью которого можно отредактировать любой файл на esp
+  //**********************************************************post and get************************************************************/
   //editRequest("192.168.88.235", "data data data data", "file.json")
 
   function editRequest(url, data, filename) {
@@ -512,8 +546,6 @@
       console.log("error", res.status);
     }
   }
-
-  let additionalParams = false;
 
   function showAdditionalParams(id) {
     additionalParams = true;
@@ -618,7 +650,6 @@
           </Card>
         </div>
       </Route>
-
       <Route path="/config">
         <div class="cards-grid-inline">
           <Card>
@@ -679,7 +710,6 @@
           </Card>
         </div>
       </Route>
-
       <Route path="/connection">
         <div class="cards-grid">
           <Card title="Подключение к WiFi роутеру" />
