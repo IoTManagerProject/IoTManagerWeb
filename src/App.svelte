@@ -30,7 +30,7 @@
   //Flags
   let showInput = false;
   let showModalFlag = false;
-  let hideAllSubParams = false;
+  let hideAllSubParams = true;
   let additionalParams = false;
 
   //dashboard
@@ -588,7 +588,7 @@
           {/each}
         </select>
       </div>
-      <div class="px-10 py-1">
+      <div class="px-5 py-1">
         <svg class="h-8 w-8 {socketConnected === true ? 'text-green-500' : 'text-red-500'}" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path stroke="none" d="M0 0h24v24H0z" /> <path d="M7 18a4.6 4.4 0 0 1 0 -9h0a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-12" /></svg>
       </div>
     </div>
@@ -663,8 +663,8 @@
                   <th class="tbl-hd">Виджет</th>
                   <th class="tbl-hd">Вкладка</th>
                   <th class="tbl-hd">Название</th>
-                  <th class="tbl-hd w-12"><button class="btn-tbl bg-green-100 hover:bg-green-400" /></th>
-                  <th class="tbl-hd w-12" />
+                  <th class="tbl-hd w-7" />
+                  <th class="tbl-hd w-7" />
                 </tr>
               </thead>
               <tbody class="bg-white">
@@ -682,8 +682,8 @@
                       </select></td>
                     <td class="tbl-bdy"><input bind:value={element.page} class="tbl-ipt w-full" type="text" /></td>
                     <td class="tbl-bdy"><input bind:value={element.descr} class="tbl-ipt w-full" type="text" /></td>
-                    <td class="tbl-bdy"><button on:click={() => (hideAllSubParams = !hideAllSubParams)} class="btn-tbl bg-green-100 hover:bg-green-400" /></td>
-                    <td class="tbl-bdy"><button class="btn-tbl bg-red-100 hover:bg-red-400" /></td>
+                    <td class="tbl-bdy"><svg on:click={() => (hideAllSubParams = !hideAllSubParams)} class="h-6 w-6 text-green-400" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path stroke="none" d="M0 0h24v24H0z" /> <circle cx="5" cy="12" r="1" /> <circle cx="12" cy="12" r="1" /> <circle cx="19" cy="12" r="1" /></svg></td>
+                    <td class="tbl-bdy"><svg class="h-6 w-6 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /></svg></td>
                   </tr>
                   {#if !hideAllSubParams}
                     {#each Object.entries(element) as [key, param]}
@@ -823,35 +823,35 @@
     }
     /*====================================================table=====================================================*/
     .tbl-hd {
-      @apply text-center px-2 py-2 break-words text-gray-500 font-bold;
+      @apply text-center px-1 py-1 break-words text-gray-500 font-bold;
     }
     .tbl-bdy {
-      @apply text-center px-2 py-2 break-words;
+      @apply text-center px-1 py-1 break-words;
     }
     .tbl-s-bdy {
-      @apply px-2 py-1 break-words;
+      @apply px-1 py-1 break-words;
     }
     .tbl-ipt {
-      @apply content-center h-8 bg-gray-50 focus:bg-white appearance-none border-2 border-gray-100 text-gray-700 leading-tight focus:outline-none text-center focus:border-indigo-500;
-    }
-    .tbl-s-txt {
-      @apply text-sm inline-block italic align-top text-right text-gray-500;
+      @apply content-center h-auto bg-gray-50 focus:bg-white appearance-none border-2 border-gray-100 text-gray-700 leading-tight focus:outline-none text-center focus:border-indigo-500;
     }
     .tbl-s-ipt {
-      @apply content-center h-6 bg-gray-50 focus:bg-white appearance-none border-2 border-gray-100 text-gray-700 leading-tight focus:outline-none text-center focus:border-indigo-500 rounded-sm;
+      @apply content-center h-auto bg-gray-50 focus:bg-white appearance-none border-2 border-gray-100 text-gray-700 leading-tight focus:outline-none text-center focus:border-indigo-500 rounded-sm;
+    }
+    .tbl-s-txt {
+      @apply inline-block italic align-top text-right text-gray-500;
     }
     .tbl-txt-p {
       @apply px-2 py-0 sm:py-0 md:py-0 lg:py-1 xl:py-2 2xl:py-2;
     }
     .tbl-txt-sz {
-      @apply text-xxs sm:text-xxs md:text-base lg:text-base xl:text-base 2xl:text-base;
+      @apply text-xxs sm:text-base md:text-base lg:text-base xl:text-base 2xl:text-base;
     }
     /*====================================================buttons=====================================================*/
     .btn-lg {
       @apply flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold h-8 w-full mt-4 border border-gray-300 rounded;
     }
     .btn-tbl {
-      @apply flex justify-center content-center text-gray-500 font-bold w-10 h-8 border border-gray-300;
+      @apply flex justify-center content-center text-gray-500 font-bold w-6 h-auto border border-gray-300;
     }
     /*====================================================select=====================================================*/
     .slct-lg {
