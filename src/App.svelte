@@ -156,42 +156,34 @@
     ],
   };
 
-  let widgetCollection = {};
-  widgetCollection = {
-    undef: "Ошибка",
-    toggleBtn: "Переключатель",
-    btn: "Кнопка",
-    select: "Кнопка переключатель",
-    range: "Ползунок",
-    inputDate: "Окно ввода даты",
-    inputTime: "Окно ввода времени 1",
-    inputTimeClock: "Окно ввода времени 2",
-    inputDigit: "Окно ввода цифры",
-    inputDigitTemp: "Окно ввода температуры",
-    inputText: "Окно ввода текста",
-    chart: "График без точек",
-    chart2: "График с точками",
-    chart3: "График дневного расхода (столбики)",
-    chart4: "График дневного расхода (плавный)",
-    fillgauge: "Бочка",
-    progressline: "Линия",
-    progressround: "Круг",
-    anydata: "Текст",
-    anydataHum: "Влажность (%)",
-    anydataPress: "Давление (mm)",
-    anydataTemp: "Температура (°С)",
-    anydataPpb: "Части на миллиард (ppb)",
-    anydataPpm: "Части на миллион (ppm)",
-    anydataVlt: "Напряжение (Vlt)",
-    anydataAmp: "Сила тока (Amp)",
-    anydataWtt: "Мощность (Wtt)",
-    anydataWhr: "Энергия (Whr)",
-    anydataHtz: "Частота (Htz)",
-    anydataTime: "Манометр",
-    alarm: "Тревожное сообщение 1",
-    anydataAlarm: "Тревожное сообщение 2",
-    na: "Без виджета",
-  };
+  let widgetCollection = [];
+
+  widgetCollection = [
+    {
+      id: "toggle",
+      val: "Переключатель",
+    },
+    {
+      id: "btn",
+      val: "Кнопка",
+    },
+    {
+      id: "select",
+      val: "Кнопка переключатель",
+    },
+    {
+      id: "range",
+      val: "Ползунок",
+    },
+    {
+      id: "anydata",
+      val: "Текст",
+    },
+    {
+      id: "input",
+      val: "Ввод",
+    },
+  ];
 
   //configuration
   let config = [];
@@ -673,10 +665,10 @@
                     <td class="tbl-bdy">{element.subtype}</td>
                     <td class="tbl-bdy"><input bind:value={element.id} class="tbl-ipt w-full" type="text" /></td>
                     <td class="tbl-bdy"
-                      ><select class="tbl-ipt w-full" bind:value={selectedDeviceData}>
-                        {#each deviceList as device}
-                          <option value={device}>
-                            {device.name}
+                      ><select bind:value={element.widget} class="tbl-ipt w-full">
+                        {#each widgetCollection as widget}
+                          <option value={widget.id}>
+                            {widget.val}
                           </option>
                         {/each}
                       </select></td>
@@ -732,7 +724,7 @@
         <Card title={"Список устройств"}>
           <table class="table-fixed w-full">
             <thead class="bg-gray-50 ">
-              <tr>
+              <tr class="tbl-txt-sz tbl-txt-p">
                 <th class="tbl-hd">Название устройства</th>
                 <th class="tbl-hd">IP адрес</th>
                 <th class="tbl-hd">Идентификатор</th>
@@ -741,7 +733,7 @@
             </thead>
             <tbody class="bg-white">
               {#each deviceList as device}
-                <tr>
+                <tr class="tbl-txt-sz tbl-txt-p">
                   <td class="tbl-bdy">{device.name}</td>
                   <td class="tbl-bdy"><a href={"http://" + device.ip}>{device.ip}</a></td>
                   <td class="tbl-bdy">{device.id}</td>
@@ -749,7 +741,7 @@
                 </tr>
               {/each}
               {#if showInput}
-                <tr>
+                <tr class="tbl-txt-sz tbl-txt-p">
                   <td class="tbl-bdy"><input bind:value={newDevice.name} class="tbl-ipt w-full" type="text" /></td>
                   <td class="tbl-bdy"><input bind:value={newDevice.ip} class="tbl-ipt w-full" type="text" /></td>
                   <td class="tbl-bdy"><input bind:value={newDevice.id} class="tbl-ipt w-full" type="text" /></td>
