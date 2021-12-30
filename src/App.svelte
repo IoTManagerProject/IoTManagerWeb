@@ -186,7 +186,7 @@
   ];
 
   //configuration
-  let config = [];
+  let configJson = [];
   let buf = [];
 
   //web sockets
@@ -317,9 +317,9 @@
           if (data.includes("]}")) {
             buf = buf.replace("]}", "]");
             if (IsJsonParse(buf)) {
-              config = JSON.parse(buf);
+              configJson = JSON.parse(buf);
               buf = [];
-              config = config;
+              configJson = configJson;
               if (debug) console.log("[i]", "parsed");
             }
           }
@@ -440,7 +440,7 @@
   }
 
   function clearData() {
-    config = [];
+    configJson = [];
     buf = [];
   }
 
@@ -544,12 +544,16 @@
     if (debug) console.log("[i]", "user open add params ", id);
   }
 
-  function pushConfigToEsp() {
-    //config.forEach((element) => {
-    wsSendMsg(wsSelected, "/changed" + JSON.stringify(config));
+  function checkConfigJson() {
+    //configJson.forEach((element) => {
+    //});
+  }
+
+  function sendConfigJson() {
+    checkConfigJson();
+    wsSendMsg(wsSelected, "/gifnoc.json" + JSON.stringify(configJson));
     clearData();
     sendCurrentPageName();
-    //});
   }
 
   function showModal() {
@@ -660,7 +664,7 @@
                 </tr>
               </thead>
               <tbody class="bg-white">
-                {#each config as element}
+                {#each configJson as element}
                   <tr class="tbl-txt-sz tbl-txt-p">
                     <td class="tbl-bdy">{element.subtype}</td>
                     <td class="tbl-bdy"><input bind:value={element.id} class="tbl-ipt w-full" type="text" /></td>
@@ -698,7 +702,7 @@
                 {/each}
               </tbody>
             </table>
-            <button class="btn-lg" on:click={() => pushConfigToEsp()}>{"Сохранить"}</button>
+            <button class="btn-lg" on:click={() => sendConfigJson()}>{"Сохранить"}</button>
           </Card>
         </div>
       </Route>
