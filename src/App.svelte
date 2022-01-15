@@ -180,8 +180,8 @@
       val: "Текст",
     },
     {
-      id: "input",
-      val: "Ввод",
+      id: "inputDigit",
+      val: "Ввод цифры",
     },
   ];
 
@@ -620,7 +620,7 @@
   </ul>
 
   <ul class="menu__main">
-    <div class="bg-cover bg-gray-50 pt-8 px-4">
+    <div class="bg-cover pt-8 px-4">
       <Route path="/">
         <div class="crd-grd">
           {#each pages as pagesName, i}
