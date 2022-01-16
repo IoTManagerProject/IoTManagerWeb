@@ -156,38 +156,41 @@
     ],
   };
 
-  let widgetCollection = [];
-
-  widgetCollection = [
-    {
-      id: "toggle",
-      val: "Переключатель",
-    },
-    {
-      id: "btn",
-      val: "Кнопка",
-    },
-    {
-      id: "select",
-      val: "Кнопка переключатель",
-    },
-    {
-      id: "range",
-      val: "Ползунок",
-    },
-    {
-      id: "anydata",
-      val: "Текст",
-    },
-    {
-      id: "inputDigit",
-      val: "Ввод цифры",
-    },
-  ];
-
   //configuration
   let configJson = [];
-  let buf = [];
+  let configJsonBuf = [];
+
+  let widgetCollection = [];
+  let widgetCollectionBuf = [];
+
+  let widgetsDropdown = [];
+
+  //widgetsDropdown = [
+  //  {
+  //    id: "toggle",
+  //    val: "Переключатель",
+  //  },
+  //  {
+  //    id: "btn",
+  //    val: "Кнопка",
+  //  },
+  //  {
+  //    id: "select",
+  //    val: "Кнопка переключатель",
+  //  },
+  //  {
+  //    id: "range",
+  //    val: "Ползунок",
+  //  },
+  //  {
+  //    id: "anydata",
+  //    val: "Текст",
+  //  },
+  //  {
+  //    id: "inputDigit",
+  //    val: "Ввод цифры",
+  //  },
+  //];
 
   //web sockets
   let socket = [];
@@ -313,14 +316,27 @@
           //if (debug) console.log("[i]", "log data:", data);
         } else if (data.includes("/config.json")) {
           data = data.replace("/config.json", "");
-          buf = buf + data;
+          configJsonBuf = configJsonBuf + data;
           if (data.includes("]}")) {
-            buf = buf.replace("]}", "]");
-            if (IsJsonParse(buf)) {
-              configJson = JSON.parse(buf);
-              buf = [];
+            configJsonBuf = configJsonBuf.replace("]}", "]");
+            if (IsJsonParse(configJsonBuf)) {
+              configJson = JSON.parse(configJsonBuf);
+              configJsonBuf = [];
               configJson = configJson;
-              if (debug) console.log("[i]", "parsed");
+              if (debug) console.log("[i]", "configJson parsed");
+            }
+          }
+        } else if (data.includes("/widgets.json")) {
+          data = data.replace("/widgets.json", "");
+          widgetCollectionBuf = widgetCollectionBuf + data;
+          if (data.includes("]}")) {
+            widgetCollectionBuf = widgetCollectionBuf.replace("]}", "]");
+            if (IsJsonParse(widgetCollectionBuf)) {
+              widgetCollection = JSON.parse(widgetCollectionBuf);
+              widgetCollectionBuf = [];
+              widgetCollection = widgetCollection;
+              createWidgetsDropdown();
+              if (debug) console.log("[i]", "widgetCollection parsed");
             }
           }
         }
@@ -336,6 +352,30 @@
     } else {
       if (debug) console.log("[e]", "socket not exist");
     }
+  }
+
+  function sendConfigJson() {
+    wsSendMsg(wsSelected, "/gifnoc.json" + JSON.stringify(configJson));
+    clearData();
+    sendCurrentPageName();
+  }
+
+  function createWidgetsDropdown() {
+    widgetCollection.forEach((widget) => {
+      widgetsDropdown.push({
+        id: widget.name,
+        val: widget.rus,
+      });
+    });
+    widgetsDropdown = widgetsDropdown;
+    if (debug) console.log("[i]", widgetsDropdown);
+  }
+
+  function clearData() {
+    configJson = [];
+    configJsonBuf = [];
+    widgetCollection = [];
+    widgetCollectionBuf = [];
   }
 
   function wsPush(ws, topic, status) {
@@ -439,11 +479,6 @@
     }
   }
 
-  function clearData() {
-    configJson = [];
-    buf = [];
-  }
-
   //***********************************************************navigation************************************************************/
   function handleNavigation() {
     clearData();
@@ -542,18 +577,6 @@
   function showAdditionalParams(id) {
     additionalParams = true;
     if (debug) console.log("[i]", "user open add params ", id);
-  }
-
-  function checkConfigJson() {
-    //configJson.forEach((element) => {
-    //});
-  }
-
-  function sendConfigJson() {
-    checkConfigJson();
-    wsSendMsg(wsSelected, "/gifnoc.json" + JSON.stringify(configJson));
-    clearData();
-    sendCurrentPageName();
   }
 
   function showModal() {
@@ -670,7 +693,7 @@
                     <td class="tbl-bdy"><input bind:value={element.id} class="tbl-ipt w-full" type="text" /></td>
                     <td class="tbl-bdy"
                       ><select bind:value={element.widget} class="tbl-ipt w-full">
-                        {#each widgetCollection as widget}
+                        {#each widgetsDropdown as widget}
                           <option value={widget.id}>
                             {widget.val}
                           </option>
