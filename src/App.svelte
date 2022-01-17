@@ -163,35 +163,6 @@
   let widgetCollection = [];
   let widgetCollectionBuf = [];
 
-  let widgetsDropdown = [];
-
-  //widgetsDropdown = [
-  //  {
-  //    id: "toggle",
-  //    val: "Переключатель",
-  //  },
-  //  {
-  //    id: "btn",
-  //    val: "Кнопка",
-  //  },
-  //  {
-  //    id: "select",
-  //    val: "Кнопка переключатель",
-  //  },
-  //  {
-  //    id: "range",
-  //    val: "Ползунок",
-  //  },
-  //  {
-  //    id: "anydata",
-  //    val: "Текст",
-  //  },
-  //  {
-  //    id: "inputDigit",
-  //    val: "Ввод цифры",
-  //  },
-  //];
-
   //web sockets
   let socket = [];
   let socketConnected = false;
@@ -335,7 +306,6 @@
               widgetCollection = JSON.parse(widgetCollectionBuf);
               widgetCollectionBuf = [];
               widgetCollection = widgetCollection;
-              createWidgetsDropdown();
               if (debug) console.log("[i]", "widgetCollection parsed");
             }
           }
@@ -358,17 +328,6 @@
     wsSendMsg(wsSelected, "/gifnoc.json" + JSON.stringify(configJson));
     clearData();
     sendCurrentPageName();
-  }
-
-  function createWidgetsDropdown() {
-    widgetCollection.forEach((widget) => {
-      widgetsDropdown.push({
-        id: widget.name,
-        val: widget.rus,
-      });
-    });
-    widgetsDropdown = widgetsDropdown;
-    if (debug) console.log("[i]", widgetsDropdown);
   }
 
   function clearData() {
@@ -526,6 +485,19 @@
       return false;
     }
     return true;
+  }
+
+  //пример как формировать массив json
+  function createWidgetsDropdown() {
+    let widgetsDropdown = [];
+    widgetCollection.forEach((widget) => {
+      widgetsDropdown.push({
+        id: widget.name,
+        val: widget.rus,
+      });
+    });
+    widgetsDropdown = widgetsDropdown;
+    if (debug) console.log("[i]", widgetsDropdown);
   }
 
   //**********************************************************post and get************************************************************/
@@ -693,9 +665,9 @@
                     <td class="tbl-bdy"><input bind:value={element.id} class="tbl-ipt w-full" type="text" /></td>
                     <td class="tbl-bdy"
                       ><select bind:value={element.widget} class="tbl-ipt w-full">
-                        {#each widgetsDropdown as widget}
-                          <option value={widget.id}>
-                            {widget.val}
+                        {#each widgetCollection as select}
+                          <option value={select.name}>
+                            {select.label}
                           </option>
                         {/each}
                       </select></td>
