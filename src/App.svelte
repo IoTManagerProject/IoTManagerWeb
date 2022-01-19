@@ -190,6 +190,7 @@
 
   //navigation
   let currentPageName = undefined;
+  let dataReceivingInProgress = false;
   router.subscribe(handleNavigation);
 
   //****************************************************functions section********************************************************/
@@ -286,6 +287,7 @@
           addCoreMsg(data);
           //if (debug) console.log("[i]", "log data:", data);
         } else if (data.includes("/config.json")) {
+          dataReceivingInProgress = true;
           data = data.replace("/config.json", "");
           configJsonBuf = configJsonBuf + data;
           if (data.includes("]}")) {
@@ -294,10 +296,12 @@
               configJson = JSON.parse(configJsonBuf);
               configJsonBuf = [];
               configJson = configJson;
+              dataReceivingInProgress = false;
               if (debug) console.log("[i]", "configJson parsed");
             }
           }
         } else if (data.includes("/widgets.json")) {
+          dataReceivingInProgress = true;
           data = data.replace("/widgets.json", "");
           widgetCollectionBuf = widgetCollectionBuf + data;
           if (data.includes("]}")) {
@@ -306,6 +310,7 @@
               widgetCollection = JSON.parse(widgetCollectionBuf);
               widgetCollectionBuf = [];
               widgetCollection = widgetCollection;
+              dataReceivingInProgress = false;
               if (debug) console.log("[i]", "widgetCollection parsed");
             }
           }
