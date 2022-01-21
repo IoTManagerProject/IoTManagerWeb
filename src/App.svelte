@@ -159,9 +159,15 @@
   //configuration
   let configJson = [];
   let configJsonBuf = [];
+  let configJsonFlag = false;
+  let configJsonStart = "/st/config.json";
+  let configJsonEnd = "/end/config.json";
 
-  let widgetCollection = [];
-  let widgetCollectionBuf = [];
+  let widgetsJson = [];
+  let widgetsJsonBuf = [];
+  let widgetsJsonFlag = false;
+  let widgetsJsonStart = "/st/widgets.json";
+  let widgetsJsonEnd = "/end/widgets.json";
 
   //web sockets
   let socket = [];
@@ -178,12 +184,6 @@
       name: "Устройство 1",
       id: "987654321",
       ip: "192.168.88.235",
-      status: false,
-    },
-    {
-      name: "Устройство 2",
-      id: "987654321",
-      ip: "192.168.88.233",
       status: false,
     },
   ];
@@ -282,39 +282,52 @@
       socket[ws].addEventListener("message", function (event) {
         let data = event.data.toString();
         //if (debug) console.log("[i]", "data:", data);
-        if (data.includes("[log]")) {
-          data = data.replace("[log]", "");
-          addCoreMsg(data);
-          //if (debug) console.log("[i]", "log data:", data);
-        } else if (data.includes("/config.json")) {
-          dataReceivingInProgress = true;
-          data = data.replace("/config.json", "");
-          configJsonBuf = configJsonBuf + data;
-          if (data.includes("]}")) {
-            configJsonBuf = configJsonBuf.replace("]}", "]");
-            if (IsJsonParse(configJsonBuf)) {
-              configJson = JSON.parse(configJsonBuf);
-              configJsonBuf = [];
-              configJson = configJson;
-              dataReceivingInProgress = false;
-              if (debug) console.log("[i]", "configJson parsed");
-            }
-          }
-        } else if (data.includes("/widgets.json")) {
-          dataReceivingInProgress = true;
-          data = data.replace("/widgets.json", "");
-          widgetCollectionBuf = widgetCollectionBuf + data;
-          if (data.includes("]}")) {
-            widgetCollectionBuf = widgetCollectionBuf.replace("]}", "]");
-            if (IsJsonParse(widgetCollectionBuf)) {
-              widgetCollection = JSON.parse(widgetCollectionBuf);
-              widgetCollectionBuf = [];
-              widgetCollection = widgetCollection;
-              dataReceivingInProgress = false;
-              if (debug) console.log("[i]", "widgetCollection parsed");
-            }
-          }
+        //if (data.includes("[log]")) {
+        //  data = data.replace("[log]", "");
+        //  addCoreMsg(data);
+        //}
+        //сборщик configJson пакетов========================================
+        if (data === configJsonStart) {
+          if (debug) console.log("[i]", "start receiving configJson");
+          configJsonFlag = true;
+          configJsonBuf = [];
+          configJson = [];
         }
+        if (configJsonFlag && data != configJsonStart && data != configJsonEnd) {
+          //data = strdecode(data);
+          configJsonBuf = configJsonBuf + data;
+        }
+        if (data === configJsonEnd) {
+          if (debug) console.log("[i]", "comleted receiving configJson");
+          configJsonFlag = false;
+          if (IsJsonParse(configJsonBuf)) {
+            configJson = JSON.parse(configJsonBuf);
+            configJson = configJson;
+            if (debug) console.log("[i]", "configJson parced!");
+          }
+          configJsonBuf = [];
+        }
+        //сборщик widgetsJson пакетов========================================
+        if (data === widgetsJsonStart) {
+          if (debug) console.log("[i]", "start receiving widgetsJson");
+          widgetsJsonFlag = true;
+          widgetsJsonBuf = [];
+          widgetsJson = [];
+        }
+        if (widgetsJsonFlag && data != widgetsJsonStart && data != widgetsJsonEnd) {
+          widgetsJsonBuf = widgetsJsonBuf + data;
+        }
+        if (data === widgetsJsonEnd) {
+          if (debug) console.log("[i]", "comleted receiving widgetsJson");
+          widgetsJsonFlag = false;
+          if (IsJsonParse(widgetsJsonBuf)) {
+            widgetsJson = JSON.parse(widgetsJsonBuf);
+            widgetsJson = widgetsJson;
+            if (debug) console.log("[i]", "widgetsJson parced!");
+          }
+          widgetsJsonBuf = [];
+        }
+        //====================================================================
       });
       socket[ws].addEventListener("close", (event) => {
         if (debug) console.log("[e]", ip, "connection closed");
@@ -331,15 +344,24 @@
 
   function sendConfigJson() {
     wsSendMsg(wsSelected, "/gifnoc.json" + JSON.stringify(configJson));
+    //wsSendMsg(wsSelected, "/gifnoc.json" + strencode(configJson));
     clearData();
     sendCurrentPageName();
+  }
+
+  function strencode(data) {
+    return unescape(encodeURIComponent(JSON.stringify(data)));
+  }
+
+  function strdecode(data) {
+    return JSON.parse(decodeURIComponent(escape(data)));
   }
 
   function clearData() {
     configJson = [];
     configJsonBuf = [];
-    widgetCollection = [];
-    widgetCollectionBuf = [];
+    widgetsJson = [];
+    widgetsJsonBuf = [];
   }
 
   function wsPush(ws, topic, status) {
@@ -495,7 +517,7 @@
   //пример как формировать массив json
   function createWidgetsDropdown() {
     let widgetsDropdown = [];
-    widgetCollection.forEach((widget) => {
+    widgetsJson.forEach((widget) => {
       widgetsDropdown.push({
         id: widget.name,
         val: widget.rus,
@@ -670,7 +692,7 @@
                     <td class="tbl-bdy"><input bind:value={element.id} class="tbl-ipt w-full" type="text" /></td>
                     <td class="tbl-bdy"
                       ><select bind:value={element.widget} class="tbl-ipt w-full">
-                        {#each widgetCollection as select}
+                        {#each widgetsJson as select}
                           <option value={select.name}>
                             {select.label}
                           </option>
