@@ -254,6 +254,7 @@
       if (debug) console.log("[e]", "device list wrong");
     } else {
       socket[ws] = new WebSocket("ws://" + ip + ":81");
+      socket.binaryType = "blob";
       //socket[ws] = new WebSocket("ws://" + ip + "/ws");
       if (debug) console.log("[i]", ip, "started connecting...");
     }
@@ -280,53 +281,100 @@
         //socket[ws].send("HELLO");
       });
       socket[ws].addEventListener("message", function (event) {
-        let data = event.data.toString();
+        let data;
+        if (typeof event.data === "string") {
+          data = event.data;
+          if (data === configJsonStart) {
+            if (debug) console.log("[i]", "start receiving configJson");
+            configJsonFlag = true;
+          }
+          if (data === widgetsJsonStart) {
+            if (debug) console.log("[i]", "start receiving widgetsJson");
+            widgetsJsonFlag = true;
+          }
+        }
+        if (event.data instanceof Blob) {
+          if (debug) console.log("[i]", "binary frame");
+          let reader = new FileReader();
+          reader.readAsText(event.data);
+          reader.onload = () => {
+            let result = reader.result;
+            //сборщик configJson пакетов========================================
+            if (configJsonFlag) {
+              configJsonBuf = configJsonBuf + result;
+              if (result.includes("]")) {
+                if (debug) console.log("[i]", "stop receiving configJson");
+                if (debug) console.log("[i]", configJsonBuf);
+                if (IsJsonParse(configJsonBuf)) {
+                  configJson = JSON.parse(configJsonBuf);
+                  configJson = configJson;
+                  if (debug) console.log("[i]", "configJson parced!");
+                  configJsonFlag = false;
+                }
+              }
+            }
+            //сборщик widgetsJson пакетов========================================
+            if (widgetsJsonFlag) {
+              widgetsJsonBuf = widgetsJsonBuf + result;
+              if (result.includes("]")) {
+                if (debug) console.log("[i]", "stop receiving widgetsJson");
+                if (debug) console.log("[i]", widgetsJsonBuf);
+                if (IsJsonParse(widgetsJsonBuf)) {
+                  widgetsJson = JSON.parse(widgetsJsonBuf);
+                  widgetsJson = widgetsJson;
+                  if (debug) console.log("[i]", "widgetsJson parced!");
+                  widgetsJsonFlag = false;
+                }
+              }
+            }
+          };
+        }
         //if (debug) console.log("[i]", "data:", data);
         //if (data.includes("[log]")) {
         //  data = data.replace("[log]", "");
         //  addCoreMsg(data);
         //}
         //сборщик configJson пакетов========================================
-        if (data === configJsonStart) {
-          if (debug) console.log("[i]", "start receiving configJson");
-          configJsonFlag = true;
-          configJsonBuf = [];
-          configJson = [];
-        }
-        if (configJsonFlag && data != configJsonStart && data != configJsonEnd) {
-          //data = strdecode(data);
-          configJsonBuf = configJsonBuf + data;
-        }
-        if (data === configJsonEnd) {
-          if (debug) console.log("[i]", "comleted receiving configJson");
-          configJsonFlag = false;
-          if (IsJsonParse(configJsonBuf)) {
-            configJson = JSON.parse(configJsonBuf);
-            configJson = configJson;
-            if (debug) console.log("[i]", "configJson parced!");
-          }
-          configJsonBuf = [];
-        }
-        //сборщик widgetsJson пакетов========================================
-        if (data === widgetsJsonStart) {
-          if (debug) console.log("[i]", "start receiving widgetsJson");
-          widgetsJsonFlag = true;
-          widgetsJsonBuf = [];
-          widgetsJson = [];
-        }
-        if (widgetsJsonFlag && data != widgetsJsonStart && data != widgetsJsonEnd) {
-          widgetsJsonBuf = widgetsJsonBuf + data;
-        }
-        if (data === widgetsJsonEnd) {
-          if (debug) console.log("[i]", "comleted receiving widgetsJson");
-          widgetsJsonFlag = false;
-          if (IsJsonParse(widgetsJsonBuf)) {
-            widgetsJson = JSON.parse(widgetsJsonBuf);
-            widgetsJson = widgetsJson;
-            if (debug) console.log("[i]", "widgetsJson parced!");
-          }
-          widgetsJsonBuf = [];
-        }
+        //if (data === configJsonStart) {
+        //  if (debug) console.log("[i]", "start receiving configJson");
+        //  configJsonFlag = true;
+        //  configJsonBuf = [];
+        //  configJson = [];
+        //}
+        //if (configJsonFlag && data != configJsonStart && data != configJsonEnd) {
+        //  configJsonBuf = configJsonBuf + data;
+        //}
+        //if (data === configJsonEnd) {
+        //  if (debug) console.log("[i]", "comleted receiving configJson");
+        //  configJsonFlag = false;
+        //  if (IsJsonParse(configJsonBuf)) {
+        //    configJson = JSON.parse(configJsonBuf);
+        //    configJson = configJson;
+        //    if (debug) console.log("[i]", "configJson parced!");
+        //  }
+        //  configJsonBuf = [];
+        //}
+        ////сборщик widgetsJson пакетов========================================
+        //if (data === widgetsJsonStart) {
+        //  if (debug) console.log("[i]", "start receiving widgetsJson");
+        //  widgetsJsonFlag = true;
+        //  widgetsJsonBuf = [];
+        //  widgetsJson = [];
+        //}
+        //if (widgetsJsonFlag && data != widgetsJsonStart && data != widgetsJsonEnd) {
+        //  widgetsJsonBuf = widgetsJsonBuf + data;
+        //}
+        //if (data === widgetsJsonEnd) {
+        //  if (debug) console.log("[i]", "comleted receiving widgetsJson");
+        //  widgetsJsonFlag = false;
+        //  if (IsJsonParse(widgetsJsonBuf)) {
+        //    widgetsJson = JSON.parse(widgetsJsonBuf);
+        //    widgetsJson = widgetsJson;
+        //    if (debug) console.log("[i]", "widgetsJson parced!");
+        //  }
+        //  widgetsJsonBuf = [];
+
+        //
         //====================================================================
       });
       socket[ws].addEventListener("close", (event) => {
