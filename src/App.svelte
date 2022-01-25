@@ -161,13 +161,11 @@
   let configJsonBuf = [];
   let configJsonFlag = false;
   let configJsonStart = "/st/config.json";
-  let configJsonEnd = "/end/config.json";
 
   let widgetsJson = [];
   let widgetsJsonBuf = [];
   let widgetsJsonFlag = false;
   let widgetsJsonStart = "/st/widgets.json";
-  let widgetsJsonEnd = "/end/widgets.json";
 
   //web sockets
   let socket = [];
@@ -281,101 +279,52 @@
         //socket[ws].send("HELLO");
       });
       socket[ws].addEventListener("message", function (event) {
-        let data;
         if (typeof event.data === "string") {
-          data = event.data;
-          if (data === configJsonStart) {
-            if (debug) console.log("[i]", "start receiving configJson");
-            configJsonFlag = true;
-          }
-          if (data === widgetsJsonStart) {
-            if (debug) console.log("[i]", "start receiving widgetsJson");
-            widgetsJsonFlag = true;
-          }
+          let data = event.data;
         }
         if (event.data instanceof Blob) {
-          if (debug) console.log("[i]", "binary frame");
           let reader = new FileReader();
           reader.readAsText(event.data);
           reader.onload = () => {
             let result = reader.result;
             //сборщик configJson пакетов========================================
-            if (configJsonFlag) {
+            if (result === "/st/config.json") {
+              configJsonFlag = true;
+              if (debug) console.log("[i]", "configJson start!");
+            }
+            if (configJsonFlag && result != "/st/config.json" && result != "/end/config.json") {
               configJsonBuf = configJsonBuf + result;
-              if (result.includes("]")) {
-                if (debug) console.log("[i]", "stop receiving configJson");
-                if (debug) console.log("[i]", configJsonBuf);
-                if (IsJsonParse(configJsonBuf)) {
-                  configJson = JSON.parse(configJsonBuf);
-                  configJson = configJson;
-                  if (debug) console.log("[i]", "configJson parced!");
-                  configJsonFlag = false;
-                }
+            }
+            if (result === "/end/config.json") {
+              configJsonFlag = false;
+              if (debug) console.log("[i]", "configJson end!");
+              //if (debug) console.log("[i]", configJsonBuf);
+              if (IsJsonParse(configJsonBuf)) {
+                configJson = JSON.parse(configJsonBuf);
+                configJson = configJson;
+                if (debug) console.log("[i]", "configJson parced!");
               }
             }
             //сборщик widgetsJson пакетов========================================
-            if (widgetsJsonFlag) {
+            if (result === "/st/widgets.json") {
+              widgetsJsonFlag = true;
+              if (debug) console.log("[i]", "widgetsJson start!");
+            }
+            if (widgetsJsonFlag && result != "/st/widgets.json" && result != "/end/widgets.json") {
               widgetsJsonBuf = widgetsJsonBuf + result;
-              if (result.includes("]")) {
-                if (debug) console.log("[i]", "stop receiving widgetsJson");
-                if (debug) console.log("[i]", widgetsJsonBuf);
-                if (IsJsonParse(widgetsJsonBuf)) {
-                  widgetsJson = JSON.parse(widgetsJsonBuf);
-                  widgetsJson = widgetsJson;
-                  if (debug) console.log("[i]", "widgetsJson parced!");
-                  widgetsJsonFlag = false;
-                }
+            }
+            if (result === "/end/widgets.json") {
+              widgetsJsonFlag = false;
+              if (debug) console.log("[i]", "widgetsJson end!");
+              //if (debug) console.log("[i]", widgetsJsonBuf);
+              if (IsJsonParse(widgetsJsonBuf)) {
+                widgetsJson = JSON.parse(widgetsJsonBuf);
+                widgetsJson = widgetsJson;
+                if (debug) console.log("[i]", "widgetsJson parced!");
               }
             }
           };
         }
-        //if (debug) console.log("[i]", "data:", data);
-        //if (data.includes("[log]")) {
-        //  data = data.replace("[log]", "");
-        //  addCoreMsg(data);
-        //}
-        //сборщик configJson пакетов========================================
-        //if (data === configJsonStart) {
-        //  if (debug) console.log("[i]", "start receiving configJson");
-        //  configJsonFlag = true;
-        //  configJsonBuf = [];
-        //  configJson = [];
-        //}
-        //if (configJsonFlag && data != configJsonStart && data != configJsonEnd) {
-        //  configJsonBuf = configJsonBuf + data;
-        //}
-        //if (data === configJsonEnd) {
-        //  if (debug) console.log("[i]", "comleted receiving configJson");
-        //  configJsonFlag = false;
-        //  if (IsJsonParse(configJsonBuf)) {
-        //    configJson = JSON.parse(configJsonBuf);
-        //    configJson = configJson;
-        //    if (debug) console.log("[i]", "configJson parced!");
-        //  }
-        //  configJsonBuf = [];
-        //}
-        ////сборщик widgetsJson пакетов========================================
-        //if (data === widgetsJsonStart) {
-        //  if (debug) console.log("[i]", "start receiving widgetsJson");
-        //  widgetsJsonFlag = true;
-        //  widgetsJsonBuf = [];
-        //  widgetsJson = [];
-        //}
-        //if (widgetsJsonFlag && data != widgetsJsonStart && data != widgetsJsonEnd) {
-        //  widgetsJsonBuf = widgetsJsonBuf + data;
-        //}
-        //if (data === widgetsJsonEnd) {
-        //  if (debug) console.log("[i]", "comleted receiving widgetsJson");
-        //  widgetsJsonFlag = false;
-        //  if (IsJsonParse(widgetsJsonBuf)) {
-        //    widgetsJson = JSON.parse(widgetsJsonBuf);
-        //    widgetsJson = widgetsJson;
-        //    if (debug) console.log("[i]", "widgetsJson parced!");
-        //  }
-        //  widgetsJsonBuf = [];
-
-        //
-        //====================================================================
       });
       socket[ws].addEventListener("close", (event) => {
         if (debug) console.log("[e]", ip, "connection closed");
@@ -392,17 +341,8 @@
 
   function sendConfigJson() {
     wsSendMsg(wsSelected, "/gifnoc.json" + JSON.stringify(configJson));
-    //wsSendMsg(wsSelected, "/gifnoc.json" + strencode(configJson));
     clearData();
     sendCurrentPageName();
-  }
-
-  function strencode(data) {
-    return unescape(encodeURIComponent(JSON.stringify(data)));
-  }
-
-  function strdecode(data) {
-    return JSON.parse(decodeURIComponent(escape(data)));
   }
 
   function clearData() {
