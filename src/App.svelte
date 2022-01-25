@@ -293,6 +293,10 @@
               if (debug) console.log("[i]", "configJson start!");
             }
             if (configJsonFlag && result != "/st/config.json" && result != "/end/config.json") {
+              //от этой хрени надо избавиться
+              if (result.includes("/gifnoc.json")) {
+                result = result.replace("/gifnoc.json", "");
+              }
               configJsonBuf = configJsonBuf + result;
             }
             if (result === "/end/config.json") {
