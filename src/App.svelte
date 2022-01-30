@@ -158,14 +158,10 @@
 
   //configuration
   let configJson = [];
-  let configJsonBuf = [];
   let configJsonFlag = false;
-  let configJsonStart = "/st/config.json";
 
   let widgetsJson = [];
-  let widgetsJsonBuf = [];
   let widgetsJsonFlag = false;
-  let widgetsJsonStart = "/st/widgets.json";
 
   //web sockets
   let socket = [];
@@ -186,13 +182,45 @@
     },
   ];
 
-  //navigation
+  //***********************************************************blob**************************************************************/
+  var MyBlobBuilder = function () {
+    this.parts = [];
+  };
+
+  MyBlobBuilder.prototype.append = function (part) {
+    this.parts.push(part);
+    this.blob = undefined; // Invalidate the blob
+  };
+
+  MyBlobBuilder.prototype.getBlob = function () {
+    if (!this.blob) {
+      this.blob = new Blob(this.parts, { type: "binary" });
+    }
+    return this.blob;
+  };
+
+  MyBlobBuilder.prototype.clear = function () {
+    this.parts = [];
+  };
+
+  //***********************************************************navigation********************************************************/
   let currentPageName = undefined;
-  let dataReceivingInProgress = false;
+  var configJsonBlob = new MyBlobBuilder();
+  var widgetsJsonBlob = new MyBlobBuilder();
   router.subscribe(handleNavigation);
 
-  //****************************************************functions section********************************************************/
-  //*****************************************************************************************************************************/
+  function handleNavigation() {
+    clearData();
+    currentPageName = $router.path.toString();
+    console.log("[i]", "user on page:", currentPageName);
+    sendCurrentPageName();
+  }
+
+  function sendCurrentPageName() {
+    if (wsSelected !== undefined) {
+      wsSendMsg(wsSelected, currentPageName);
+    }
+  }
 
   //****************************************************web sockets section******************************************************/
   function connectToAllDevices() {
@@ -281,49 +309,50 @@
       socket[ws].addEventListener("message", function (event) {
         if (typeof event.data === "string") {
           let data = event.data;
-        }
-        if (event.data instanceof Blob) {
-          let reader = new FileReader();
-          reader.readAsText(event.data);
-          reader.onload = () => {
-            let result = reader.result;
-            //сборщик configJson пакетов========================================
-            if (result === "/st/config.json") {
-              configJsonFlag = true;
-              if (debug) console.log("[i]", "configJson start!");
-            }
-            if (configJsonFlag && result != "/st/config.json" && result != "/end/config.json") {
-              configJsonBuf = configJsonBuf + result;
-            }
-            if (result === "/end/config.json") {
-              configJsonFlag = false;
-              if (debug) console.log("[i]", "configJson end!");
-              //if (debug) console.log("[i]", configJsonBuf);
-              if (IsJsonParse(configJsonBuf)) {
-                configJson = JSON.parse(configJsonBuf);
+          //сборщик configJson пакетов========================================
+          if (data === "/st/config.json") {
+            if (debug) console.log("[i]", "configJson start!");
+            configJsonFlag = true;
+          }
+          if (data === "/end/config.json") {
+            if (debug) console.log("[i]", "configJson end!");
+            configJsonFlag = false;
+            var bb = configJsonBlob.getBlob();
+            let configJsonReader = new FileReader();
+            configJsonReader.readAsText(bb);
+            configJsonReader.onload = () => {
+              let configJsonResult = configJsonReader.result;
+              if (IsJsonParse(configJsonResult)) {
+                configJson = JSON.parse(configJsonResult);
                 configJson = configJson;
                 if (debug) console.log("[i]", "configJson parced!");
               }
-            }
-            //сборщик widgetsJson пакетов========================================
-            if (result === "/st/widgets.json") {
-              widgetsJsonFlag = true;
-              if (debug) console.log("[i]", "widgetsJson start!");
-            }
-            if (widgetsJsonFlag && result != "/st/widgets.json" && result != "/end/widgets.json") {
-              widgetsJsonBuf = widgetsJsonBuf + result;
-            }
-            if (result === "/end/widgets.json") {
-              widgetsJsonFlag = false;
-              if (debug) console.log("[i]", "widgetsJson end!");
-              //if (debug) console.log("[i]", widgetsJsonBuf);
-              if (IsJsonParse(widgetsJsonBuf)) {
-                widgetsJson = JSON.parse(widgetsJsonBuf);
+            };
+          }
+          //сборщик widgetsJson пакетов========================================
+          if (data === "/st/widgets.json") {
+            if (debug) console.log("[i]", "widgetsJson start!");
+            widgetsJsonFlag = true;
+          }
+          if (data === "/end/widgets.json") {
+            if (debug) console.log("[i]", "widgetsJson end!");
+            widgetsJsonFlag = false;
+            var bb = widgetsJsonBlob.getBlob();
+            let widgetsJsonReader = new FileReader();
+            widgetsJsonReader.readAsText(bb);
+            widgetsJsonReader.onload = () => {
+              let widgetsJsonResult = widgetsJsonReader.result;
+              if (IsJsonParse(widgetsJsonResult)) {
+                widgetsJson = JSON.parse(widgetsJsonResult);
                 widgetsJson = widgetsJson;
                 if (debug) console.log("[i]", "widgetsJson parced!");
               }
-            }
-          };
+            };
+          }
+        }
+        if (event.data instanceof Blob) {
+          if (configJsonFlag) configJsonBlob.append(event.data);
+          if (widgetsJsonFlag) widgetsJsonBlob.append(event.data);
         }
       });
       socket[ws].addEventListener("close", (event) => {
@@ -347,9 +376,11 @@
 
   function clearData() {
     configJson = [];
-    configJsonBuf = [];
+    configJsonBlob.clear();
     widgetsJson = [];
-    widgetsJsonBuf = [];
+    widgetsJsonBlob.clear();
+
+    if (debug) console.log("[i]", "all app data cleared");
   }
 
   function wsPush(ws, topic, status) {
@@ -450,20 +481,6 @@
       } else {
         if (debug) console.log("[e]", "wrong data");
       }
-    }
-  }
-
-  //***********************************************************navigation************************************************************/
-  function handleNavigation() {
-    clearData();
-    currentPageName = $router.path.toString();
-    console.log("[i]", "user on page:", currentPageName);
-    sendCurrentPageName();
-  }
-
-  function sendCurrentPageName() {
-    if (wsSelected !== undefined) {
-      wsSendMsg(wsSelected, currentPageName);
     }
   }
 
