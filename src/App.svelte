@@ -37,115 +37,115 @@
   let wigets = [];
   let pages = [];
 
-  wigets = [
-    {
-      widget: "input",
-      type: "date",
-      status: "2021-10-17",
-      page: "Inputs",
-      order: "4",
-      descr: "Switch on boiler date",
-      topic: "/prefix/00000-00004/date1",
-      ws: 0,
-    },
-    {
-      widget: "input",
-      type: "time",
-      status: "12:00",
-      page: "Inputs",
-      order: "1",
-      descr: "Switch on boiler time",
-      topic: "/prefix/00000-00001/time",
-      ws: 0,
-    },
-    {
-      widget: "input",
-      type: "number",
-      status: "30.5",
-      after: "°С",
-      page: "Inputs",
-      order: "2",
-      descr: "Boiler temperature",
-      topic: "/prefix/00000-00002/temp",
-      ws: 0,
-    },
-    {
-      widget: "input",
-      type: "text",
-      status: "Hello",
-      page: "Inputs",
-      order: "3",
-      descr: "Message to be send",
-      topic: "/prefix/00000-00003/text",
-      ws: 0,
-    },
-    {
-      widget: "toggle",
-      status: 0,
-      page: "Toggles",
-      order: "3",
-      descr: "Light in my room",
-      topic: "/prefix/00000-00003/btn1",
-      ws: 0,
-    },
-    {
-      widget: "toggle",
-      status: 0,
-      page: "Toggles",
-      order: "3",
-      descr: "Light in my room",
-      topic: "/prefix/00000-00003/btn2",
-      ws: 0,
-    },
-    {
-      widget: "toggle",
-      status: 0,
-      page: "Toggles",
-      order: "3",
-      descr: "Light in my room",
-      topic: "/prefix/00000-00003/btn3",
-      ws: 0,
-    },
-    {
-      widget: "anydata",
-      status: 30.5,
-      after: "°С",
-      page: "Any data",
-      order: "3",
-      descr: "Temperature",
-      topic: "/prefix/00000-00003/tmp10",
-      ws: 0,
-    },
-    {
-      widget: "anydata",
-      status: 1032,
-      after: "mm",
-      page: "Any data",
-      order: "3",
-      descr: "Pressure",
-      topic: "/prefix/00000-00003/tmp10",
-      ws: 0,
-    },
-    {
-      widget: "anydata",
-      status: 50,
-      after: "%",
-      page: "Any data",
-      order: "3",
-      descr: "Level",
-      topic: "/prefix/00000-00003/tmp10",
-      ws: 0,
-    },
-    {
-      widget: "anydata",
-      status: "opened",
-      page: "Any data",
-      order: "3",
-      descr: "Status",
-      topic: "/prefix/00000-00003/tmp10",
-      ws: 0,
-    },
-  ];
+  //wigets = [
+  //  {
+  //    widget: "input",
+  //    type: "date",
+  //    status: "2021-10-17",
+  //    page: "Inputs",
+  //    order: "4",
+  //    descr: "Switch on boiler date",
+  //    topic: "/prefix/00000-00004/date1",
+  //    ws: 0,
+  //  },
+  //  {
+  //    widget: "input",
+  //    type: "time",
+  //    status: "12:00",
+  //    page: "Inputs",
+  //    order: "1",
+  //    descr: "Switch on boiler time",
+  //    topic: "/prefix/00000-00001/time",
+  //    ws: 0,
+  //  },
+  //  {
+  //    widget: "input",
+  //    type: "number",
+  //    status: "30.5",
+  //    after: "°С",
+  //    page: "Inputs",
+  //    order: "2",
+  //    descr: "Boiler temperature",
+  //    topic: "/prefix/00000-00002/temp",
+  //    ws: 0,
+  //  },
+  //  {
+  //    widget: "input",
+  //    type: "text",
+  //    status: "Hello",
+  //    page: "Inputs",
+  //    order: "3",
+  //    descr: "Message to be send",
+  //    topic: "/prefix/00000-00003/text",
+  //    ws: 0,
+  //  },
+  //  {
+  //    widget: "toggle",
+  //    status: 0,
+  //    page: "Toggles",
+  //    order: "3",
+  //    descr: "Light in my room",
+  //    topic: "/prefix/00000-00003/btn1",
+  //    ws: 0,
+  //  },
+  //  {
+  //    widget: "toggle",
+  //    status: 0,
+  //    page: "Toggles",
+  //    order: "3",
+  //    descr: "Light in my room",
+  //    topic: "/prefix/00000-00003/btn2",
+  //    ws: 0,
+  //  },
+  //  {
+  //    widget: "toggle",
+  //    status: 0,
+  //    page: "Toggles",
+  //    order: "3",
+  //    descr: "Light in my room",
+  //    topic: "/prefix/00000-00003/btn3",
+  //    ws: 0,
+  //  },
+  //  {
+  //    widget: "anydata",
+  //    status: 30.5,
+  //    after: "°С",
+  //    page: "Any data",
+  //    order: "3",
+  //    descr: "Temperature",
+  //    topic: "/prefix/00000-00003/tmp10",
+  //    ws: 0,
+  //  },
+  //  {
+  //    widget: "anydata",
+  //    status: 1032,
+  //    after: "mm",
+  //    page: "Any data",
+  //    order: "3",
+  //    descr: "Pressure",
+  //    topic: "/prefix/00000-00003/tmp10",
+  //    ws: 0,
+  //  },
+  //  {
+  //    widget: "anydata",
+  //    status: 50,
+  //    after: "%",
+  //    page: "Any data",
+  //    order: "3",
+  //    descr: "Level",
+  //    topic: "/prefix/00000-00003/tmp10",
+  //    ws: 0,
+  //  },
+  //  {
+  //    widget: "anydata",
+  //    status: "opened",
+  //    page: "Any data",
+  //    order: "3",
+  //    descr: "Status",
+  //    topic: "/prefix/00000-00003/tmp10",
+  //    ws: 0,
+  //  },
+  //];
 
   let datachart = {
     labels: ["Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"],
@@ -177,8 +177,8 @@
     {
       name: "Устройство 1",
       id: "987654321",
-      ip: myip,
-      //ip: "192.168.88.235",
+      //ip: myip,
+      ip: "192.168.88.235",
       status: false,
     },
   ];
@@ -369,10 +369,38 @@
     }
   }
 
-  function sendConfigJson() {
+  function saveConfig() {
+    generateLayout();
     wsSendMsg(wsSelected, "/gifnoc" + JSON.stringify(configJson));
     clearData();
     sendCurrentPageName();
+  }
+
+  function generateLayout() {
+    let layout = [];
+    for (let i = 0; i < configJson.length; i++) {
+      let config = configJson[i];
+      let setWidget = config.widget;
+      let error = true;
+      for (let w = 0; w < widgetsJson.length; w++) {
+        if (setWidget === widgetsJson[w].name) {
+          let widget = widgetsJson[w];
+          widget.page = config.page;
+          widget.descr = config.descr;
+          widget.id = config.id;
+          layout.push(widget);
+          error = false;
+          break;
+        } else {
+          error = true;
+        }
+      }
+      if (error) console.log("[e]", "error, widget not found: " + setWidget);
+    }
+    if (debug) console.log("[i]", JSON.stringify(layout));
+    wigets = layout;
+    wigets = wigets;
+    wigetsUpdate();
   }
 
   function clearData() {
@@ -434,7 +462,7 @@
   }
 
   function wigetsUpdate() {
-    wigets = JSON.parse(document.getElementById("text1").value);
+    //wigets = JSON.parse(document.getElementById("text1").value);
     findNewPage();
   }
 
@@ -730,7 +758,7 @@
                 {/each}
               </tbody>
             </table>
-            <button class="btn-lg" on:click={() => sendConfigJson()}>{"Сохранить"}</button>
+            <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить"}</button>
           </Card>
         </div>
       </Route>
