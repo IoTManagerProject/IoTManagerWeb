@@ -371,6 +371,7 @@
 
   function saveConfig() {
     generateLayout();
+    wsSendMsg(wsSelected, "/tuoyal" + JSON.stringify(generateLayout()));
     wsSendMsg(wsSelected, "/gifnoc" + JSON.stringify(configJson));
     clearData();
     sendCurrentPageName();
@@ -398,9 +399,10 @@
       if (error) console.log("[e]", "error, widget not found: " + setWidget);
     }
     if (debug) console.log("[i]", JSON.stringify(layout));
-    wigets = layout;
-    wigets = wigets;
-    wigetsUpdate();
+    return layout;
+    //wigets = layout;
+    //wigets = wigets;
+    //wigetsUpdate();
   }
 
   function clearData() {
@@ -462,7 +464,6 @@
   }
 
   function wigetsUpdate() {
-    //wigets = JSON.parse(document.getElementById("text1").value);
     findNewPage();
   }
 
@@ -696,10 +697,6 @@
               {/each}
             </Card>
           {/each}
-
-          <Card title="Редактор JSON">
-            <textarea on:input={wigetsUpdate} rows="10" class="jsn-ipt w-full" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
-          </Card>
         </div>
       </Route>
       <Route path="/config">
@@ -815,6 +812,9 @@
       </Route>
       <Route path="/about">
         <button on:click={() => showModal()} type="button"> Toggle modal </button>
+        <Card title="Редактор JSON">
+          <textarea on:input={wigetsUpdate} rows="10" class="jsn-ipt w-full" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
+        </Card>
       </Route>
     </div>
   </ul>
