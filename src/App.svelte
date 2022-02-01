@@ -22,6 +22,8 @@
   let debug = true;
   let LOG_MAX_MESSAGES = 10;
   let reconnectTimeout = 60000;
+  let opened = false;
+  let preventMove = false;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
@@ -162,6 +164,25 @@
 
   let widgetsJson = [];
   let widgetsJsonFlag = false;
+
+  let itemsJson = [];
+
+  itemsJson = [
+    {
+      name: "1. Аналоговый сенсор",
+      type: "Reading",
+      subtype: "AnalogAdc",
+      id: "t",
+      widget: "anydataTmp",
+      page: "Сенсоры",
+      descr: "Температура",
+      map: "1,1024,1,1024",
+      plus: 0,
+      multiply: 1,
+      pin: 0,
+      int: 15,
+    },
+  ];
 
   //web sockets
   let socket = [];
@@ -445,7 +466,7 @@
     }
   }
 
-  //***********************************************************dashboard************************************************************/
+  //***********************************************************dashboard***************************************************************/
   function findNewPage() {
     pages = [];
     const newPage = Array.from(new Set(Array.from(wigets, ({ page }) => page)));
@@ -467,7 +488,7 @@
     findNewPage();
   }
 
-  //***********************************************************logging************************************************************/
+  //***********************************************************logging******************************************************************/
   const addCoreMsg = (msg) => {
     if (coreMessages.length > Number(LOG_MAX_MESSAGES)) {
       coreMessages = coreMessages.slice(0);
@@ -485,8 +506,8 @@
     });
   };
 
-  //***********************************************************dev list************************************************************/
-  function dropdownChange() {
+  //***********************************************************dev list******************************************************************/
+  function devicesDropdownChange() {
     socketConnected = selectedDeviceData.status;
     wsSelected = selectedDeviceData.ws;
     clearData();
@@ -514,7 +535,7 @@
     }
   }
 
-  //****************************************************************json************************************************************/
+  //****************************************************************json******************************************************************/
   function getJsonObject(array, number) {
     let num = 0;
     let out = {};
@@ -562,7 +583,7 @@
     if (debug) console.log("[i]", widgetsDropdown);
   }
 
-  //**********************************************************post and get************************************************************/
+  //**********************************************************post and get*****************************************************************/
   //editRequest("192.168.88.235", "data data data data", "file.json")
 
   function editRequest(url, data, filename) {
@@ -613,27 +634,42 @@
     if (debug) console.log("[i]", "user open add params ", id);
   }
 
+  //**********************************************************modal*************************************************************************/
   function showModal() {
     showModalFlag = !showModalFlag;
   }
 
-  //initialisation=======================================================================================
+  function onCheck() {
+    let width = screen.width;
+    console.log("width", width);
+    if (width < 900) {
+      preventMove = true;
+    } else {
+      preventMove = false;
+    }
+  }
+
+  //************************************************elements and presets dropdown************************************************************/
+
+  function elementsDropdownChange() {}
+
+  //*******************************************************initialisation********************************************************************/
   onMount(async () => {
     console.log("[i]", "mounted");
     connectToAllDevices();
     wsTestMsgTask();
     socketConnected = selectedDeviceData.status;
-    dropdownChange();
+    devicesDropdownChange();
     findNewPage();
   });
 </script>
 
-<main>
-  <Modal show={showModalFlag} />
-  <div class="fixed m-0 h-10 w-full bg-gray-100 shadow-md">
+<div class="flex flex-col h-screen bg-gray-50">
+  <!--<Modal show={showModalFlag} />-->
+  <header class="h-10 w-full bg-gray-100 overflow-auto shadow-md">
     <div class="flex justify-end content-center">
       <div class="px-15 py-2">
-        <select bind:value={selectedDeviceData} on:change={() => dropdownChange()}>
+        <select bind:value={selectedDeviceData} on:change={() => devicesDropdownChange()}>
           {#each deviceList as device}
             <option value={device}>
               {device.name}
@@ -645,180 +681,193 @@
         <svg class="h-8 w-8 {socketConnected === true ? 'text-green-500' : 'text-red-500'}" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path stroke="none" d="M0 0h24v24H0z" /> <path d="M7 18a4.6 4.4 0 0 1 0 -9h0a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-12" /></svg>
       </div>
     </div>
-  </div>
+  </header>
 
-  <input id="menu__toggle" type="checkbox" />
-  <label class="menu__btn" for="menu__toggle">
-    <span />
-  </label>
+  <nav class="flex">
+    <input bind:checked={opened} on:change={() => onCheck()} id="menu__toggle" type="checkbox" />
+    <label class="menu__btn" for="menu__toggle">
+      <span />
+    </label>
 
-  <ul class="menu__box">
-    <li>
-      <a class="menu__item" href="/">{"Управление"}</a>
-    </li>
-    <li>
-      <a class="menu__item" href="/config">{"Конфигуратор"}</a>
-    </li>
-    <li>
-      <a class="menu__item" href="/connection">{"Подключение"}</a>
-    </li>
-    <li>
-      <a class="menu__item" href="/utilities">{"Утилиты"}</a>
-    </li>
-    <li>
-      <a class="menu__item" href="/log">{"Лог"}</a>
-    </li>
-    <li>
-      <a class="menu__item" href="/list">{"Устройства"}</a>
-    </li>
-    <li>
-      <a class="menu__item" href="/about">{"О проекте"}</a>
-    </li>
-  </ul>
+    <ul class="menu__box">
+      <li>
+        <a class="menu__item" href="/">{"Управление"}</a>
+      </li>
+      <li>
+        <a class="menu__item" href="/config">{"Конфигуратор"}</a>
+      </li>
+      <li>
+        <a class="menu__item" href="/connection">{"Подключение"}</a>
+      </li>
+      <li>
+        <a class="menu__item" href="/utilities">{"Утилиты"}</a>
+      </li>
+      <li>
+        <a class="menu__item" href="/log">{"Лог"}</a>
+      </li>
+      <li>
+        <a class="menu__item" href="/list">{"Устройства"}</a>
+      </li>
+      <li>
+        <a class="menu__item" href="/about">{"О проекте"}</a>
+      </li>
+    </ul>
+  </nav>
 
-  <ul class="menu__main">
-    <div class="bg-cover pt-8 px-4">
-      <Route path="/">
-        <div class="crd-grd">
-          {#each pages as pagesName, i}
-            <Card title={pagesName.page}>
-              {#each wigets as widget, i}
-                {#if widget.page === pagesName.page}
-                  {#if widget.widget === "input"}
-                    <Input bind:value={widget.status} widget={widget} wsPushProp={(ws, topic, status) => wsPush(ws, topic, status)} />
+  <main class="flex-1 overflow-y-auto p-0 {opened === true && !preventMove ? 'ml-36' : 'ml-0'}">
+    <ul class="menu__main">
+      <div class="bg-cover pt-0 px-4">
+        <Route path="/">
+          <div class="grd-3cols">
+            {#each pages as pagesName, i}
+              <Card title={pagesName.page}>
+                {#each wigets as widget, i}
+                  {#if widget.page === pagesName.page}
+                    {#if widget.widget === "input"}
+                      <Input bind:value={widget.status} widget={widget} wsPushProp={(ws, topic, status) => wsPush(ws, topic, status)} />
+                    {/if}
+                    {#if widget.widget === "toggle"}
+                      <Toggle bind:value={widget.status} widget={widget} wsPushProp={(ws, topic, status) => wsPush(ws, topic, status)} />
+                    {/if}
+                    {#if widget.widget === "anydata"}
+                      <Anydata bind:value={widget.status} widget={widget} />
+                    {/if}
                   {/if}
-                  {#if widget.widget === "toggle"}
-                    <Toggle bind:value={widget.status} widget={widget} wsPushProp={(ws, topic, status) => wsPush(ws, topic, status)} />
-                  {/if}
-                  {#if widget.widget === "anydata"}
-                    <Anydata bind:value={widget.status} widget={widget} />
-                  {/if}
-                {/if}
-              {/each}
+                {/each}
+              </Card>
+            {/each}
+          </div>
+        </Route>
+        <Route path="/config">
+          <div class="grd-1cols">
+            <Card>
+              <div class="grd-2cols">
+                <select class="slct-lg" on:change={() => elementsDropdownChange()}>
+                  {#each itemsJson as item}
+                    <option value={item}>
+                      {item.name}
+                    </option>
+                  {/each}
+                </select>
+                <select class="slct-lg">{"Выберите пресет"}</select>
+              </div>
+              <table class="table-fixed w-full select-none my-2 border-gray-300 rounded">
+                <thead class="bg-gray-100">
+                  <tr class="tbl-txt-sz tbl-txt-p">
+                    <th class="tbl-hd">Тип</th>
+                    <th class="tbl-hd">Id</th>
+                    <th class="tbl-hd">Виджет</th>
+                    <th class="tbl-hd">Вкладка</th>
+                    <th class="tbl-hd">Название</th>
+                    <th class="tbl-hd w-7" />
+                    <th class="tbl-hd w-7" />
+                  </tr>
+                </thead>
+                <tbody class="bg-white">
+                  {#each configJson as element}
+                    <tr class="tbl-txt-sz tbl-txt-p">
+                      <td class="tbl-bdy">{element.subtype}</td>
+                      <td class="tbl-bdy"><input bind:value={element.id} class="tbl-ipt w-full" type="text" /></td>
+                      <td class="tbl-bdy"
+                        ><select bind:value={element.widget} class="tbl-ipt w-full">
+                          {#each widgetsJson as select}
+                            <option value={select.name}>
+                              {select.label}
+                            </option>
+                          {/each}
+                        </select></td>
+                      <td class="tbl-bdy"><input bind:value={element.page} class="tbl-ipt w-full" type="text" /></td>
+                      <td class="tbl-bdy"><input bind:value={element.descr} class="tbl-ipt w-full" type="text" /></td>
+                      <td class="tbl-bdy"><svg on:click={() => (hideAllSubParams = !hideAllSubParams)} class="h-6 w-6 text-green-400 cursor-pointer" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path stroke="none" d="M0 0h24v24H0z" /> <circle cx="5" cy="12" r="1" /> <circle cx="12" cy="12" r="1" /> <circle cx="19" cy="12" r="1" /></svg></td>
+                      <td class="tbl-bdy"><svg class="h-6 w-6 text-red-400 cursor-pointer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /></svg></td>
+                    </tr>
+                    {#if !hideAllSubParams}
+                      {#each Object.entries(element) as [key, param]}
+                        {#if key != "type" && key != "subtype" && key != "id" && key != "widget" && key != "page" && key != "descr"}
+                          <tr class="tbl-txt-sz tbl-txt-p">
+                            <td />
+                            <td />
+                            <td />
+                            <td class="tbl-s-bdy text-right">
+                              <p class="tbl-s-txt">{key}</p>
+                            </td>
+                            <td class="tbl-s-bdy text-center">
+                              <input bind:value={element[key]} class="tbl-s-ipt w-full" type="text" />
+                            </td>
+                          </tr>
+                        {/if}
+                      {/each}
+                      <!--<br />-->
+                    {/if}
+                  {/each}
+                </tbody>
+              </table>
+              <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить"}</button>
             </Card>
-          {/each}
-        </div>
-      </Route>
-      <Route path="/config">
-        <div class="crd-grd-ln">
-          <Card>
-            <!--<select class="slct-lg">{"Выберите элемент"}</select>-->
-            <!--<select class="slct-lg">{"Выберите пресет"}</select>-->
+          </div>
+        </Route>
+        <Route path="/connection">
+          <div class="grd-3cols">
+            <Card title="Подключение к WiFi роутеру" />
+            <Card title="Подключение к MQTT брокеру" />
+          </div>
+        </Route>
+        <Route path="/utilities">
+          <Card title={"Пример графика"}>
+            <Chart data={datachart} type="line" />
+          </Card>
+        </Route>
+        <Route path="/log">
+          <Card title={"Лог"}>
+            {#each coreMessages as message, i}
+              <div class={message.msg.toString().includes("[E]") ? "text-red-500" : "text-black"}>{message.msg}</div>
+            {/each}
+          </Card>
+        </Route>
+        <Route path="/list">
+          <Card title={"Список устройств"}>
             <table class="table-fixed w-full">
-              <thead class="bg-gray-50">
+              <thead class="bg-gray-50 ">
                 <tr class="tbl-txt-sz tbl-txt-p">
-                  <th class="tbl-hd">Тип</th>
-                  <th class="tbl-hd">Id</th>
-                  <th class="tbl-hd">Виджет</th>
-                  <th class="tbl-hd">Вкладка</th>
-                  <th class="tbl-hd">Название</th>
-                  <th class="tbl-hd w-7" />
-                  <th class="tbl-hd w-7" />
+                  <th class="tbl-hd">Название устройства</th>
+                  <th class="tbl-hd">IP адрес</th>
+                  <th class="tbl-hd">Идентификатор</th>
+                  <th class="tbl-hd">Состояние</th>
                 </tr>
               </thead>
               <tbody class="bg-white">
-                {#each configJson as element}
+                {#each deviceList as device}
                   <tr class="tbl-txt-sz tbl-txt-p">
-                    <td class="tbl-bdy">{element.subtype}</td>
-                    <td class="tbl-bdy"><input bind:value={element.id} class="tbl-ipt w-full" type="text" /></td>
-                    <td class="tbl-bdy"
-                      ><select bind:value={element.widget} class="tbl-ipt w-full">
-                        {#each widgetsJson as select}
-                          <option value={select.name}>
-                            {select.label}
-                          </option>
-                        {/each}
-                      </select></td>
-                    <td class="tbl-bdy"><input bind:value={element.page} class="tbl-ipt w-full" type="text" /></td>
-                    <td class="tbl-bdy"><input bind:value={element.descr} class="tbl-ipt w-full" type="text" /></td>
-                    <td class="tbl-bdy"><svg on:click={() => (hideAllSubParams = !hideAllSubParams)} class="h-6 w-6 text-green-400" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path stroke="none" d="M0 0h24v24H0z" /> <circle cx="5" cy="12" r="1" /> <circle cx="12" cy="12" r="1" /> <circle cx="19" cy="12" r="1" /></svg></td>
-                    <td class="tbl-bdy"><svg class="h-6 w-6 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /></svg></td>
+                    <td class="tbl-bdy">{device.name}</td>
+                    <td class="tbl-bdy"><a href={"http://" + device.ip}>{device.ip}</a></td>
+                    <td class="tbl-bdy">{device.id}</td>
+                    <td class="tbl-bdy {device.status ? 'bg-green-50' : 'bg-red-50'}">{device.status ? "online" : "offline"}</td>
                   </tr>
-                  {#if !hideAllSubParams}
-                    {#each Object.entries(element) as [key, param]}
-                      {#if key != "type" && key != "subtype" && key != "id" && key != "widget" && key != "page" && key != "descr"}
-                        <tr class="tbl-txt-sz tbl-txt-p">
-                          <td />
-                          <td />
-                          <td />
-                          <td class="tbl-s-bdy text-right">
-                            <p class="tbl-s-txt">{key}</p>
-                          </td>
-                          <td class="tbl-s-bdy text-center">
-                            <input bind:value={element[key]} class="tbl-s-ipt w-full" type="text" />
-                          </td>
-                        </tr>
-                      {/if}
-                    {/each}
-                    <!--<br />-->
-                  {/if}
                 {/each}
+                {#if showInput}
+                  <tr class="tbl-txt-sz tbl-txt-p">
+                    <td class="tbl-bdy"><input bind:value={newDevice.name} class="tbl-ipt w-full" type="text" /></td>
+                    <td class="tbl-bdy"><input bind:value={newDevice.ip} class="tbl-ipt w-full" type="text" /></td>
+                    <td class="tbl-bdy"><input bind:value={newDevice.id} class="tbl-ipt w-full" type="text" /></td>
+                    <td class="tbl-bdy" />
+                  </tr>
+                {/if}
               </tbody>
             </table>
-            <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить"}</button>
+            <button class="btn-lg" on:click={() => ((showInput = !showInput), devListSave())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
           </Card>
-        </div>
-      </Route>
-      <Route path="/connection">
-        <div class="crd-grd">
-          <Card title="Подключение к WiFi роутеру" />
-          <Card title="Подключение к MQTT брокеру" />
-        </div>
-      </Route>
-      <Route path="/utilities">
-        <Card title={"Пример графика"}>
-          <Chart data={datachart} type="line" />
-        </Card>
-      </Route>
-      <Route path="/log">
-        <Card title={"Лог"}>
-          {#each coreMessages as message, i}
-            <div class={message.msg.toString().includes("[E]") ? "text-red-500" : "text-black"}>{message.msg}</div>
-          {/each}
-        </Card>
-      </Route>
-      <Route path="/list">
-        <Card title={"Список устройств"}>
-          <table class="table-fixed w-full">
-            <thead class="bg-gray-50 ">
-              <tr class="tbl-txt-sz tbl-txt-p">
-                <th class="tbl-hd">Название устройства</th>
-                <th class="tbl-hd">IP адрес</th>
-                <th class="tbl-hd">Идентификатор</th>
-                <th class="tbl-hd">Состояние</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white">
-              {#each deviceList as device}
-                <tr class="tbl-txt-sz tbl-txt-p">
-                  <td class="tbl-bdy">{device.name}</td>
-                  <td class="tbl-bdy"><a href={"http://" + device.ip}>{device.ip}</a></td>
-                  <td class="tbl-bdy">{device.id}</td>
-                  <td class="tbl-bdy {device.status ? 'bg-green-50' : 'bg-red-50'}">{device.status ? "online" : "offline"}</td>
-                </tr>
-              {/each}
-              {#if showInput}
-                <tr class="tbl-txt-sz tbl-txt-p">
-                  <td class="tbl-bdy"><input bind:value={newDevice.name} class="tbl-ipt w-full" type="text" /></td>
-                  <td class="tbl-bdy"><input bind:value={newDevice.ip} class="tbl-ipt w-full" type="text" /></td>
-                  <td class="tbl-bdy"><input bind:value={newDevice.id} class="tbl-ipt w-full" type="text" /></td>
-                  <td class="tbl-bdy" />
-                </tr>
-              {/if}
-            </tbody>
-          </table>
-          <button class="btn-lg" on:click={() => ((showInput = !showInput), devListSave())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
-        </Card>
-      </Route>
-      <Route path="/about">
-        <button on:click={() => showModal()} type="button"> Toggle modal </button>
-        <Card title="Редактор JSON">
-          <textarea on:input={wigetsUpdate} rows="10" class="jsn-ipt w-full" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
-        </Card>
-      </Route>
-    </div>
-  </ul>
-</main>
+        </Route>
+        <Route path="/about">
+          <button on:click={() => showModal()} type="button"> Toggle modal </button>
+          <Card title="Редактор JSON">
+            <textarea on:input={wigetsUpdate} rows="10" class="jsn-ipt w-full" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
+          </Card>
+        </Route>
+      </div>
+    </ul>
+  </main>
+  <footer class="h-4 bg-gray-100 border-gray-200 shadow-lg"><div class="flex justify-center content-center text-xxs text-gray-500">Developed by Dmitry Borisenko</div></footer>
+</div>
 
 <style lang="postcss" global>
   @tailwind base;
@@ -828,11 +877,11 @@
   @layer components {
     /*==================================================cards grid=====================================================*/
     /* grid for cards */
-    .crd-grd {
+    .grd-3cols {
       @apply grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 justify-items-center;
     }
     /* grid for cards for full screen */
-    .crd-grd-ln {
+    .grd-1cols {
       @apply grid grid-cols-1 justify-items-center;
     }
     /*=============================================card and items inside===============================================*/
@@ -900,18 +949,22 @@
     }
     /*====================================================buttons=====================================================*/
     .btn-lg {
-      @apply flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold h-8 w-full mt-4 border border-gray-300 rounded;
+      @apply flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold h-8 w-full mt-0 border border-gray-300 rounded;
     }
     .btn-tbl {
       @apply flex justify-center content-center text-gray-500 font-bold w-6 h-auto border border-gray-300;
     }
     /*====================================================select=====================================================*/
+    .grd-2cols {
+      @apply grid gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 justify-items-center;
+    }
     .slct-lg {
-      @apply flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold h-8 w-1/4 mb-6 border border-gray-300 rounded;
+      @apply flex w-full justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold h-8 mb-0 border border-gray-300 rounded;
     }
   }
 
   #menu__toggle {
+    position: relative;
     opacity: 0;
   }
   #menu__toggle:checked ~ .menu__btn > span {
