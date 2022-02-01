@@ -166,23 +166,9 @@
   let widgetsJsonFlag = false;
 
   let itemsJson = [];
+  let itemsJsonFlag = false;
 
-  itemsJson = [
-    {
-      name: "1. Аналоговый сенсор",
-      type: "Reading",
-      subtype: "AnalogAdc",
-      id: "t",
-      widget: "anydataTmp",
-      page: "Сенсоры",
-      descr: "Температура",
-      map: "1,1024,1,1024",
-      plus: 0,
-      multiply: 1,
-      pin: 0,
-      int: 15,
-    },
-  ];
+  let itemsJsonBind = 0;
 
   //web sockets
   let socket = [];
@@ -229,6 +215,7 @@
   let currentPageName = undefined;
   var configJsonBlob = new MyBlobBuilder();
   var widgetsJsonBlob = new MyBlobBuilder();
+  var itemsJsonBlob = new MyBlobBuilder();
   router.subscribe(handleNavigation);
 
   function handleNavigation() {
@@ -371,10 +358,31 @@
               }
             };
           }
+          //сборщик itemsJson пакетов========================================
+          if (data === "/st/items.json") {
+            if (debug) console.log("[i]", "itemsJson start!");
+            itemsJsonFlag = true;
+          }
+          if (data === "/end/items.json") {
+            if (debug) console.log("[i]", "itemsJson end!");
+            itemsJsonFlag = false;
+            var bb = itemsJsonBlob.getBlob();
+            let itemsJsonReader = new FileReader();
+            itemsJsonReader.readAsText(bb);
+            itemsJsonReader.onload = () => {
+              let itemsJsonResult = itemsJsonReader.result;
+              if (IsJsonParse(itemsJsonResult)) {
+                itemsJson = JSON.parse(itemsJsonResult);
+                itemsJson = itemsJson;
+                if (debug) console.log("[i]", "itemsJson parced!");
+              }
+            };
+          }
         }
         if (event.data instanceof Blob) {
           if (configJsonFlag) configJsonBlob.append(event.data);
           if (widgetsJsonFlag) widgetsJsonBlob.append(event.data);
+          if (itemsJsonFlag) itemsJsonBlob.append(event.data);
         }
       });
       socket[ws].addEventListener("close", (event) => {
@@ -651,7 +659,26 @@
 
   //************************************************elements and presets dropdown************************************************************/
 
-  function elementsDropdownChange() {}
+  function elementsDropdownChange() {
+    //костыльный вариант предотвкащающий binding
+    let itemStr = JSON.stringify(getItem(itemsJsonBind));
+    let item = JSON.parse(itemStr);
+    delete item.num;
+    delete item.name;
+    configJson.push(item);
+    configJson = configJson;
+    itemsJsonBind = 0;
+    if (debug) console.log("[i]", "item added");
+  }
+
+  function getItem(num) {
+    for (let i = 0; i < itemsJson.length; i++) {
+      let item = itemsJson[i];
+      if (num === item.num) {
+        return item;
+      }
+    }
+  }
 
   //*******************************************************initialisation********************************************************************/
   onMount(async () => {
@@ -742,16 +769,21 @@
           <div class="grd-1cols">
             <Card>
               <div class="grd-2cols">
-                <select class="slct-lg" on:change={() => elementsDropdownChange()}>
+                <select class="slct-lg" bind:value={itemsJsonBind} on:change={() => elementsDropdownChange()}>
                   {#each itemsJson as item}
-                    <option value={item}>
-                      {item.name}
-                    </option>
+                    {#if item.header}
+                      <optgroup label={item.header} />
+                    {/if}
+                    {#if !item.header}
+                      <option value={item.num}>
+                        {item.name}
+                      </option>
+                    {/if}
                   {/each}
                 </select>
                 <select class="slct-lg">{"Выберите пресет"}</select>
               </div>
-              <table class="table-fixed w-full select-none my-2 border-gray-300 rounded">
+              <table class="table-fixed w-full select-none my-2 ">
                 <thead class="bg-gray-100">
                   <tr class="tbl-txt-sz tbl-txt-p">
                     <th class="tbl-hd">Тип</th>
