@@ -36,118 +36,7 @@
   let additionalParams = false;
 
   //dashboard
-  let wigets = [];
   let pages = [];
-
-  //wigets = [
-  //  {
-  //    widget: "input",
-  //    type: "date",
-  //    status: "2021-10-17",
-  //    page: "Inputs",
-  //    order: "4",
-  //    descr: "Switch on boiler date",
-  //    topic: "/prefix/00000-00004/date1",
-  //    ws: 0,
-  //  },
-  //  {
-  //    widget: "input",
-  //    type: "time",
-  //    status: "12:00",
-  //    page: "Inputs",
-  //    order: "1",
-  //    descr: "Switch on boiler time",
-  //    topic: "/prefix/00000-00001/time",
-  //    ws: 0,
-  //  },
-  //  {
-  //    widget: "input",
-  //    type: "number",
-  //    status: "30.5",
-  //    after: "°С",
-  //    page: "Inputs",
-  //    order: "2",
-  //    descr: "Boiler temperature",
-  //    topic: "/prefix/00000-00002/temp",
-  //    ws: 0,
-  //  },
-  //  {
-  //    widget: "input",
-  //    type: "text",
-  //    status: "Hello",
-  //    page: "Inputs",
-  //    order: "3",
-  //    descr: "Message to be send",
-  //    topic: "/prefix/00000-00003/text",
-  //    ws: 0,
-  //  },
-  //  {
-  //    widget: "toggle",
-  //    status: 0,
-  //    page: "Toggles",
-  //    order: "3",
-  //    descr: "Light in my room",
-  //    topic: "/prefix/00000-00003/btn1",
-  //    ws: 0,
-  //  },
-  //  {
-  //    widget: "toggle",
-  //    status: 0,
-  //    page: "Toggles",
-  //    order: "3",
-  //    descr: "Light in my room",
-  //    topic: "/prefix/00000-00003/btn2",
-  //    ws: 0,
-  //  },
-  //  {
-  //    widget: "toggle",
-  //    status: 0,
-  //    page: "Toggles",
-  //    order: "3",
-  //    descr: "Light in my room",
-  //    topic: "/prefix/00000-00003/btn3",
-  //    ws: 0,
-  //  },
-  //  {
-  //    widget: "anydata",
-  //    status: 30.5,
-  //    after: "°С",
-  //    page: "Any data",
-  //    order: "3",
-  //    descr: "Temperature",
-  //    topic: "/prefix/00000-00003/tmp10",
-  //    ws: 0,
-  //  },
-  //  {
-  //    widget: "anydata",
-  //    status: 1032,
-  //    after: "mm",
-  //    page: "Any data",
-  //    order: "3",
-  //    descr: "Pressure",
-  //    topic: "/prefix/00000-00003/tmp10",
-  //    ws: 0,
-  //  },
-  //  {
-  //    widget: "anydata",
-  //    status: 50,
-  //    after: "%",
-  //    page: "Any data",
-  //    order: "3",
-  //    descr: "Level",
-  //    topic: "/prefix/00000-00003/tmp10",
-  //    ws: 0,
-  //  },
-  //  {
-  //    widget: "anydata",
-  //    status: "opened",
-  //    page: "Any data",
-  //    order: "3",
-  //    descr: "Status",
-  //    topic: "/prefix/00000-00003/tmp10",
-  //    ws: 0,
-  //  },
-  //];
 
   let datachart = {
     labels: ["Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"],
@@ -170,6 +59,12 @@
 
   let itemsJsonBind = 0;
 
+  let layoutJson = [];
+  let layoutJsonFlag = false;
+
+  let settingsJson = {};
+  let settingsJsonFlag = false;
+
   //web sockets
   let socket = [];
   let socketConnected = false;
@@ -184,8 +79,8 @@
     {
       name: "Устройство 1",
       id: "987654321",
-      ip: myip,
-      //ip: "192.168.88.235",
+      //ip: myip,
+      ip: "192.168.88.235",
       status: false,
     },
   ];
@@ -216,6 +111,8 @@
   var configJsonBlob = new MyBlobBuilder();
   var widgetsJsonBlob = new MyBlobBuilder();
   var itemsJsonBlob = new MyBlobBuilder();
+  var layoutJsonBlob = new MyBlobBuilder();
+  var settingsJsonBlob = new MyBlobBuilder();
   router.subscribe(handleNavigation);
 
   function handleNavigation() {
@@ -318,6 +215,7 @@
       socket[ws].addEventListener("message", function (event) {
         if (typeof event.data === "string") {
           let data = event.data;
+          if (debug) console.log("[i]", getIP(ws), "msg received", data); //
           //сборщик configJson пакетов========================================
           if (data === "/st/config.json") {
             if (debug) console.log("[i]", "configJson start!");
@@ -378,11 +276,55 @@
               }
             };
           }
+          //сборщик layoutJson пакетов========================================
+          if (data === "/st/layout.json") {
+            if (debug) console.log("[i]", "layoutJson start!");
+            layoutJsonFlag = true;
+          }
+          if (data === "/end/layout.json") {
+            if (debug) console.log("[i]", "layoutJson end!");
+            layoutJsonFlag = false;
+            var bb = layoutJsonBlob.getBlob();
+            let layoutJsonReader = new FileReader();
+            layoutJsonReader.readAsText(bb);
+            layoutJsonReader.onload = () => {
+              let layoutJsonResult = layoutJsonReader.result;
+              if (IsJsonParse(layoutJsonResult)) {
+                layoutJson = JSON.parse(layoutJsonResult);
+                layoutJson = layoutJson;
+                wigetsUpdate();
+                if (debug) console.log("[i]", "layoutJson parced!");
+              }
+            };
+          }
+          //сборщик settingsJson пакетов========================================
+          if (data === "/st/settings.json") {
+            if (debug) console.log("[i]", "settingsJson start!");
+            settingsJsonFlag = true;
+          }
+          if (data === "/end/settings.json") {
+            if (debug) console.log("[i]", "settingsJson end!");
+            settingsJsonFlag = false;
+            var bb = settingsJsonBlob.getBlob();
+            let settingsJsonReader = new FileReader();
+            settingsJsonReader.readAsText(bb);
+            settingsJsonReader.onload = () => {
+              let settingsJsonResult = settingsJsonReader.result;
+              if (IsJsonParse(settingsJsonResult)) {
+                settingsJson = JSON.parse(settingsJsonResult);
+                settingsJson = settingsJson;
+                wigetsUpdate();
+                if (debug) console.log("[i]", "settingsJson parced!");
+              }
+            };
+          }
         }
         if (event.data instanceof Blob) {
           if (configJsonFlag) configJsonBlob.append(event.data);
           if (widgetsJsonFlag) widgetsJsonBlob.append(event.data);
           if (itemsJsonFlag) itemsJsonBlob.append(event.data);
+          if (layoutJsonFlag) layoutJsonBlob.append(event.data);
+          if (settingsJsonFlag) settingsJsonBlob.append(event.data);
         }
       });
       socket[ws].addEventListener("close", (event) => {
@@ -399,9 +341,14 @@
   }
 
   function saveConfig() {
-    generateLayout();
     wsSendMsg(wsSelected, "/tuoyal" + JSON.stringify(generateLayout()));
     wsSendMsg(wsSelected, "/gifnoc" + JSON.stringify(configJson));
+    clearData();
+    sendCurrentPageName();
+  }
+
+  function saveSettings() {
+    wsSendMsg(wsSelected, "/cennoc" + JSON.stringify(settingsJson));
     clearData();
     sendCurrentPageName();
   }
@@ -409,15 +356,16 @@
   function generateLayout() {
     let layout = [];
     for (let i = 0; i < configJson.length; i++) {
-      let config = configJson[i];
+      let config = Object.assign({}, configJson[i]);
       let setWidget = config.widget;
       let error = true;
       for (let w = 0; w < widgetsJson.length; w++) {
         if (setWidget === widgetsJson[w].name) {
-          let widget = widgetsJson[w];
+          let widget = Object.assign({}, widgetsJson[w]);
           widget.page = config.page;
           widget.descr = config.descr;
           widget.id = config.id;
+          widget.ws = wsSelected;
           layout.push(widget);
           error = false;
           break;
@@ -427,18 +375,25 @@
       }
       if (error) console.log("[e]", "error, widget not found: " + setWidget);
     }
-    if (debug) console.log("[i]", JSON.stringify(layout));
+    if (debug) console.log("[i] layout:", JSON.stringify(layout));
     return layout;
-    //wigets = layout;
-    //wigets = wigets;
-    //wigetsUpdate();
   }
 
   function clearData() {
     configJson = [];
     configJsonBlob.clear();
+
     widgetsJson = [];
     widgetsJsonBlob.clear();
+
+    itemsJson = [];
+    itemsJsonBlob.clear();
+
+    layoutJson = [];
+    layoutJsonBlob.clear();
+
+    settingsJson = {};
+    settingsJsonBlob.clear();
 
     if (debug) console.log("[i]", "all app data cleared");
   }
@@ -477,7 +432,7 @@
   //***********************************************************dashboard***************************************************************/
   function findNewPage() {
     pages = [];
-    const newPage = Array.from(new Set(Array.from(wigets, ({ page }) => page)));
+    const newPage = Array.from(new Set(Array.from(layoutJson, ({ page }) => page)));
     newPage.forEach(function (item, i, arr) {
       pages = [...pages, JSON.parse(JSON.stringify({ page: item }))];
     });
@@ -752,12 +707,12 @@
       <div class="bg-cover pt-0 px-4">
         <Route path="/">
           <div class="grd-3cols">
-            {#if wigets === []}
+            {#if layoutJson === []}
               <Card title={"Ваша панель управления пуста, вначале добавьте новые элементы в конфигураторе!"} />
             {/if}
             {#each pages as pagesName, i}
               <Card title={pagesName.page}>
-                {#each wigets as widget, i}
+                {#each layoutJson as widget, i}
                   {#if widget.page === pagesName.page}
                     {#if widget.widget === "input"}
                       <Input bind:value={widget.status} widget={widget} wsPushProp={(ws, topic, status) => wsPush(ws, topic, status)} />
@@ -777,7 +732,7 @@
         <Route path="/config">
           <div class="grd-1cols">
             <Card>
-              <div class="grd-2cols">
+              <div class="grd-2colsfx">
                 <select class="slct-lg" bind:value={itemsJsonBind} on:change={() => elementsDropdownChange()}>
                   {#each itemsJson as item}
                     {#if item.header}
@@ -848,9 +803,93 @@
           </div>
         </Route>
         <Route path="/connection">
-          <div class="grd-3cols">
-            <Card title="Подключение к WiFi роутеру" />
-            <Card title="Подключение к MQTT брокеру" />
+          <div class="grd-2cols">
+            <Card title="Подключение к WiFi роутеру">
+              <div class="crd-itm-psn">
+                <div class="wgt-dscr-w">
+                  <label class="wgt-dscr-stl">Название устройства</label>
+                </div>
+                <div class="wgt-w">
+                  <input id="name" bind:value={settingsJson.name} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
+                </div>
+              </div>
+              <div class="crd-itm-psn">
+                <div class="wgt-dscr-w">
+                  <label class="wgt-dscr-stl">Точка доступа</label>
+                </div>
+                <div class="wgt-w">
+                  <input id="apssid" bind:value={settingsJson.apssid} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
+                </div>
+              </div>
+              <div class="crd-itm-psn">
+                <div class="wgt-dscr-w">
+                  <label class="wgt-dscr-stl">Пароль точки доступа</label>
+                </div>
+                <div class="wgt-w">
+                  <input id="appass" bind:value={settingsJson.appass} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
+                </div>
+              </div>
+              <div class="crd-itm-psn">
+                <div class="wgt-dscr-w">
+                  <label class="wgt-dscr-stl">Название wifi сети</label>
+                </div>
+                <div class="wgt-w">
+                  <input id="routerssid" bind:value={settingsJson.routerssid} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
+                </div>
+              </div>
+              <div class="crd-itm-psn">
+                <div class="wgt-dscr-w">
+                  <label class="wgt-dscr-stl">Пароль</label>
+                </div>
+                <div class="wgt-w">
+                  <input id="routerpass" bind:value={settingsJson.routerpass} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
+                </div>
+              </div>
+              <button class="btn-lg" on:click={() => saveSettings()}>{"Сохранить"}</button>
+            </Card>
+            <Card title="Подключение к MQTT брокеру">
+              <div class="crd-itm-psn">
+                <div class="wgt-dscr-w">
+                  <label class="wgt-dscr-stl">Название сервера</label>
+                </div>
+                <div class="wgt-w">
+                  <input id="mqttServer" bind:value={settingsJson.mqttServer} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
+                </div>
+              </div>
+              <div class="crd-itm-psn">
+                <div class="wgt-dscr-w">
+                  <label class="wgt-dscr-stl">Порт</label>
+                </div>
+                <div class="wgt-w">
+                  <input id="mqttPort" bind:value={settingsJson.mqttPort} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
+                </div>
+              </div>
+              <div class="crd-itm-psn">
+                <div class="wgt-dscr-w">
+                  <label class="wgt-dscr-stl">Префикс</label>
+                </div>
+                <div class="wgt-w">
+                  <input id="mqttPrefix" bind:value={settingsJson.mqttPrefix} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
+                </div>
+              </div>
+              <div class="crd-itm-psn">
+                <div class="wgt-dscr-w">
+                  <label class="wgt-dscr-stl">Имя пользователя</label>
+                </div>
+                <div class="wgt-w">
+                  <input id="mqttUser" bind:value={settingsJson.mqttUser} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
+                </div>
+              </div>
+              <div class="crd-itm-psn">
+                <div class="wgt-dscr-w">
+                  <label class="wgt-dscr-stl">Пароль</label>
+                </div>
+                <div class="wgt-w">
+                  <input id="mqttPass" bind:value={settingsJson.mqttPass} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
+                </div>
+              </div>
+              <button class="btn-lg" on:click={() => saveSettings()}>{"Сохранить"}</button>
+            </Card>
           </div>
         </Route>
         <Route path="/utilities">
@@ -901,7 +940,7 @@
         <Route path="/about">
           <button on:click={() => showModal()} type="button"> Toggle modal </button>
           <Card title="Редактор JSON">
-            <textarea on:input={wigetsUpdate} rows="10" class="jsn-ipt w-full" id="text1">{syntaxHighlight(JSON.stringify(wigets))}</textarea>
+            <textarea on:input={wigetsUpdate} rows="10" class="jsn-ipt w-full" id="text1">{syntaxHighlight(JSON.stringify(layoutJson))}</textarea>
           </Card>
         </Route>
       </div>
@@ -955,7 +994,7 @@
       @apply py-2 px-4 bg-indigo-500 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75;
     }
     .wgt-ipt {
-      @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white text-right;
+      @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white;
     }
     .jsn-ipt {
       @apply content-center pr-4 py-1 bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
@@ -996,8 +1035,11 @@
       @apply flex justify-center content-center text-gray-500 font-bold w-6 h-auto border border-gray-300;
     }
     /*====================================================select=====================================================*/
-    .grd-2cols {
+    .grd-2colsfx {
       @apply grid gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 justify-items-center;
+    }
+    .grd-2cols {
+      @apply grid gap-4 grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 justify-items-center;
     }
     .slct-lg {
       @apply flex w-full justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold h-8 mb-0 border border-gray-300 rounded;
