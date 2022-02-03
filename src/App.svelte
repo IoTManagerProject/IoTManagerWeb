@@ -79,8 +79,8 @@
     {
       name: "Устройство 1",
       id: "987654321",
-      //ip: myip,
-      ip: "192.168.88.235",
+      ip: myip,
+      //ip: "192.168.88.235",
       status: false,
     },
   ];
@@ -215,7 +215,16 @@
       socket[ws].addEventListener("message", function (event) {
         if (typeof event.data === "string") {
           let data = event.data;
-          if (debug) console.log("[i]", getIP(ws), "msg received", data); //
+          //if (debug) console.log("[i]", getIP(ws), "msg received", data);//
+          //сборщик statusJson сообщений======================================
+          if (data.includes("status")) {
+            if (IsJsonParse(data)) {
+              let statusJson = JSON.parse(data);
+              udatelayoutJson(statusJson);
+              wigetsUpdate();
+              if (debug) console.log("[i]", "status: ", statusJson);
+            }
+          }
           //сборщик configJson пакетов========================================
           if (data === "/st/config.json") {
             if (debug) console.log("[i]", "configJson start!");
@@ -364,8 +373,9 @@
           let widget = Object.assign({}, widgetsJson[w]);
           widget.page = config.page;
           widget.descr = config.descr;
-          widget.id = config.id;
-          widget.ws = wsSelected;
+          //widget.id = config.id;
+          //widget.ws = wsSelected;
+          widget.topic = settingsJson.root + "/" + config.id;
           layout.push(widget);
           error = false;
           break;
@@ -377,6 +387,16 @@
     }
     if (debug) console.log("[i] layout:", JSON.stringify(layout));
     return layout;
+  }
+
+  function udatelayoutJson(newStatusJson) {
+    for (let i = 0; i < layoutJson.length; i++) {
+      let topic = layoutJson[i].topic;
+      if (topic === newStatusJson.topic) {
+        layoutJson[i].status = newStatusJson.status;
+        break;
+      }
+    }
   }
 
   function clearData() {
@@ -807,7 +827,7 @@
             <Card title="Подключение к WiFi роутеру">
               <div class="crd-itm-psn">
                 <div class="wgt-dscr-w">
-                  <label class="wgt-dscr-stl">Название устройства</label>
+                  <label id="namel" class="wgt-dscr-stl">Название устройства</label>
                 </div>
                 <div class="wgt-w">
                   <input id="name" bind:value={settingsJson.name} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
@@ -815,7 +835,7 @@
               </div>
               <div class="crd-itm-psn">
                 <div class="wgt-dscr-w">
-                  <label class="wgt-dscr-stl">Точка доступа</label>
+                  <label id="apssidl" class="wgt-dscr-stl">Точка доступа</label>
                 </div>
                 <div class="wgt-w">
                   <input id="apssid" bind:value={settingsJson.apssid} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
@@ -823,7 +843,7 @@
               </div>
               <div class="crd-itm-psn">
                 <div class="wgt-dscr-w">
-                  <label class="wgt-dscr-stl">Пароль точки доступа</label>
+                  <label id="appassl" class="wgt-dscr-stl">Пароль точки доступа</label>
                 </div>
                 <div class="wgt-w">
                   <input id="appass" bind:value={settingsJson.appass} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
@@ -831,7 +851,7 @@
               </div>
               <div class="crd-itm-psn">
                 <div class="wgt-dscr-w">
-                  <label class="wgt-dscr-stl">Название wifi сети</label>
+                  <label id="routerssidl" class="wgt-dscr-stl">Название wifi сети</label>
                 </div>
                 <div class="wgt-w">
                   <input id="routerssid" bind:value={settingsJson.routerssid} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
@@ -839,7 +859,7 @@
               </div>
               <div class="crd-itm-psn">
                 <div class="wgt-dscr-w">
-                  <label class="wgt-dscr-stl">Пароль</label>
+                  <label id="routerpassl" class="wgt-dscr-stl">Пароль</label>
                 </div>
                 <div class="wgt-w">
                   <input id="routerpass" bind:value={settingsJson.routerpass} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
@@ -850,7 +870,7 @@
             <Card title="Подключение к MQTT брокеру">
               <div class="crd-itm-psn">
                 <div class="wgt-dscr-w">
-                  <label class="wgt-dscr-stl">Название сервера</label>
+                  <label id="mqttServerl" class="wgt-dscr-stl">Название сервера</label>
                 </div>
                 <div class="wgt-w">
                   <input id="mqttServer" bind:value={settingsJson.mqttServer} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
@@ -858,7 +878,7 @@
               </div>
               <div class="crd-itm-psn">
                 <div class="wgt-dscr-w">
-                  <label class="wgt-dscr-stl">Порт</label>
+                  <label id="mqttPortl" class="wgt-dscr-stl">Порт</label>
                 </div>
                 <div class="wgt-w">
                   <input id="mqttPort" bind:value={settingsJson.mqttPort} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
@@ -866,7 +886,7 @@
               </div>
               <div class="crd-itm-psn">
                 <div class="wgt-dscr-w">
-                  <label class="wgt-dscr-stl">Префикс</label>
+                  <label id="mqttPrefixl" class="wgt-dscr-stl">Префикс</label>
                 </div>
                 <div class="wgt-w">
                   <input id="mqttPrefix" bind:value={settingsJson.mqttPrefix} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
@@ -874,7 +894,7 @@
               </div>
               <div class="crd-itm-psn">
                 <div class="wgt-dscr-w">
-                  <label class="wgt-dscr-stl">Имя пользователя</label>
+                  <label id="mqttUserl" class="wgt-dscr-stl">Имя пользователя</label>
                 </div>
                 <div class="wgt-w">
                   <input id="mqttUser" bind:value={settingsJson.mqttUser} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
@@ -882,7 +902,7 @@
               </div>
               <div class="crd-itm-psn">
                 <div class="wgt-dscr-w">
-                  <label class="wgt-dscr-stl">Пароль</label>
+                  <label id="mqttPassl" class="wgt-dscr-stl">Пароль</label>
                 </div>
                 <div class="wgt-w">
                   <input id="mqttPass" bind:value={settingsJson.mqttPass} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
