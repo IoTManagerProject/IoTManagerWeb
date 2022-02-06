@@ -16,6 +16,7 @@
   //});
 
   import Card from "./components/Card.svelte";
+  import Alarm from "./components/Alarm.svelte";
   import Modal from "./components/Modal.svelte";
   import Input from "./widgets/Input.svelte";
   import Toggle from "./widgets/Toggle.svelte";
@@ -97,8 +98,8 @@
     {
       name: "Устройство 1",
       id: "987654321",
-      ip: myip,
-      //ip: "192.168.8.196",
+      //ip: myip,
+      ip: "192.168.88.235",
       status: false,
     },
   ];
@@ -234,7 +235,7 @@
       socket[ws].addEventListener("message", function (event) {
         if (typeof event.data === "string") {
           let data = event.data;
-          //if (debug) console.log("[i]", getIP(ws), "msg received", data);//
+          if (debug) console.log("[i]", getIP(ws), "msg received", data); //
           //сборщик statusJson сообщений======================================
           if (data.includes("status")) {
             if (IsJsonParse(data)) {
@@ -963,7 +964,12 @@
                     <input bind:value={settingsJson.routerpass} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
                   </div>
                 </div>
-                <button class="btn-lg" on:click={() => saveSettings()}>{"Сохранить"}</button>
+                {#if settingsJson.pass_status === 1}
+                  <div class="grd-1cols">
+                    <Alarm title="Введен неправильный пароль" />
+                  </div>
+                {/if}
+                <button class="btn-lg" on:click={() => saveSettings()}>{"Сохранить и перезагрузить"}</button>
               </Card>
               <Card title="Подключение к MQTT брокеру">
                 <div class="crd-itm-psn">
@@ -1006,7 +1012,7 @@
                     <input bind:value={settingsJson.mqttPass} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
                   </div>
                 </div>
-                <button class="btn-lg" on:click={() => saveSettings()}>{"Сохранить"}</button>
+                <button class="btn-lg" on:click={() => saveSettings()}>{"Сохранить и проверить подключение"}</button>
               </Card>
             </div>
           </Route>
@@ -1085,14 +1091,6 @@
       @apply grid grid-cols-1 justify-items-center;
     }
     /*=============================================card and items inside===============================================*/
-    /* 1. paddig and style for card */
-    .crd {
-      @apply w-full p-2 sm:p-2 md:p-2 lg:p-2 xl:px-8 xl:py-4 2xl:px-8 2xl:py-4 bg-white rounded-lg shadow-md lg:shadow-lg border border-gray-100;
-    }
-    /* 2. style for card header */
-    .crd-hdr {
-      @apply text-center text-lg text-gray-500 font-bold pb-4;
-    }
     /* 3. card items positioning*/
     .crd-itm-psn {
       @apply flex mb-3 h-8 items-center;
