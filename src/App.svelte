@@ -3,28 +3,17 @@
   //*****************************************************************************************************************************/
   import { onMount } from "svelte";
   import { Route, router, active } from "tinro";
-  router.mode.hash(); // enables hash navigation method
-  //router.mode.memory(); // enables in-memory navigation method
-  import Chart from "svelte-frappe-charts";
-  //import { SvelteToast, toast } from "@zerodevx/svelte-toast";
+  router.mode.hash();
 
-  //const app = new SvelteToast({
-  //  target: document.body,
-  //  props: {
-  //    options: {},
-  //  },
-  //});
-
-  import Card from "./components/Card.svelte";
-  import Alarm from "./components/Alarm.svelte";
   import Modal from "./components/Modal.svelte";
-  import Input from "./widgets/Input.svelte";
-  import Toggle from "./widgets/Toggle.svelte";
-  import Anydata from "./widgets/Anydata.svelte";
 
-  //как ставить и удалять
-  //npm install --save svelte-simple-modal
-  //npm uninstall svelte-simple-modal
+  import DashboardPage from "./pages/Dashboard.svelte";
+  import ConfigPage from "./pages/Config.svelte";
+  import ConnectionPage from "./pages/Connection.svelte";
+  import UtilitiesPage from "./pages/Utilities.svelte";
+  import LogPage from "./pages/Log.svelte";
+  import ListPage from "./pages/List.svelte";
+  import AboutPage from "./pages/About.svelte";
 
   //****************************************************constants section*********************************************************/
   //******************************************************************************************************************************/
@@ -41,20 +30,11 @@
   //Flags
   let showInput = false;
   let showModalFlag = false;
-  let hideAllSubParams = true;
+
   let additionalParams = false;
 
   //dashboard
   let pages = [];
-
-  let datachart = {
-    labels: ["Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"],
-    datasets: [
-      {
-        values: [10, 12, 3, 9, 8, 15, 9],
-      },
-    ],
-  };
 
   //configuration
   let configJson = [];
@@ -88,7 +68,7 @@
   let selectedDeviceData = undefined;
   let deviceList = [];
   let flag = true;
-  let newDevice = {};
+
   let coreMessages = [];
   let wsSelected = undefined;
 
@@ -712,37 +692,6 @@
     wsSendMsg(wsSelected, "/scan");
   }
 
-  function returnError() {
-    let ret = false;
-    if (!socketConnected || oneOfJsonPackageError) {
-      ret = true;
-    }
-    return ret;
-  }
-
-  function returnErrorName() {
-    if (!socketConnected) {
-      return "Нет соединения";
-    } else if (oneOfJsonPackageError) {
-      return "Ошибка данных";
-    }
-  }
-
-  function configPageStatus() {
-    if (itemsJsonParced && widgetsJsonParced && configJsonParced && settingsJsonParced) {
-      return true;
-    }
-  }
-
-  function pushGreen() {
-    toast.push("Saved!", {
-      theme: {
-        "--toastBackground": "#48BB78",
-        "--toastProgressBackground": "#2F855A",
-      },
-    });
-  }
-
   //*******************************************************initialisation********************************************************************/
   onMount(async () => {
     console.log("[i]", "mounted");
@@ -813,259 +762,25 @@
           </div>
         {:else}
           <Route path="/">
-            <div class="grd-3cols">
-              {#if layoutJson === []}
-                <Card title={"Ваша панель управления пуста, вначале добавьте новые элементы в конфигураторе!"} />
-              {/if}
-              {#each pages as pagesName, i}
-                <Card title={pagesName.page}>
-                  {#each layoutJson as widget, i}
-                    {#if widget.page === pagesName.page}
-                      {#if widget.widget === "input"}
-                        <Input bind:value={widget.status} widget={widget} wsPushProp={(ws, topic, status) => wsPush(ws, topic, status)} />
-                      {/if}
-                      {#if widget.widget === "toggle"}
-                        <Toggle bind:value={widget.status} widget={widget} wsPushProp={(ws, topic, status) => wsPush(ws, topic, status)} />
-                      {/if}
-                      {#if widget.widget === "anydata"}
-                        <Anydata bind:value={widget.status} widget={widget} />
-                      {/if}
-                    {/if}
-                  {/each}
-                </Card>
-              {/each}
-            </div>
+            <DashboardPage layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
           </Route>
           <Route path="/config">
-            <!--{#if itemsJsonParced && widgetsJsonParced && configJsonParced && settingsJsonParced}-->
-            <div class="grd-1cols">
-              <Card>
-                <div class="grd-2colsfx">
-                  <select class="slct-lg" bind:value={itemsJsonBind} on:change={() => elementsDropdownChange()}>
-                    {#each itemsJson as item}
-                      {#if item.header}
-                        <optgroup label={item.header} />
-                      {/if}
-                      {#if !item.header}
-                        <option value={item.num}>
-                          {item.name}
-                        </option>
-                      {/if}
-                    {/each}
-                  </select>
-                  <select class="slct-lg"><option>{"Выберите пресет"}</option></select>
-                </div>
-                <table class="table-fixed w-full select-none my-2 ">
-                  <thead class="bg-gray-100">
-                    <tr class="tbl-txt-sz tbl-txt-p">
-                      <th class="tbl-hd">Тип</th>
-                      <th class="tbl-hd">Id</th>
-                      <th class="tbl-hd">Виджет</th>
-                      <th class="tbl-hd">Вкладка</th>
-                      <th class="tbl-hd">Название</th>
-                      <th class="tbl-hd w-7" />
-                      <th class="tbl-hd w-7" />
-                    </tr>
-                  </thead>
-                  <tbody class="bg-white">
-                    {#each configJson as element, i}
-                      <tr class="tbl-txt-sz tbl-txt-p">
-                        <td class="tbl-bdy">{element.subtype}</td>
-                        <td class="tbl-bdy"><input bind:value={element.id} class="tbl-ipt w-full" type="text" /></td>
-                        <td class="tbl-bdy"
-                          ><select bind:value={element.widget} class="tbl-ipt w-full">
-                            {#each widgetsJson as select}
-                              <option value={select.name}>
-                                {select.label}
-                              </option>
-                            {/each}
-                          </select></td>
-                        <td class="tbl-bdy"><input bind:value={element.page} class="tbl-ipt w-full" type="text" /></td>
-                        <td class="tbl-bdy"><input bind:value={element.descr} class="tbl-ipt w-full" type="text" /></td>
-                        <td class="tbl-bdy"><svg on:click={() => (hideAllSubParams = !hideAllSubParams)} class="h-6 w-6 text-green-400 cursor-pointer" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path stroke="none" d="M0 0h24v24H0z" /> <circle cx="5" cy="12" r="1" /> <circle cx="12" cy="12" r="1" /> <circle cx="19" cy="12" r="1" /></svg></td>
-                        <td class="tbl-bdy"><svg on:click={() => deleteLine(i)} class="h-6 w-6 text-red-400 cursor-pointer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /></svg></td>
-                      </tr>
-                      {#if !hideAllSubParams}
-                        {#each Object.entries(element) as [key, param]}
-                          {#if key != "type" && key != "subtype" && key != "id" && key != "widget" && key != "page" && key != "descr"}
-                            <tr class="tbl-txt-sz tbl-txt-p">
-                              <td />
-                              <td />
-                              <td />
-                              <td class="tbl-s-bdy text-right">
-                                <p class="tbl-s-txt">{key}</p>
-                              </td>
-                              <td class="tbl-s-bdy text-center">
-                                <input bind:value={element[key]} class="tbl-s-ipt w-full" type="text" />
-                              </td>
-                            </tr>
-                          {/if}
-                        {/each}
-                        <!--<br />-->
-                      {/if}
-                    {/each}
-                  </tbody>
-                </table>
-                <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить"}</button>
-              </Card>
-            </div>
-            <!--{:else if !itemsJsonParced && !widgetsJsonParced && !configJsonParced && !settingsJsonParced}-->
-            <!--<div class="flex justify-center items-center">-->
-            <!--<div style="border-top-color:transparent" class="w-20 h-20 border-4 border-blue-400 border-solid rounded-full animate-spin" />-->
-            <!--</div>-->
-            <!--{/if}-->
+            <ConfigPage configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} itemsJsonBind={itemsJsonBind} ssidDropdownClick={() => elementsDropdownChange()} saveConfig={() => saveConfig()} deleteLine={(i) => deleteLine(i)} />
           </Route>
           <Route path="/connection">
-            <div class="grd-2cols">
-              <Card title="Подключение к WiFi роутеру">
-                <div class="crd-itm-psn">
-                  <div class="wgt-dscr-w">
-                    <p class="wgt-dscr-stl">Название устройства</p>
-                  </div>
-                  <div class="wgt-w">
-                    <input bind:value={settingsJson.name} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
-                  </div>
-                </div>
-                <div class="crd-itm-psn">
-                  <div class="wgt-dscr-w">
-                    <p class="wgt-dscr-stl">Точка доступа</p>
-                  </div>
-                  <div class="wgt-w">
-                    <input bind:value={settingsJson.apssid} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
-                  </div>
-                </div>
-                <div class="crd-itm-psn">
-                  <div class="wgt-dscr-w">
-                    <p class="wgt-dscr-stl">Пароль точки доступа</p>
-                  </div>
-                  <div class="wgt-w">
-                    <input bind:value={settingsJson.appass} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
-                  </div>
-                </div>
-                <div class="crd-itm-psn">
-                  <div class="wgt-dscr-w">
-                    <p class="wgt-dscr-stl">Название wifi сети</p>
-                  </div>
-                  <div class="wgt-w">
-                    <select class="wgt-ipt text-left focus:border-indigo-500" bind:value={settingsJson.routerssid} on:click={() => ssidDropdownClick()}>
-                      {#each Object.entries(ssidJson) as [num, ssid]}
-                        <option value={ssid}>
-                          {ssid}
-                        </option>
-                      {/each}
-                    </select>
-                  </div>
-                </div>
-                <div class="crd-itm-psn">
-                  <div class="wgt-dscr-w">
-                    <p class="wgt-dscr-stl">Пароль</p>
-                  </div>
-                  <div class="wgt-w">
-                    <input bind:value={settingsJson.routerpass} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
-                  </div>
-                </div>
-                {#if settingsJson.pass_status === 1}
-                  <div class="grd-1cols">
-                    <Alarm title="Введен неправильный пароль" />
-                  </div>
-                {/if}
-                <button class="btn-lg" on:click={() => saveSettings()}>{"Сохранить и перезагрузить"}</button>
-              </Card>
-              <Card title="Подключение к MQTT брокеру">
-                <div class="crd-itm-psn">
-                  <div class="wgt-dscr-w">
-                    <p class="wgt-dscr-stl">Название сервера</p>
-                  </div>
-                  <div class="wgt-w">
-                    <input bind:value={settingsJson.mqttServer} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
-                  </div>
-                </div>
-                <div class="crd-itm-psn">
-                  <div class="wgt-dscr-w">
-                    <p class="wgt-dscr-stl">Порт</p>
-                  </div>
-                  <div class="wgt-w">
-                    <input bind:value={settingsJson.mqttPort} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
-                  </div>
-                </div>
-                <div class="crd-itm-psn">
-                  <div class="wgt-dscr-w">
-                    <p class="wgt-dscr-stl">Префикс</p>
-                  </div>
-                  <div class="wgt-w">
-                    <input bind:value={settingsJson.mqttPrefix} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
-                  </div>
-                </div>
-                <div class="crd-itm-psn">
-                  <div class="wgt-dscr-w">
-                    <p class="wgt-dscr-stl">Имя пользователя</p>
-                  </div>
-                  <div class="wgt-w">
-                    <input bind:value={settingsJson.mqttUser} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
-                  </div>
-                </div>
-                <div class="crd-itm-psn">
-                  <div class="wgt-dscr-w">
-                    <p class="wgt-dscr-stl">Пароль</p>
-                  </div>
-                  <div class="wgt-w">
-                    <input bind:value={settingsJson.mqttPass} class="wgt-ipt text-left focus:border-indigo-500" type="text" />
-                  </div>
-                </div>
-                <button class="btn-lg" on:click={() => saveSettings()}>{"Сохранить и проверить подключение"}</button>
-              </Card>
-            </div>
+            <ConnectionPage settingsJson={settingsJson} ssidJson={ssidJson} ssidDropdownClick={() => ssidDropdownClick()} saveSettings={() => saveSettings()} />
           </Route>
           <Route path="/utilities">
-            <Card title={"Пример графика"}>
-              <Chart data={datachart} type="line" />
-            </Card>
+            <UtilitiesPage />
           </Route>
           <Route path="/log">
-            <Card title={"Лог"}>
-              {#each coreMessages as message, i}
-                <div class={message.msg.toString().includes("[E]") ? "text-red-500" : "text-black"}>{message.msg}</div>
-              {/each}
-            </Card>
+            <LogPage coreMessages={coreMessages} />
           </Route>
           <Route path="/list">
-            <Card title={"Список устройств"}>
-              <table class="table-fixed gap-4 w-full">
-                <thead class="bg-gray-50 ">
-                  <tr class="tbl-txt-sz tbl-txt-p">
-                    <th class="tbl-hd">Название устройства</th>
-                    <th class="tbl-hd">IP адрес</th>
-                    <th class="tbl-hd">Идентификатор</th>
-                    <th class="tbl-hd">Состояние</th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white">
-                  {#each deviceList as device}
-                    <tr class="tbl-txt-sz tbl-txt-p">
-                      <td class="tbl-bdy">{device.name}</td>
-                      <td class="tbl-bdy"><a href={"http://" + device.ip}>{device.ip}</a></td>
-                      <td class="tbl-bdy">{device.id}</td>
-                      <td class="tbl-bdy {device.status ? 'bg-green-50' : 'bg-red-50'}">{device.status ? "online" : "offline"}</td>
-                    </tr>
-                  {/each}
-                  {#if showInput}
-                    <tr class="tbl-txt-sz tbl-txt-p">
-                      <td class="tbl-bdy"><input bind:value={newDevice.name} class="tbl-ipt w-full" type="text" /></td>
-                      <td class="tbl-bdy"><input bind:value={newDevice.ip} class="tbl-ipt w-full" type="text" /></td>
-                      <td class="tbl-bdy"><input bind:value={newDevice.id} class="tbl-ipt w-full" type="text" /></td>
-                      <td class="tbl-bdy" />
-                    </tr>
-                  {/if}
-                </tbody>
-              </table>
-              <button class="btn-lg" on:click={() => ((showInput = !showInput), devListSave())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
-            </Card>
+            <ListPage deviceList={deviceList} showInput={showInput} devListSave={() => devListSave()} />
           </Route>
           <Route path="/about">
-            <button on:click={() => showModal()} type="button"> Toggle modal </button>
-            <Card title="Редактор JSON">
-              <textarea on:input={wigetsUpdate} rows="10" class="jsn-ipt w-full" id="text1">{syntaxHighlight(JSON.stringify(layoutJson))}</textarea>
-            </Card>
+            <AboutPage wigetsUpdate={wigetsUpdate} layoutJson={layoutJson} showModal={() => showModal()} syntaxHighlight={(json) => syntaxHighlight(json)} />
           </Route>
         {/if}
       </div>

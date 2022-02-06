@@ -1,9 +1,9 @@
 <script>
-  import Card from "./components/Card.svelte";
-  import Alarm from "./components/Alarm.svelte";
+  import Card from "../components/Card.svelte";
+  import Alarm from "../components/Alarm.svelte";
+
   export let settingsJson;
   export let ssidJson;
-
   export let ssidDropdownClick = () => {};
   export let saveSettings = () => {};
 </script>
