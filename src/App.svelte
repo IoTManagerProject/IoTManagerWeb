@@ -23,7 +23,7 @@
   //******************************************************************************************************************************/
   let debug = true;
   let LOG_MAX_MESSAGES = 10;
-  let reconnectTimeout = 60000;
+  let reconnectTimeout = 30000;
   let opened = false;
   let preventMove = false;
 
@@ -232,7 +232,16 @@
               let statusJson = JSON.parse(data);
               udatelayoutJson(statusJson);
               wigetsUpdate();
-              if (debug) console.log("[i]", "status json parced: ", statusJson);
+              if (debug) console.log("[i]", "statusJson parced: ", statusJson);
+            }
+          }
+          //сборщик paramsJson сообщений======================================
+          if (data.includes("params")) {
+            if (IsJsonParse(data)) {
+              let paramsJson = JSON.parse(data);
+              //udatelayoutJson(statusJson);
+              //wigetsUpdate();
+              if (debug) console.log("[i]", "paramsJson parced: ", paramsJson);
             }
           }
           //сборщик ssidJson сообщений======================================
@@ -242,7 +251,7 @@
               delete ssidJson.ssid;
               ssidJson = ssidJson;
               ssidJsonParced = true;
-              if (debug) console.log("[i]", "ssid json parced");
+              if (debug) console.log("[i]", "ssidJson parced");
             }
           }
           //сборщик deviceList сообщений======================================
