@@ -10,5 +10,5 @@
 
 <button on:click={() => showModal()} type="button"> Toggle modal </button>
 <Card title="Редактор JSON">
-  <textarea on:input={wigetsUpdate} rows="10" class="jsn-ipt w-full" id="text1">{syntaxHighlight(JSON.stringify(layoutJson))}</textarea>
+  <textarea on:input={wigetsUpdate} rows="10" class="ipt-big w-full" id="text1">{syntaxHighlight(JSON.stringify(layoutJson))}</textarea>
 </Card>

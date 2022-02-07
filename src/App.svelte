@@ -6,7 +6,7 @@
   router.mode.hash();
 
   import Alarm from "./components/Alarm.svelte";
-  import Progress from "./components/Progress.svelte";
+  //import Progress from "./components/Progress.svelte";
 
   import Modal from "./components/Modal.svelte";
   import DashboardPage from "./pages/Dashboard.svelte";
@@ -16,6 +16,8 @@
   import LogPage from "./pages/Log.svelte";
   import ListPage from "./pages/List.svelte";
   import AboutPage from "./pages/About.svelte";
+
+  import CloudIcon from "./svg/Cloud.svelte";
 
   //****************************************************constants section*********************************************************/
   //******************************************************************************************************************************/
@@ -76,19 +78,15 @@
 
   deviceList = [
     {
-      name: "Устройство 1",
+      name: "Устройство",
       id: "123456789",
       ip: "192.168.88.235",
       //ip: myip,
       status: false,
     },
-    {
-      name: "Устройство 2",
-      id: "123456789",
-      ip: "192.168.88.236",
-      status: false,
-    },
   ];
+
+  let deviceListParced = false;
 
   //***********************************************************blob**************************************************************/
   var MyBlobBuilder = function () {
@@ -102,7 +100,9 @@
 
   MyBlobBuilder.prototype.getBlob = function () {
     if (!this.blob) {
-      this.blob = new Blob(this.parts, { type: "binary" });
+      this.blob = new Blob(this.parts, {
+        type: "binary",
+      });
     }
     return this.blob;
   };
@@ -223,14 +223,14 @@
           let data = event.data;
           //if (debug) console.log("[i]", getIP(ws), "msg received", data); //
           //сборщик statusJson сообщений======================================
-          if (data.includes("status")) {
-            if (IsJsonParse(data)) {
-              let statusJson = JSON.parse(data);
-              udatelayoutJson(statusJson);
-              wigetsUpdate();
-              if (debug) console.log("[i]", "status json parced: ", statusJson);
-            }
-          }
+          //if (data.includes("status")) {
+          //  if (IsJsonParse(data)) {
+          //    let statusJson = JSON.parse(data);
+          //    udatelayoutJson(statusJson);
+          //    wigetsUpdate();
+          //    if (debug) console.log("[i]", "status json parced: ", statusJson);
+          //  }
+          //}
           //сборщик ssidJson сообщений======================================
           if (data.includes("ssid")) {
             if (IsJsonParse(data)) {
@@ -239,6 +239,17 @@
               ssidJson = ssidJson;
               ssidJsonParced = true;
               if (debug) console.log("[i]", "ssid json parced");
+            }
+          }
+          //сборщик deviceList сообщений======================================
+          if (data.includes("devicelist")) {
+            if (IsJsonParse(data)) {
+              deviceList = JSON.parse(data);
+              delete deviceList.devicelist;
+              deviceList = deviceList;
+              deviceListParced = true;
+              //connectToAllDevices();
+              if (debug) console.log("[i]", "devicelist json parced", deviceList);
             }
           }
           //сборщик configJson пакетов========================================
@@ -258,7 +269,7 @@
                 configJson = JSON.parse(configJsonResult);
                 configJson = configJson;
                 configJsonParced = true;
-                if (debug) console.log("[i]", "configJson parced!");
+                if (debug) console.log("[ii]", "configJson parced!");
               }
             };
           }
@@ -279,7 +290,7 @@
                 widgetsJson = JSON.parse(widgetsJsonResult);
                 widgetsJson = widgetsJson;
                 widgetsJsonParced = true;
-                if (debug) console.log("[i]", "widgetsJson parced!");
+                if (debug) console.log("[ii]", "widgetsJson parced!");
               }
             };
           }
@@ -300,7 +311,7 @@
                 itemsJson = JSON.parse(itemsJsonResult);
                 itemsJson = itemsJson;
                 itemsJsonParced = true;
-                if (debug) console.log("[i]", "itemsJson parced!");
+                if (debug) console.log("[ii]", "itemsJson parced!");
               }
             };
           }
@@ -322,7 +333,7 @@
                 layoutJson = layoutJson;
                 wigetsUpdate();
                 layoutJsonParced = true;
-                if (debug) console.log("[i]", "layoutJson parced!");
+                if (debug) console.log("[ii]", "layoutJson parced!");
               }
             };
           }
@@ -344,7 +355,7 @@
                 settingsJson = settingsJson;
                 wigetsUpdate();
                 settingsJsonParced = true;
-                if (debug) console.log("[i]", "settingsJson parced!");
+                if (debug) console.log("[ii]", "settingsJson parced!");
               }
             };
           }
@@ -443,8 +454,6 @@
     settingsJsonParced = false;
     ssidJsonParced = false;
 
-    //ssidJson = {};
-
     if (debug) console.log("[i]", "all app data cleared");
   }
 
@@ -484,7 +493,14 @@
     pages = [];
     const newPage = Array.from(new Set(Array.from(layoutJson, ({ page }) => page)));
     newPage.forEach(function (item, i, arr) {
-      pages = [...pages, JSON.parse(JSON.stringify({ page: item }))];
+      pages = [
+        ...pages,
+        JSON.parse(
+          JSON.stringify({
+            page: item,
+          })
+        ),
+      ];
     });
     pages.sort(function (a, b) {
       if (a.page < b.page) {
@@ -507,7 +523,13 @@
       coreMessages = coreMessages.slice(0);
     }
     const time = new Date().getTime();
-    coreMessages = [...coreMessages, { time, msg }];
+    coreMessages = [
+      ...coreMessages,
+      {
+        time,
+        msg,
+      },
+    ];
     coreMessages.sort(function (a, b) {
       if (a.time > b.time) {
         return -1;
@@ -520,6 +542,33 @@
   };
 
   //***********************************************************dev list******************************************************************/
+  function createDefaultDevice() {
+    let find = false;
+    let device;
+    if (debug) console.log("[i]", "original dev ip (js): ", myip);
+    if (debug) console.log("[i]", "original dev ip (esp): ", settingsJson.ip);
+    for (let i = 0; i < deviceList.length; i++) {
+      device = deviceList[i];
+      if (debug) console.log("[i]", "start checking dev no: ", i, device.ip);
+      if (device.ip === settingsJson.ip) {
+        if (debug) console.log("[i]", "found ", device.ip);
+        device.name = settingsJson.name;
+        device.id = settingsJson.id;
+        find = true;
+        break;
+      }
+    }
+    if (!find) {
+      if (debug) console.log("[i]", "not found, add to the end");
+      deviceList.push({
+        ip: settingsJson.ip,
+        name: settingsJson.name,
+        id: settingsJson.id,
+      });
+    }
+    deviceList = deviceList;
+  }
+
   function devicesDropdownChange() {
     socketConnected = selectedDeviceData.status;
     wsSelected = selectedDeviceData.ws;
@@ -532,6 +581,7 @@
   }
 
   function devListSave() {
+    //createDefaultDevice();
     if (!showInput) {
       if (newDevice.name !== undefined && newDevice.ip !== undefined && newDevice.id !== undefined) {
         newDevice.status = false;
@@ -606,7 +656,13 @@
     if (debug) console.log("[i]", "request for edit file");
     var xmlHttp = new XMLHttpRequest();
     var formData = new FormData();
-    formData.append("data", new Blob([data], { type: "text/json" }), "/" + filename);
+    formData.append(
+      "data",
+      new Blob([data], {
+        type: "text/json",
+      }),
+      "/" + filename
+    );
     xmlHttp.open("POST", "http://" + url + "/edit");
     xmlHttp.onload = function () {
       //во время загрузки
@@ -667,17 +723,6 @@
 
   //************************************************elements and presets dropdown************************************************************/
 
-  function deleteLineFromDevlist(num) {
-    for (let i = 0; i < deviceList.length; i++) {
-      if (num === i) {
-        deviceList.splice(i, 1);
-        deviceList = deviceList;
-        if (debug) console.log("[i]", "item " + num + " deleted from dev list");
-        break;
-      }
-    }
-  }
-
   function ssidDropdownClick() {
     wsSendMsg(wsSelected, "/scan");
   }
@@ -697,9 +742,9 @@
   <Modal show={showModalFlag} />
 
   <header class="h-10 w-full bg-gray-100 overflow-auto shadow-md">
-    <div class="flex justify-end content-center">
-      <div class="px-15 py-2 z-50">
-        <select class="border-indigo-500" bind:value={selectedDeviceData} on:change={() => devicesDropdownChange()}>
+    <div class="flex content-center items-center justify-end">
+      <div class="px-15 py-1 z-50 ">
+        <select class="border border-indigo-500 border-4" bind:value={selectedDeviceData} on:change={() => devicesDropdownChange()}>
           {#each deviceList as device}
             <option value={device}>
               {device.name}
@@ -707,8 +752,8 @@
           {/each}
         </select>
       </div>
-      <div class="pl-2 pr-4 py-1">
-        <svg class="h-8 w-8 {socketConnected === true ? 'text-green-500' : 'text-red-500'}" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path stroke="none" d="M0 0h24v24H0z" /> <path d="M7 18a4.6 4.4 0 0 1 0 -9h0a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-12" /></svg>
+      <div class="pl-4 pr-4 py-1">
+        <CloudIcon color={socketConnected === true ? "text-green-500" : "text-red-500"} />
       </div>
     </div>
   </header>
@@ -754,7 +799,7 @@
             <DashboardPage layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
           </Route>
           <Route path="/config">
-            <ConfigPage configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} deleteLineFromConfig={(i) => deleteLineFromConfig(i)} />
+            <ConfigPage configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} />
           </Route>
           <Route path="/connection">
             <ConnectionPage settingsJson={settingsJson} ssidJson={ssidJson} ssidDropdownClick={() => ssidDropdownClick()} saveSettings={() => saveSettings()} />
@@ -770,13 +815,15 @@
           </Route>
         {/if}
         <Route path="/list">
-          <ListPage deviceList={deviceList} showInput={showInput} deleteLineFromDevlist={(num) => deleteLineFromDevlist(num)} devListSave={() => devListSave()} newDevice={newDevice} />
+          <ListPage deviceList={deviceList} showInput={showInput} devListSave={() => devListSave()} newDevice={newDevice} />
         </Route>
       </div>
     </ul>
   </main>
 
-  <footer class="h-4 bg-gray-100 border-gray-200 shadow-lg"><div class="flex justify-center content-center text-xxs text-gray-500">Developed by Dmitry Borisenko</div></footer>
+  <footer class="h-4 bg-gray-100 border-gray-200 shadow-lg">
+    <div class="flex justify-center content-center text-xxs text-gray-500">Developed by Dmitry Borisenko</div>
+  </footer>
 </div>
 
 <style lang="postcss" global>
@@ -785,41 +832,35 @@
   @tailwind utilities;
 
   @layer components {
-    /*==================================================cards grid=====================================================*/
-    /* grid for cards */
-    .grd-3cols {
-      @apply grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 justify-items-center;
-    }
-    /* grid for cards for full screen */
-    .grd-1cols {
+    /*==================================================grids=====================================================*/
+    .grd-1col1 {
       @apply grid grid-cols-1 justify-items-center;
     }
+    .grd-2col1 {
+      @apply grid gap-4 grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 justify-items-center;
+    }
+    .grd-2col2 {
+      @apply grid gap-4 grid-cols-2 justify-items-center;
+    }
+    .grd-3col1 {
+      @apply grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 justify-items-center;
+    }
     /*=============================================card and items inside===============================================*/
-    /* 3. card items positioning*/
     .crd-itm-psn {
       @apply flex mb-3 h-8 items-center;
     }
-    /* 4. widget description width*/
     .wgt-dscr-w {
       @apply w-2/3;
     }
-    /* 5. widget descr style*/
     .wgt-dscr-stl {
       @apply pr-4 text-gray-500 font-bold;
     }
-    /* 6. widget width*/
     .wgt-w {
       @apply flex justify-end w-1/3;
     }
     /*====================================================others=====================================================*/
     .btn-i {
       @apply py-2 px-4 bg-indigo-500 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75;
-    }
-    .wgt-ipt {
-      @apply content-center px-2 h-8 bg-gray-50 border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white;
-    }
-    .jsn-ipt {
-      @apply content-center px-2 h-8 bg-gray-50 border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
     }
     .wgt-adt-stl {
       @apply text-center text-gray-500 font-bold;
@@ -831,43 +872,45 @@
     .tbl-hd {
       @apply text-center px-1 break-words text-gray-500 font-bold;
     }
-    .tbl-bdy {
+    .tbl-bdy-lg {
       @apply text-center px-1 break-words;
     }
-    .tbl-s-bdy {
+    .tbl-bdy-sm {
       @apply px-1 break-words;
     }
-    .tbl-ipt {
-      @apply content-center mt-2 h-7 bg-gray-50 focus:bg-white border-2 border-gray-100 text-gray-700 leading-tight focus:outline-none text-center focus:border-indigo-500;
+    /*====================================================inputs=====================================================*/
+    .ipt-lg {
+      @apply h-4 sm:h-7 md:h-7 lg:h-7 xl:h-7 2xl:h-7 content-center mt-2 bg-gray-50 focus:bg-white border-2 border-gray-100 text-gray-700 leading-tight focus:outline-none text-center focus:border-indigo-500;
     }
-    .tbl-s-ipt {
-      @apply content-center h-6 bg-gray-50 focus:bg-white border-2 border-gray-100 text-gray-700 leading-tight focus:outline-none text-center focus:border-indigo-500 rounded-sm;
+    .ipt-sm {
+      @apply h-3 sm:h-6 md:h-6 lg:h-6 xl:h-6 2xl:h-6 content-center bg-gray-50 focus:bg-white border-2 border-gray-100 text-gray-700 leading-tight focus:outline-none text-center focus:border-indigo-500 rounded-sm;
     }
-    .tbl-s-txt {
+    .ipt-rnd {
+      @apply content-center px-2 h-8 bg-gray-50 border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white;
+    }
+    .ipt-big {
+      @apply content-center px-2 h-8 bg-gray-50 border-2 border-gray-200 rounded w-full text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500;
+    }
+    /*====================================================text=====================================================*/
+    .txt-ita {
       @apply inline-block italic align-top text-right text-gray-500;
     }
-    .tbl-txt-p {
+    .txt-pad {
       @apply px-2 py-0 sm:py-0 md:py-0 lg:py-1 xl:py-2 2xl:py-2;
     }
-    .tbl-txt-sz {
+    .txt-sz {
       @apply text-xxs sm:text-base md:text-base lg:text-base xl:text-base 2xl:text-base;
     }
     /*====================================================buttons=====================================================*/
     .btn-lg {
-      @apply flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold h-8 w-full mt-0 border border-gray-300 rounded;
+      @apply flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold text-xxs sm:text-base md:text-base lg:text-base xl:text-base 2xl:text-base h-4 sm:h-8 md:h-8 lg:h-8 xl:h-8 2xl:h-8 w-full mt-0 border border-gray-300 rounded;
     }
     .btn-tbl {
       @apply flex justify-center content-center text-gray-500 font-bold w-6 h-auto border border-gray-300;
     }
     /*====================================================select=====================================================*/
-    .grd-2colsfx {
-      @apply grid gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 justify-items-center;
-    }
-    .grd-2cols {
-      @apply grid gap-4 grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 justify-items-center;
-    }
     .slct-lg {
-      @apply flex w-full justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold h-8 mb-0 border border-gray-300 rounded;
+      @apply flex w-full justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold text-xxs sm:text-base md:text-base lg:text-base xl:text-base 2xl:text-base h-4 sm:h-8 md:h-8 lg:h-8 xl:h-8 2xl:h-8 mb-0 border border-gray-300 rounded;
     }
   }
 

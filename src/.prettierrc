@@ -8,6 +8,12 @@
   "sxBracketSameLine": true,
   "overrides": [
     {
+      "files": "App.svelte",
+      "options": {
+        "printWidth": 1000
+      }
+    },
+    {
       "files": "Input.svelte",
       "options": {
         "printWidth": 600
@@ -17,6 +23,12 @@
       "files": "Toggle.svelte",
       "options": {
         "printWidth": 600
+      }
+    },
+    {
+      "files": "Cross.svelte",
+      "options": {
+        "printWidth": 50
       }
     }
   ]

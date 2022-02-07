@@ -1,5 +1,7 @@
 <script>
   import Card from "../components/Card.svelte";
+  import CrossIcon from "../svg/Cross.svelte";
+  import OpenIcon from "../svg/Open.svelte";
 
   export let configJson;
   export let widgetsJson;
@@ -40,9 +42,9 @@
 </script>
 
 <!--{#if itemsJsonParced && widgetsJsonParced && configJsonParced && settingsJsonParced}-->
-<div class="grd-1cols">
+<div class="grd-1col1">
   <Card>
-    <div class="grd-2colsfx">
+    <div class="grd-2col2">
       <select class="slct-lg" bind:value={itemsJsonBind} on:change={() => elementsDropdownChange()}>
         {#each itemsJson as item}
           {#if item.header}
@@ -59,7 +61,7 @@
     </div>
     <table class="tbl">
       <thead class="bg-gray-100">
-        <tr class="tbl-txt-sz tbl-txt-p">
+        <tr class="txt-sz txt-pad">
           <th class="tbl-hd">Тип</th>
           <th class="tbl-hd">Id</th>
           <th class="tbl-hd">Виджет</th>
@@ -71,34 +73,34 @@
       </thead>
       <tbody class="bg-white">
         {#each configJson as element, i}
-          <tr class="tbl-txt-sz tbl-txt-p">
-            <td class="tbl-bdy">{element.subtype}</td>
-            <td class="tbl-bdy"><input bind:value={element.id} class="tbl-ipt w-full" type="text" /></td>
-            <td class="tbl-bdy"
-              ><select bind:value={element.widget} class="tbl-ipt w-full">
+          <tr class="txt-sz txt-pad align-middle">
+            <td class="tbl-bdy-lg">{element.subtype}</td>
+            <td class="tbl-bdy-lg"><input bind:value={element.id} class="ipt-lg w-full" type="text" /></td>
+            <td class="tbl-bdy-lg"
+              ><select bind:value={element.widget} class="ipt-lg w-full">
                 {#each widgetsJson as select}
                   <option value={select.name}>
                     {select.label}
                   </option>
                 {/each}
               </select></td>
-            <td class="tbl-bdy"><input bind:value={element.page} class="tbl-ipt w-full" type="text" /></td>
-            <td class="tbl-bdy"><input bind:value={element.descr} class="tbl-ipt w-full" type="text" /></td>
-            <td class="tbl-bdy"><svg on:click={() => (hideAllSubParams = !hideAllSubParams)} class="h-6 w-6 text-green-400 cursor-pointer" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path stroke="none" d="M0 0h24v24H0z" /> <circle cx="5" cy="12" r="1" /> <circle cx="12" cy="12" r="1" /> <circle cx="19" cy="12" r="1" /></svg></td>
-            <td class="tbl-bdy"><svg on:click={() => deleteLineFromConfig(i)} class="h-6 w-6 text-red-400 cursor-pointer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /></svg></td>
+            <td class="tbl-bdy-lg"><input bind:value={element.page} class="ipt-lg w-full" type="text" /></td>
+            <td class="tbl-bdy-lg"><input bind:value={element.descr} class="ipt-lg w-full" type="text" /></td>
+            <td class="tbl-bdy-lg"><OpenIcon click={() => (hideAllSubParams = !hideAllSubParams)} /></td>
+            <td class="tbl-bdy-lg"><CrossIcon i={i} click={(i) => deleteLineFromConfig(i)} /></td>
           </tr>
           {#if !hideAllSubParams}
             {#each Object.entries(element) as [key, param]}
               {#if key != "type" && key != "subtype" && key != "id" && key != "widget" && key != "page" && key != "descr"}
-                <tr class="tbl-txt-sz tbl-txt-p">
+                <tr class="txt-sz txt-pad">
                   <td />
                   <td />
                   <td />
-                  <td class="tbl-s-bdy text-right">
-                    <p class="tbl-s-txt">{key}</p>
+                  <td class="tbl-bdy-sm text-right">
+                    <p class="txt-ita">{key}</p>
                   </td>
-                  <td class="tbl-s-bdy text-center">
-                    <input bind:value={element[key]} class="tbl-s-ipt w-full" type="text" />
+                  <td class="tbl-bdy-sm text-center">
+                    <input bind:value={element[key]} class="ipt-sm w-full" type="text" />
                   </td>
                 </tr>
               {/if}
