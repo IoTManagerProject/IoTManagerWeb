@@ -29,7 +29,8 @@
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
-  let myip = document.location.hostname;
+  //let myip = document.location.hostname;
+  let myip = "192.168.88.235";
 
   //Flags
   let showInput = false;
@@ -68,25 +69,26 @@
   let socket = [];
   let socketConnected = false;
   let selectedDeviceData = undefined;
-  let deviceList = [];
+  let selectedWs = 0;
+
   let flag = true;
   let newDevice = {};
   let coreMessages = [];
-  let wsSelected = undefined;
 
   let oneOfJsonPackageError = false;
 
+  let deviceList = [];
   deviceList = [
     {
-      name: "Устройство",
-      id: "123456789",
-      ip: "192.168.88.235",
-      //ip: myip,
+      name: "--",
+      id: "--",
+      ip: myip,
       status: false,
     },
   ];
 
-  let deviceListParced = false;
+  let incDeviceList = [];
+  let incDeviceListParced = false;
 
   //***********************************************************blob**************************************************************/
   var MyBlobBuilder = function () {
@@ -129,8 +131,8 @@
   }
 
   function sendCurrentPageName() {
-    if (wsSelected !== undefined) {
-      wsSendMsg(wsSelected, currentPageName);
+    if (selectedWs !== undefined) {
+      wsSendMsg(selectedWs, currentPageName);
     }
   }
 
@@ -138,6 +140,7 @@
   function connectToAllDevices() {
     //closeAllConnection();
     //socket = [];
+    getSelectedDeviceData(selectedWs);
     let ws = 0;
     deviceList.forEach((device) => {
       //if (debug) console.log("[i]", device.name, ws, device.ip, device.id);
@@ -149,7 +152,7 @@
       ws++;
     });
     deviceList = deviceList;
-    socketConnected = selectedDeviceData.status;
+    //socketConnected = selectedDeviceData.status;
   }
 
   function closeAllConnection() {
@@ -173,6 +176,7 @@
       }
     });
     deviceList = deviceList;
+    getSelectedDeviceData(selectedWs);
     socketConnected = selectedDeviceData.status;
   }
 
@@ -223,14 +227,14 @@
           let data = event.data;
           //if (debug) console.log("[i]", getIP(ws), "msg received", data); //
           //сборщик statusJson сообщений======================================
-          //if (data.includes("status")) {
-          //  if (IsJsonParse(data)) {
-          //    let statusJson = JSON.parse(data);
-          //    udatelayoutJson(statusJson);
-          //    wigetsUpdate();
-          //    if (debug) console.log("[i]", "status json parced: ", statusJson);
-          //  }
-          //}
+          if (data.includes("status")) {
+            if (IsJsonParse(data)) {
+              let statusJson = JSON.parse(data);
+              udatelayoutJson(statusJson);
+              wigetsUpdate();
+              if (debug) console.log("[i]", "status json parced: ", statusJson);
+            }
+          }
           //сборщик ssidJson сообщений======================================
           if (data.includes("ssid")) {
             if (IsJsonParse(data)) {
@@ -244,12 +248,15 @@
           //сборщик deviceList сообщений======================================
           if (data.includes("devicelist")) {
             if (IsJsonParse(data)) {
-              deviceList = JSON.parse(data);
-              delete deviceList.devicelist;
+              incDeviceList = JSON.parse(data);
+              delete incDeviceList.devicelist;
+              incDeviceList = incDeviceList;
+              incDeviceListParced = true;
+              deviceList = combineArrays(deviceList, incDeviceList);
               deviceList = deviceList;
-              deviceListParced = true;
-              //connectToAllDevices();
-              if (debug) console.log("[i]", "devicelist json parced", deviceList);
+              whenDeviceListWasUpdated();
+              connectToAllDevices();
+              if (debug) console.log("[i]", "incDeviceList json parced", incDeviceList);
             }
           }
           //сборщик configJson пакетов========================================
@@ -355,6 +362,7 @@
                 settingsJson = settingsJson;
                 wigetsUpdate();
                 settingsJsonParced = true;
+                updateThisDeviceInList();
                 if (debug) console.log("[ii]", "settingsJson parced!");
               }
             };
@@ -382,14 +390,14 @@
   }
 
   function saveConfig() {
-    wsSendMsg(wsSelected, "/tuoyal" + JSON.stringify(generateLayout()));
-    wsSendMsg(wsSelected, "/gifnoc" + JSON.stringify(configJson));
+    wsSendMsg(selectedWs, "/tuoyal" + JSON.stringify(generateLayout()));
+    wsSendMsg(selectedWs, "/gifnoc" + JSON.stringify(configJson));
     clearData();
     sendCurrentPageName();
   }
 
   function saveSettings() {
-    wsSendMsg(wsSelected, "/cennoc" + JSON.stringify(settingsJson));
+    wsSendMsg(selectedWs, "/cennoc" + JSON.stringify(settingsJson));
     clearData();
     sendCurrentPageName();
   }
@@ -406,7 +414,7 @@
           widget.page = config.page;
           widget.descr = config.descr;
           //widget.id = config.id;
-          //widget.ws = wsSelected;
+          //widget.ws = selectedWs;
           widget.topic = settingsJson.root + "/" + config.id;
           layout.push(widget);
           error = false;
@@ -542,41 +550,35 @@
   };
 
   //***********************************************************dev list******************************************************************/
-  function createDefaultDevice() {
-    let find = false;
-    let device;
-    if (debug) console.log("[i]", "original dev ip (js): ", myip);
-    if (debug) console.log("[i]", "original dev ip (esp): ", settingsJson.ip);
-    for (let i = 0; i < deviceList.length; i++) {
-      device = deviceList[i];
-      if (debug) console.log("[i]", "start checking dev no: ", i, device.ip);
-      if (device.ip === settingsJson.ip) {
-        if (debug) console.log("[i]", "found ", device.ip);
-        device.name = settingsJson.name;
-        device.id = settingsJson.id;
-        find = true;
-        break;
-      }
-    }
-    if (!find) {
-      if (debug) console.log("[i]", "not found, add to the end");
-      deviceList.push({
-        ip: settingsJson.ip,
-        name: settingsJson.name,
-        id: settingsJson.id,
-      });
-    }
-    deviceList = deviceList;
+
+  function combineArrays(A, B) {
+    var ids = new Set(A.map((d) => d.ip));
+    let output = [...A, ...B.filter((d) => !ids.has(d.ip))];
+    return output;
+  }
+
+  function whenDeviceListWasUpdated() {
+    getSelectedDeviceData(selectedWs);
+    socketConnected = selectedDeviceData.status;
   }
 
   function devicesDropdownChange() {
-    socketConnected = selectedDeviceData.status;
-    wsSelected = selectedDeviceData.ws;
+    whenDeviceListWasUpdated();
     clearData();
     sendCurrentPageName();
     if (debug) console.log("[i]", "user selected device:", selectedDeviceData.name);
     if (selectedDeviceData.ip === myip) {
       if (debug) console.log("[i]", "user selected original device", selectedDeviceData.name);
+    }
+  }
+
+  function getSelectedDeviceData(ws) {
+    for (let i = 0; i < deviceList.length; i++) {
+      let device = deviceList[i];
+      if (device.ws === ws) {
+        selectedDeviceData = device;
+        break;
+      }
     }
   }
 
@@ -588,12 +590,23 @@
         deviceList.push(newDevice);
         deviceList = deviceList;
         newDevice = {};
+        whenDeviceListWasUpdated();
         connectToAllDevices();
         if (debug) console.log("[i]", "selected device:", selectedDeviceData);
-        //socketConnected = selectedDeviceData.status;
-        //socketConnected = socketConnected;
       } else {
         if (debug) console.log("[e]", "wrong data");
+      }
+    }
+  }
+
+  function updateThisDeviceInList() {
+    for (let i = 0; i < deviceList.length; i++) {
+      let device = deviceList[i];
+      if (device.ip === myip) {
+        device.name = settingsJson.name;
+        device.id = settingsJson.id;
+        settingsJson = settingsJson;
+        break;
       }
     }
   }
@@ -724,7 +737,7 @@
   //************************************************elements and presets dropdown************************************************************/
 
   function ssidDropdownClick() {
-    wsSendMsg(wsSelected, "/scan");
+    wsSendMsg(selectedWs, "/scan");
   }
 
   //*******************************************************initialisation********************************************************************/
@@ -732,8 +745,7 @@
     console.log("[i]", "mounted");
     connectToAllDevices();
     wsTestMsgTask();
-    socketConnected = selectedDeviceData.status;
-    devicesDropdownChange();
+    whenDeviceListWasUpdated();
     findNewPage();
   });
 </script>
@@ -744,9 +756,9 @@
   <header class="h-10 w-full bg-gray-100 overflow-auto shadow-md">
     <div class="flex content-center items-center justify-end">
       <div class="px-15 py-1 z-50 ">
-        <select class="border border-indigo-500 border-4" bind:value={selectedDeviceData} on:change={() => devicesDropdownChange()}>
+        <select class="border border-indigo-500 border-4" bind:value={selectedWs} on:change={() => devicesDropdownChange()}>
           {#each deviceList as device}
-            <option value={device}>
+            <option value={device.ws}>
               {device.name}
             </option>
           {/each}

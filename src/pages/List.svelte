@@ -1,5 +1,6 @@
 <script>
   import Card from "../components/Card.svelte";
+  import Alarm from "../components/Alarm.svelte";
 
   import CrossIcon from "../svg/Cross.svelte";
   import OpenIcon from "../svg/Open.svelte";
@@ -58,4 +59,7 @@
     </table>
     <button class="btn-lg" on:click={() => ((showInput = !showInput), devListSave())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
   </Card>
+  <Alarm>
+    <p>Список устройств будет обновляться автоматически. Подключенные к одному роутеру устройства будут появляться в списке в течении двух минут. Ручное добавление сделано в целях проверки для разработчика.</p>
+  </Alarm>
 </div>
