@@ -5,8 +5,10 @@
   import { Route, router, active } from "tinro";
   router.mode.hash();
 
-  import Modal from "./components/Modal.svelte";
+  import Alarm from "./components/Alarm.svelte";
+  import Progress from "./components/Progress.svelte";
 
+  import Modal from "./components/Modal.svelte";
   import DashboardPage from "./pages/Dashboard.svelte";
   import ConfigPage from "./pages/Config.svelte";
   import ConnectionPage from "./pages/Connection.svelte";
@@ -49,8 +51,6 @@
   let itemsJsonFlag = false;
   let itemsJsonParced = false;
 
-  let itemsJsonBind = 0;
-
   let layoutJson = [];
   let layoutJsonFlag = false;
   let layoutJsonParced = false;
@@ -68,7 +68,7 @@
   let selectedDeviceData = undefined;
   let deviceList = [];
   let flag = true;
-
+  let newDevice = {};
   let coreMessages = [];
   let wsSelected = undefined;
 
@@ -77,9 +77,15 @@
   deviceList = [
     {
       name: "Устройство 1",
-      id: "987654321",
-      //ip: myip,
+      id: "123456789",
       ip: "192.168.88.235",
+      //ip: myip,
+      status: false,
+    },
+    {
+      name: "Устройство 2",
+      id: "123456789",
+      ip: "192.168.88.236",
       status: false,
     },
   ];
@@ -215,7 +221,7 @@
       socket[ws].addEventListener("message", function (event) {
         if (typeof event.data === "string") {
           let data = event.data;
-          if (debug) console.log("[i]", getIP(ws), "msg received", data); //
+          //if (debug) console.log("[i]", getIP(ws), "msg received", data); //
           //сборщик statusJson сообщений======================================
           if (data.includes("status")) {
             if (IsJsonParse(data)) {
@@ -661,28 +667,12 @@
 
   //************************************************elements and presets dropdown************************************************************/
 
-  function elementsDropdownChange() {
-    for (let i = 0; i < itemsJson.length; i++) {
-      let item = Object.assign({}, itemsJson[i]);
-      if (itemsJsonBind === item.num) {
-        delete item.num;
-        delete item.name;
-        configJson.push(item);
-        configJson = configJson;
-        itemsJsonBind = 0;
-        if (debug) console.log("[i]", "item added");
-        break;
-      }
-    }
-  }
-
-  function deleteLine(num) {
-    if (debug) console.log("[i]", num);
-    for (let i = 0; i < configJson.length; i++) {
+  function deleteLineFromDevlist(num) {
+    for (let i = 0; i < deviceList.length; i++) {
       if (num === i) {
-        configJson.splice(i, 1);
-        configJson = configJson;
-        if (debug) console.log("[i]", "item " + num + " deleted");
+        deviceList.splice(i, 1);
+        deviceList = deviceList;
+        if (debug) console.log("[i]", "item " + num + " deleted from dev list");
         break;
       }
     }
@@ -705,10 +695,11 @@
 
 <div class="flex flex-col h-screen bg-gray-50">
   <Modal show={showModalFlag} />
+
   <header class="h-10 w-full bg-gray-100 overflow-auto shadow-md">
     <div class="flex justify-end content-center">
       <div class="px-15 py-2 z-50">
-        <select bind:value={selectedDeviceData} on:change={() => devicesDropdownChange()}>
+        <select class="border-indigo-500" bind:value={selectedDeviceData} on:change={() => devicesDropdownChange()}>
           {#each deviceList as device}
             <option value={device}>
               {device.name}
@@ -716,7 +707,7 @@
           {/each}
         </select>
       </div>
-      <div class="px-5 py-1">
+      <div class="pl-2 pr-4 py-1">
         <svg class="h-8 w-8 {socketConnected === true ? 'text-green-500' : 'text-red-500'}" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path stroke="none" d="M0 0h24v24H0z" /> <path d="M7 18a4.6 4.4 0 0 1 0 -9h0a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-12" /></svg>
       </div>
     </div>
@@ -757,15 +748,13 @@
     <ul class="menu__main">
       <div class="bg-cover pt-0 px-4">
         {#if !socketConnected}
-          <div class="flex justify-center items-center">
-            <div style="border-top-color:transparent" class="w-20 h-20 border-4 border-blue-400 border-solid rounded-full animate-spin" />
-          </div>
+          <Alarm title="Нет соединения" />
         {:else}
           <Route path="/">
             <DashboardPage layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
           </Route>
           <Route path="/config">
-            <ConfigPage configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} itemsJsonBind={itemsJsonBind} ssidDropdownClick={() => elementsDropdownChange()} saveConfig={() => saveConfig()} deleteLine={(i) => deleteLine(i)} />
+            <ConfigPage configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} deleteLineFromConfig={(i) => deleteLineFromConfig(i)} />
           </Route>
           <Route path="/connection">
             <ConnectionPage settingsJson={settingsJson} ssidJson={ssidJson} ssidDropdownClick={() => ssidDropdownClick()} saveSettings={() => saveSettings()} />
@@ -776,13 +765,13 @@
           <Route path="/log">
             <LogPage coreMessages={coreMessages} />
           </Route>
-          <Route path="/list">
-            <ListPage deviceList={deviceList} showInput={showInput} devListSave={() => devListSave()} />
-          </Route>
           <Route path="/about">
             <AboutPage wigetsUpdate={wigetsUpdate} layoutJson={layoutJson} showModal={() => showModal()} syntaxHighlight={(json) => syntaxHighlight(json)} />
           </Route>
         {/if}
+        <Route path="/list">
+          <ListPage deviceList={deviceList} showInput={showInput} deleteLineFromDevlist={(num) => deleteLineFromDevlist(num)} devListSave={() => devListSave()} newDevice={newDevice} />
+        </Route>
       </div>
     </ul>
   </main>
@@ -836,6 +825,9 @@
       @apply text-center text-gray-500 font-bold;
     }
     /*====================================================table=====================================================*/
+    .tbl {
+      @apply table-fixed w-full select-none my-2;
+    }
     .tbl-hd {
       @apply text-center px-1 break-words text-gray-500 font-bold;
     }

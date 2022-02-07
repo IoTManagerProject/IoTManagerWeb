@@ -4,13 +4,39 @@
   export let configJson;
   export let widgetsJson;
   export let itemsJson;
-  export let itemsJsonBind;
 
-  export let elementsDropdownChange = () => {};
+  let itemsJsonBind = 0;
+  let debug = true;
+
   export let saveConfig = () => {};
-  export let deleteLine = (i) => {};
 
   let hideAllSubParams = true;
+
+  function elementsDropdownChange() {
+    for (let i = 0; i < itemsJson.length; i++) {
+      let item = Object.assign({}, itemsJson[i]);
+      if (itemsJsonBind === item.num) {
+        delete item.num;
+        delete item.name;
+        configJson.push(item);
+        configJson = configJson;
+        itemsJsonBind = 0;
+        if (debug) console.log("[i]", "item added");
+        break;
+      }
+    }
+  }
+
+  function deleteLineFromConfig(num) {
+    for (let i = 0; i < configJson.length; i++) {
+      if (num === i) {
+        configJson.splice(i, 1);
+        configJson = configJson;
+        if (debug) console.log("[i]", "item " + num + " deleted from config");
+        break;
+      }
+    }
+  }
 </script>
 
 <!--{#if itemsJsonParced && widgetsJsonParced && configJsonParced && settingsJsonParced}-->
@@ -31,7 +57,7 @@
       </select>
       <select class="slct-lg"><option>{"Выберите пресет"}</option></select>
     </div>
-    <table class="table-fixed w-full select-none my-2 ">
+    <table class="tbl">
       <thead class="bg-gray-100">
         <tr class="tbl-txt-sz tbl-txt-p">
           <th class="tbl-hd">Тип</th>
@@ -59,7 +85,7 @@
             <td class="tbl-bdy"><input bind:value={element.page} class="tbl-ipt w-full" type="text" /></td>
             <td class="tbl-bdy"><input bind:value={element.descr} class="tbl-ipt w-full" type="text" /></td>
             <td class="tbl-bdy"><svg on:click={() => (hideAllSubParams = !hideAllSubParams)} class="h-6 w-6 text-green-400 cursor-pointer" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path stroke="none" d="M0 0h24v24H0z" /> <circle cx="5" cy="12" r="1" /> <circle cx="12" cy="12" r="1" /> <circle cx="19" cy="12" r="1" /></svg></td>
-            <td class="tbl-bdy"><svg on:click={() => deleteLine(i)} class="h-6 w-6 text-red-400 cursor-pointer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /></svg></td>
+            <td class="tbl-bdy"><svg on:click={() => deleteLineFromConfig(i)} class="h-6 w-6 text-red-400 cursor-pointer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /></svg></td>
           </tr>
           {#if !hideAllSubParams}
             {#each Object.entries(element) as [key, param]}
