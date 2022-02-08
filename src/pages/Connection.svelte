@@ -3,9 +3,11 @@
   import Alarm from "../components/Alarm.svelte";
 
   export let settingsJson;
+  export let errorsJson;
   export let ssidJson;
   export let ssidDropdownClick = () => {};
   export let saveSettings = () => {};
+  export let rebootEsp = () => {};
 </script>
 
 <div class="grd-2col1">
@@ -56,12 +58,12 @@
         <input bind:value={settingsJson.routerpass} class="ipt-rnd text-left focus:border-indigo-500" type="text" />
       </div>
     </div>
-    {#if settingsJson.pass_status === 1}
+    {#if errorsJson.passer === 1}
       <div class="grd-1col1">
         <Alarm title="Введен неправильный пароль" />
       </div>
     {/if}
-    <button class="btn-lg" on:click={() => saveSettings()}>{"Сохранить и перезагрузить"}</button>
+    <button class="btn-lg" on:click={() => saveSettings()}>{"Сохранить"}</button>
   </Card>
   <Card title="Подключение к MQTT брокеру">
     <div class="crd-itm-psn">
@@ -105,5 +107,10 @@
       </div>
     </div>
     <button class="btn-lg" on:click={() => saveSettings()}>{"Сохранить и проверить подключение"}</button>
+  </Card>
+</div>
+<div class="grd-1col1">
+  <Card title="Дополнительные опции">
+    <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить устройство"}</button>
   </Card>
 </div>

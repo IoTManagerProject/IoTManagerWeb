@@ -6,7 +6,7 @@
   router.mode.hash();
 
   import Alarm from "./components/Alarm.svelte";
-  //import Progress from "./components/Progress.svelte";
+  import Progress from "./components/Progress.svelte";
 
   import Modal from "./components/Modal.svelte";
   import DashboardPage from "./pages/Dashboard.svelte";
@@ -24,13 +24,14 @@
   let debug = true;
   let LOG_MAX_MESSAGES = 10;
   let reconnectTimeout = 30000;
+  let rebootingTimeout = 20000;
   let opened = false;
   let preventMove = false;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
-  //let myip = document.location.hostname;
-  let myip = "192.168.88.235";
+  let myip = document.location.hostname;
+  //let myip = "192.168.88.235";
 
   //Flags
   let showInput = false;
@@ -61,6 +62,9 @@
   let settingsJson = {};
   let settingsJsonFlag = false;
   let settingsJsonParced = false;
+
+  let errorsJson = {};
+  let errorsJsonParced = false;
 
   let ssidJson = {};
   let ssidJsonParced = false;
@@ -130,9 +134,11 @@
     sendCurrentPageName();
   }
 
+  //отправляем запрос данных для данной страницы и запрос данных для всех страниц - /all
   function sendCurrentPageName() {
     if (selectedWs !== undefined) {
       wsSendMsg(selectedWs, currentPageName);
+      wsSendMsg(selectedWs, "/all");
     }
   }
 
@@ -232,7 +238,7 @@
               let statusJson = JSON.parse(data);
               udatelayoutJson(statusJson);
               wigetsUpdate();
-              if (debug) console.log("[i]", "statusJson parced: ", statusJson);
+              if (debug) console.log("✔", "statusJson parced");
             }
           }
           //сборщик paramsJson сообщений======================================
@@ -241,7 +247,7 @@
               let paramsJson = JSON.parse(data);
               //udatelayoutJson(statusJson);
               //wigetsUpdate();
-              if (debug) console.log("[i]", "paramsJson parced: ", paramsJson);
+              if (debug) console.log("✔", "paramsJson parced");
             }
           }
           //сборщик ssidJson сообщений======================================
@@ -251,7 +257,7 @@
               delete ssidJson.ssid;
               ssidJson = ssidJson;
               ssidJsonParced = true;
-              if (debug) console.log("[i]", "ssidJson parced");
+              if (debug) console.log("✔", "ssidJson parced");
             }
           }
           //сборщик deviceList сообщений======================================
@@ -265,7 +271,18 @@
               deviceList = deviceList;
               whenDeviceListWasUpdated();
               connectToAllDevices();
-              if (debug) console.log("[i]", "incDeviceList json parced", incDeviceList);
+              if (debug) console.log("✔", "incDeviceList json parced");
+            }
+          }
+          //сборщик errorsJson сообщений======================================
+          if (data.includes("errors")) {
+            if (IsJsonParse(data)) {
+              errorsJson = JSON.parse(data);
+              delete errorsJson.errors;
+              errorsJson = errorsJson;
+              errorsJsonParced = true;
+              handleErrors();
+              if (debug) console.log("✔", "errorsJson json parced");
             }
           }
           //сборщик configJson пакетов========================================
@@ -285,7 +302,7 @@
                 configJson = JSON.parse(configJsonResult);
                 configJson = configJson;
                 configJsonParced = true;
-                if (debug) console.log("[ii]", "configJson parced!");
+                if (debug) console.log("✔", "configJson parced");
               }
             };
           }
@@ -306,7 +323,7 @@
                 widgetsJson = JSON.parse(widgetsJsonResult);
                 widgetsJson = widgetsJson;
                 widgetsJsonParced = true;
-                if (debug) console.log("[ii]", "widgetsJson parced!");
+                if (debug) console.log("✔", "widgetsJson parced");
               }
             };
           }
@@ -327,7 +344,7 @@
                 itemsJson = JSON.parse(itemsJsonResult);
                 itemsJson = itemsJson;
                 itemsJsonParced = true;
-                if (debug) console.log("[ii]", "itemsJson parced!");
+                if (debug) console.log("✔", "itemsJson parced");
               }
             };
           }
@@ -349,7 +366,7 @@
                 layoutJson = layoutJson;
                 wigetsUpdate();
                 layoutJsonParced = true;
-                if (debug) console.log("[ii]", "layoutJson parced!");
+                if (debug) console.log("✔", "layoutJson parced");
               }
             };
           }
@@ -372,7 +389,7 @@
                 wigetsUpdate();
                 settingsJsonParced = true;
                 updateThisDeviceInList();
-                if (debug) console.log("[ii]", "settingsJson parced!");
+                if (debug) console.log("✔", "settingsJson parced");
               }
             };
           }
@@ -406,6 +423,7 @@
   }
 
   function saveSettings() {
+    console.log("[i]", settingsJson);
     wsSendMsg(selectedWs, "/cennoc" + JSON.stringify(settingsJson));
     clearData();
     sendCurrentPageName();
@@ -463,6 +481,8 @@
 
     settingsJson = {};
     settingsJsonBlob.clear();
+
+    errorsJson = {};
 
     configJsonParced = false;
     widgetsJsonParced = false;
@@ -749,6 +769,29 @@
     wsSendMsg(selectedWs, "/scan");
   }
 
+  let wsClientsError = false;
+
+  function handleErrors() {
+    if (errorsJson.wscle === 1) {
+      wsClientsError = true;
+    }
+  }
+
+  let rebootingInProgress = false;
+  const myTimeout = undefined;
+
+  function rebootEsp() {
+    if (debug) console.log("[i]", "reboot...");
+    wsSendMsg(selectedWs, "/reboot");
+    rebootingInProgress = true;
+    myTimeout = setTimeout(rebootingTask, rebootingTimeout);
+  }
+
+  function rebootingTask() {
+    clearTimeout(myTimeout);
+    connectToAllDevices();
+    rebootingInProgress = false;
+  }
   //*******************************************************initialisation********************************************************************/
   onMount(async () => {
     console.log("[i]", "mounted");
@@ -760,11 +803,15 @@
 </script>
 
 <div class="flex flex-col h-screen bg-gray-50">
-  <Modal show={showModalFlag} />
-
+  {#if wsClientsError}
+    <Modal header={"Ошибка"} text={"Слишком много клиентов было открыто. Допускается не более четырех. Для исчезновения ошибки перезагрузите устройство"} />
+  {/if}
+  {#if rebootingInProgress}
+    <Progress />
+  {/if}
   <header class="h-10 w-full bg-gray-100 overflow-auto shadow-md">
     <div class="flex content-center items-center justify-end">
-      <div class="px-15 py-1 z-50 ">
+      <div class="px-15 py-1">
         <select class="border border-indigo-500 border-4" bind:value={selectedWs} on:change={() => devicesDropdownChange()}>
           {#each deviceList as device}
             <option value={device.ws}>
@@ -823,7 +870,7 @@
             <ConfigPage configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} />
           </Route>
           <Route path="/connection">
-            <ConnectionPage settingsJson={settingsJson} ssidJson={ssidJson} ssidDropdownClick={() => ssidDropdownClick()} saveSettings={() => saveSettings()} />
+            <ConnectionPage settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} rebootEsp={() => rebootEsp()} ssidDropdownClick={() => ssidDropdownClick()} saveSettings={() => saveSettings()} />
           </Route>
           <Route path="/utilities">
             <UtilitiesPage />
@@ -858,7 +905,7 @@
       @apply grid grid-cols-1 justify-items-center;
     }
     .grd-2col1 {
-      @apply grid gap-4 grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 justify-items-center;
+      @apply grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 justify-items-center;
     }
     .grd-2col2 {
       @apply grid gap-4 grid-cols-2 justify-items-center;
@@ -924,14 +971,14 @@
     }
     /*====================================================buttons=====================================================*/
     .btn-lg {
-      @apply flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold text-xxs sm:text-base md:text-base lg:text-base xl:text-base 2xl:text-base h-4 sm:h-8 md:h-8 lg:h-8 xl:h-8 2xl:h-8 w-full mt-0 border border-gray-300 rounded;
+      @apply flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold text-sm sm:text-base md:text-base lg:text-base xl:text-base 2xl:text-base h-6 sm:h-8 md:h-8 lg:h-8 xl:h-8 2xl:h-8 w-full mt-0 border border-gray-300 rounded;
     }
     .btn-tbl {
       @apply flex justify-center content-center text-gray-500 font-bold w-6 h-auto border border-gray-300;
     }
     /*====================================================select=====================================================*/
     .slct-lg {
-      @apply flex w-full justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold text-xxs sm:text-base md:text-base lg:text-base xl:text-base 2xl:text-base h-4 sm:h-8 md:h-8 lg:h-8 xl:h-8 2xl:h-8 mb-0 border border-gray-300 rounded;
+      @apply flex w-full justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold text-sm sm:text-base md:text-base lg:text-base xl:text-base 2xl:text-base h-6 sm:h-8 md:h-8 lg:h-8 xl:h-8 2xl:h-8 mb-0 border border-gray-300 rounded;
     }
   }
 
