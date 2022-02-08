@@ -12,15 +12,18 @@
   import DashboardPage from "./pages/Dashboard.svelte";
   import ConfigPage from "./pages/Config.svelte";
   import ConnectionPage from "./pages/Connection.svelte";
+  import ListPage from "./pages/List.svelte";
+  import SystemPage from "./pages/System.svelte";
+
   import UtilitiesPage from "./pages/Utilities.svelte";
   import LogPage from "./pages/Log.svelte";
-  import ListPage from "./pages/List.svelte";
   import AboutPage from "./pages/About.svelte";
 
   import CloudIcon from "./svg/Cloud.svelte";
 
   //****************************************************constants section*********************************************************/
   //******************************************************************************************************************************/
+  let version = 400;
   let debug = true;
   let LOG_MAX_MESSAGES = 10;
   let reconnectTimeout = 30000;
@@ -238,6 +241,7 @@
               let statusJson = JSON.parse(data);
               udatelayoutJson(statusJson);
               wigetsUpdate();
+              if (debug) console.log(statusJson);
               if (debug) console.log("✔", "statusJson parced");
             }
           }
@@ -281,7 +285,6 @@
               delete errorsJson.errors;
               errorsJson = errorsJson;
               errorsJsonParced = true;
-              handleErrors();
               if (debug) console.log("✔", "errorsJson json parced");
             }
           }
@@ -552,6 +555,7 @@
 
   function wigetsUpdate() {
     findNewPage();
+    layoutJson = layoutJson;
   }
 
   //***********************************************************logging******************************************************************/
@@ -769,14 +773,6 @@
     wsSendMsg(selectedWs, "/scan");
   }
 
-  let wsClientsError = false;
-
-  function handleErrors() {
-    if (errorsJson.wscle === 1) {
-      wsClientsError = true;
-    }
-  }
-
   let rebootingInProgress = false;
   const myTimeout = undefined;
 
@@ -803,9 +799,9 @@
 </script>
 
 <div class="flex flex-col h-screen bg-gray-50">
-  {#if wsClientsError}
-    <Modal header={"Ошибка"} text={"Слишком много клиентов было открыто. Допускается не более четырех. Для исчезновения ошибки перезагрузите устройство"} />
-  {/if}
+  <!--{#if errorsJson.wscle === 1}-->
+  <!--<Modal header={"Ошибка web sockets"} text={"Слишком много клиентов было открыто. Допускается не более четырех. Для исчезновения ошибки перезагрузите устройство"} />-->
+  <!--{/if}-->
   {#if rebootingInProgress}
     <Progress />
   {/if}
@@ -843,17 +839,20 @@
         <a class="menu__item" href="/connection">{"Подключение"}</a>
       </li>
       <li>
-        <a class="menu__item" href="/utilities">{"Утилиты"}</a>
-      </li>
-      <li>
-        <a class="menu__item" href="/log">{"Лог"}</a>
-      </li>
-      <li>
         <a class="menu__item" href="/list">{"Устройства"}</a>
       </li>
       <li>
-        <a class="menu__item" href="/about">{"О проекте"}</a>
+        <a class="menu__item" href="/system">{"Системные"}</a>
       </li>
+      <!--<li>-->
+      <!--<a class="menu__item" href="/utilities">{"Утилиты"}</a>-->
+      <!--</li>-->
+      <!--<li>-->
+      <!--<a class="menu__item" href="/log">{"Лог"}</a>-->
+      <!--</li>-->
+      <!--<li>-->
+      <!--<a class="menu__item" href="/about">{"О проекте"}</a>-->
+      <!--</li>-->
     </ul>
   </nav>
 
@@ -872,15 +871,19 @@
           <Route path="/connection">
             <ConnectionPage settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} rebootEsp={() => rebootEsp()} ssidDropdownClick={() => ssidDropdownClick()} saveSettings={() => saveSettings()} />
           </Route>
-          <Route path="/utilities">
-            <UtilitiesPage />
+          <Route path="/system">
+            <SystemPage settingsJson={settingsJson} errorsJson={errorsJson} rebootEsp={() => rebootEsp()} version={version} />
           </Route>
-          <Route path="/log">
-            <LogPage coreMessages={coreMessages} />
-          </Route>
-          <Route path="/about">
-            <AboutPage wigetsUpdate={wigetsUpdate} layoutJson={layoutJson} showModal={() => showModal()} syntaxHighlight={(json) => syntaxHighlight(json)} />
-          </Route>
+
+          <!--<Route path="/utilities">-->
+          <!--<UtilitiesPage />-->
+          <!--</Route>-->
+          <!--<Route path="/log">-->
+          <!--<LogPage coreMessages={coreMessages} />-->
+          <!--</Route>-->
+          <!--<Route path="/about">-->
+          <!--<AboutPage wigetsUpdate={wigetsUpdate} layoutJson={layoutJson} showModal={() => showModal()} syntaxHighlight={(json) => syntaxHighlight(json)} />-->
+          <!--</Route>-->
         {/if}
         <Route path="/list">
           <ListPage deviceList={deviceList} showInput={showInput} devListSave={() => devListSave()} newDevice={newDevice} />

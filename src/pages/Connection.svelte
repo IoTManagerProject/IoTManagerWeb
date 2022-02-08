@@ -110,7 +110,7 @@
   </Card>
 </div>
 <div class="grd-1col1">
-  <Card title="Дополнительные опции">
+  <Card>
     <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить устройство"}</button>
   </Card>
 </div>
