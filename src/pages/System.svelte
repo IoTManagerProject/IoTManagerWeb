@@ -75,7 +75,17 @@
     <div class="grd-2col1">
       {#if errorsJson.wscle === 1}
         <Alarm title={"Ошибка web sockets"} close={() => cancelAlarm("wscle")}>
-          <p class="break-words text-center">Слишком много клиентов было открыто. Допускается не более четырех. Для исчезновения ошибки перезагрузите устройство</p>
+          <p class="break-words text-center">Слишком много клиентов было открыто. Допускается не более четырех.</p>
+        </Alarm>
+      {/if}
+      {#if errorsJson.jsbuf === 1}
+        <Alarm title={"Ошибка json"} close={() => cancelAlarm("jsbuf")}>
+          <p class="break-words text-center">Недостаточный размер буфера библиотеки Arduino Json. Устройство может вести себя непредсказуемо. Обратитесь к разработчику</p>
+        </Alarm>
+      {/if}
+      {#if errorsJson.jserr > 0}
+        <Alarm title={"Ошибка json"} close={() => cancelAlarm("jserr")}>
+          <p class="break-words text-center">Ошибка записи/чтения json. Устройство может вести себя непредсказуемо. Количество ошибок: {errorsJson.jserr}. Обратитесь к разработчику.</p>
         </Alarm>
       {/if}
       {#if errorsJson.bver != version}

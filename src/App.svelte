@@ -793,10 +793,18 @@
 
   function cancelAlarm(alarmKey) {
     console.log("[x]", alarmKey);
-    if ((alarmKey = "wscle")) {
+    if (alarmKey === "wscle") {
       errorsJson.wscle = 0;
+      wsSendMsg(selectedWs, '/rorre|{"wscle":0}');
     }
-    wsSendMsg(selectedWs, "/rorre|" + JSON.stringify(errorsJson));
+    if (alarmKey === "jsbuf") {
+      errorsJson.jsbuf = 0;
+      wsSendMsg(selectedWs, '/rorre|{"jsbuf":0}');
+    }
+    if (alarmKey === "jserr") {
+      errorsJson.jserr = 0;
+      wsSendMsg(selectedWs, '/rorre|{"jserr":0}');
+    }
   }
   //*******************************************************initialisation********************************************************************/
   onMount(async () => {
