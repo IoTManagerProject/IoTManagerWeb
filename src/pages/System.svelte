@@ -79,7 +79,7 @@
         </Alarm>
       {/if}
       {#if errorsJson.bver != version}
-        <Alarm title={"Ошибка версии"} close={() => cancelAlarm("bver")}>
+        <Alarm title={"Ошибка версии"}>
           <p class="break-words text-center">Версия файловой системы не совпадает с версией прошивки. Вероятно произошла ошибка во время обновления устройства по воздуху.</p>
         </Alarm>
       {/if}

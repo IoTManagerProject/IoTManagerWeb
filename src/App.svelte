@@ -796,9 +796,6 @@
     if ((alarmKey = "wscle")) {
       errorsJson.wscle = 0;
     }
-    if ((alarmKey = "bver")) {
-      errorsJson.bver = 0;
-    }
     wsSendMsg(selectedWs, "/rorre|" + JSON.stringify(errorsJson));
   }
   //*******************************************************initialisation********************************************************************/
