@@ -87,7 +87,7 @@
             <td class="tbl-bdy-lg"><input bind:value={element.page} class="ipt-lg w-full" type="text" /></td>
             <td class="tbl-bdy-lg"><input bind:value={element.descr} class="ipt-lg w-full" type="text" /></td>
             <td class="tbl-bdy-lg"><OpenIcon click={() => (hideAllSubParams = !hideAllSubParams)} /></td>
-            <td class="tbl-bdy-lg"><CrossIcon i={i} click={(i) => deleteLineFromConfig(i)} /></td>
+            <td class="tbl-bdy-lg"><CrossIcon click={() => deleteLineFromConfig(i)} /></td>
           </tr>
           {#if !hideAllSubParams}
             {#each Object.entries(element) as [key, param]}

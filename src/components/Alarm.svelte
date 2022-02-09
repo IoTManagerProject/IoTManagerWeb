@@ -1,10 +1,22 @@
 <script>
+  import CrossIcon from "../svg/Cross.svelte";
   export let title;
+  export let showCloseBtn = true;
+  export let close = () => {};
 </script>
 
 <div class="alm">
   {#if title}
-    <h1 class="alm-hdr">{title}</h1>
+    <div class="flex items-center">
+      <div class="w-11/12">
+        <h1 class="alm-hdr">{title}</h1>
+      </div>
+      <div class="flex justify-end w-1/12">
+        {#if showCloseBtn}
+          <CrossIcon click={() => close()} />
+        {/if}
+      </div>
+    </div>
   {/if}
   <slot />
 </div>

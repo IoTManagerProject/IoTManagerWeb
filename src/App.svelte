@@ -23,7 +23,7 @@
 
   //****************************************************constants section*********************************************************/
   //******************************************************************************************************************************/
-  let version = 400;
+  let version = 401;
   let debug = true;
   let LOG_MAX_MESSAGES = 10;
   let reconnectTimeout = 30000;
@@ -133,6 +133,8 @@
   function handleNavigation() {
     clearData();
     currentPageName = $router.path.toString();
+    //название страницы служит заголовком, поэтому отметим конец заголовка "|"
+    currentPageName = currentPageName + "|";
     console.log("[i]", "user on page:", currentPageName);
     sendCurrentPageName();
   }
@@ -141,7 +143,7 @@
   function sendCurrentPageName() {
     if (selectedWs !== undefined) {
       wsSendMsg(selectedWs, currentPageName);
-      wsSendMsg(selectedWs, "/all");
+      wsSendMsg(selectedWs, "/all|");
     }
   }
 
@@ -241,7 +243,7 @@
               let statusJson = JSON.parse(data);
               udatelayoutJson(statusJson);
               wigetsUpdate();
-              if (debug) console.log(statusJson);
+              //if (debug) console.log(statusJson);
               if (debug) console.log("✔", "statusJson parced");
             }
           }
@@ -258,7 +260,7 @@
           if (data.includes("ssid")) {
             if (IsJsonParse(data)) {
               ssidJson = JSON.parse(data);
-              delete ssidJson.ssid;
+              //delete ssidJson.ssid;
               ssidJson = ssidJson;
               ssidJsonParced = true;
               if (debug) console.log("✔", "ssidJson parced");
@@ -268,7 +270,7 @@
           if (data.includes("devicelist")) {
             if (IsJsonParse(data)) {
               incDeviceList = JSON.parse(data);
-              delete incDeviceList.devicelist;
+              //delete incDeviceList.devicelist;
               incDeviceList = incDeviceList;
               incDeviceListParced = true;
               deviceList = combineArrays(deviceList, incDeviceList);
@@ -282,7 +284,7 @@
           if (data.includes("errors")) {
             if (IsJsonParse(data)) {
               errorsJson = JSON.parse(data);
-              delete errorsJson.errors;
+              //delete errorsJson.errors;
               errorsJson = errorsJson;
               errorsJsonParced = true;
               if (debug) console.log("✔", "errorsJson json parced");
@@ -419,15 +421,15 @@
   }
 
   function saveConfig() {
-    wsSendMsg(selectedWs, "/tuoyal" + JSON.stringify(generateLayout()));
-    wsSendMsg(selectedWs, "/gifnoc" + JSON.stringify(configJson));
+    wsSendMsg(selectedWs, "/tuoyal|" + JSON.stringify(generateLayout()));
+    wsSendMsg(selectedWs, "/gifnoc|" + JSON.stringify(configJson));
     clearData();
     sendCurrentPageName();
   }
 
   function saveSettings() {
     console.log("[i]", settingsJson);
-    wsSendMsg(selectedWs, "/cennoc" + JSON.stringify(settingsJson));
+    wsSendMsg(selectedWs, "/sgnittes|" + JSON.stringify(settingsJson));
     clearData();
     sendCurrentPageName();
   }
@@ -512,7 +514,7 @@
           wsConnect(device.ws);
           wsEventAdd(device.ws);
         } else {
-          wsSendMsg(device.ws, "tst");
+          wsSendMsg(device.ws, "/tst|");
         }
       });
     }
@@ -770,7 +772,7 @@
   //************************************************elements and presets dropdown************************************************************/
 
   function ssidDropdownClick() {
-    wsSendMsg(selectedWs, "/scan");
+    wsSendMsg(selectedWs, "/scan|");
   }
 
   let rebootingInProgress = false;
@@ -778,7 +780,7 @@
 
   function rebootEsp() {
     if (debug) console.log("[i]", "reboot...");
-    wsSendMsg(selectedWs, "/reboot");
+    wsSendMsg(selectedWs, "/reboot|");
     rebootingInProgress = true;
     myTimeout = setTimeout(rebootingTask, rebootingTimeout);
   }
@@ -787,6 +789,17 @@
     clearTimeout(myTimeout);
     connectToAllDevices();
     rebootingInProgress = false;
+  }
+
+  function cancelAlarm(alarmKey) {
+    console.log("[x]", alarmKey);
+    if ((alarmKey = "wscle")) {
+      errorsJson.wscle = 0;
+    }
+    if ((alarmKey = "bver")) {
+      errorsJson.bver = 0;
+    }
+    wsSendMsg(selectedWs, "/rorre|" + JSON.stringify(errorsJson));
   }
   //*******************************************************initialisation********************************************************************/
   onMount(async () => {
@@ -872,7 +885,7 @@
             <ConnectionPage settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} rebootEsp={() => rebootEsp()} ssidDropdownClick={() => ssidDropdownClick()} saveSettings={() => saveSettings()} />
           </Route>
           <Route path="/system">
-            <SystemPage settingsJson={settingsJson} errorsJson={errorsJson} rebootEsp={() => rebootEsp()} version={version} />
+            <SystemPage settingsJson={settingsJson} errorsJson={errorsJson} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} version={version} />
           </Route>
 
           <!--<Route path="/utilities">-->

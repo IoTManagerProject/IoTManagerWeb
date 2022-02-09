@@ -4,6 +4,8 @@
   export let version;
   export let errorsJson;
   export let rebootEsp = () => {};
+
+  export let cancelAlarm = (alarmKey) => {};
 </script>
 
 <div class="grd-2col1">
@@ -70,20 +72,20 @@
     </div>
   </Card>
   <Card title="Системные ошибки">
-    <div class="grd-3col1">
+    <div class="grd-2col1">
       {#if errorsJson.wscle === 1}
-        <Alarm title={"Ошибка web sockets"}>
-          <p>Слишком много клиентов было открыто. Допускается не более четырех. Для исчезновения ошибки перезагрузите устройство</p>
+        <Alarm title={"Ошибка web sockets"} close={() => cancelAlarm("wscle")}>
+          <p class="break-words text-center">Слишком много клиентов было открыто. Допускается не более четырех. Для исчезновения ошибки перезагрузите устройство</p>
         </Alarm>
       {/if}
       {#if errorsJson.bver != version}
-        <Alarm title={"Ошибка версии"}>
-          <p>Версия файловой системы не совпадает с версией прошивки</p>
+        <Alarm title={"Ошибка версии"} close={() => cancelAlarm("bver")}>
+          <p class="break-words text-center">Версия файловой системы не совпадает с версией прошивки. Вероятно произошла ошибка во время обновления устройства по воздуху.</p>
         </Alarm>
       {/if}
       {#if errorsJson.rssi < 3 && errorsJson.rssi > 0}
         <Alarm title={"WiFi"}>
-          <p>Уровень сигнала WiFi предельно низкий, веб интерфейс может работать со сбоями и потерей данных, рекомендуется переместить устройство ближе к роутеру</p>
+          <p class="break-words text-center">Уровень сигнала WiFi предельно низкий, веб интерфейс может работать со сбоями и потерей данных, рекомендуется переместить устройство ближе к роутеру</p>
         </Alarm>
       {/if}
     </div>

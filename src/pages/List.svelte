@@ -44,7 +44,7 @@
             <td class="tbl-bdy-lg ipt-lg w-full"><a href={"http://" + device.ip}>{device.ip}</a></td>
             <td class="tbl-bdy-lg ipt-lg w-full">{device.id}</td>
             <td class="tbl-bdy-lg ipt-lg w-full {device.status ? 'bg-green-50' : 'bg-red-50'}">{device.status ? "online" : "offline"}</td>
-            <td class="tbl-bdy-lg"><CrossIcon i={i} click={(i) => deleteLineFromDevlist(i)} /></td>
+            <td class="tbl-bdy-lg"><CrossIcon click={() => deleteLineFromDevlist(i)} /></td>
           </tr>
         {/each}
         {#if showInput}
