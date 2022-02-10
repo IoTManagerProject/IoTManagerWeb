@@ -26,7 +26,7 @@
   let version = 401;
   let debug = true;
   let LOG_MAX_MESSAGES = 10;
-  let reconnectTimeout = 30000;
+  let reconnectTimeout = 20000;
   let rebootingTimeout = 20000;
   let opened = false;
   let preventMove = false;
@@ -785,6 +785,16 @@
     myTimeout = setTimeout(rebootingTask, rebootingTimeout);
   }
 
+  function mqttConnect() {
+    errorsJson.mqtt = 8;
+    console.log("[i]", settingsJson);
+    wsSendMsg(selectedWs, "/sgnittes|" + JSON.stringify(settingsJson));
+    //wsSendMsg(selectedWs, '/rorre|{"mqtt":8}');
+    wsSendMsg(selectedWs, "/mqtt|");
+    clearData();
+    sendCurrentPageName();
+  }
+
   function rebootingTask() {
     clearTimeout(myTimeout);
     connectToAllDevices();
@@ -887,7 +897,7 @@
             <ConfigPage configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} />
           </Route>
           <Route path="/connection">
-            <ConnectionPage settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} rebootEsp={() => rebootEsp()} ssidDropdownClick={() => ssidDropdownClick()} saveSettings={() => saveSettings()} />
+            <ConnectionPage settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} rebootEsp={() => rebootEsp()} ssidDropdownClick={() => ssidDropdownClick()} saveSettings={() => saveSettings()} mqttConnect={() => mqttConnect()} />
           </Route>
           <Route path="/system">
             <SystemPage settingsJson={settingsJson} errorsJson={errorsJson} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} version={version} />
@@ -938,14 +948,8 @@
     .crd-itm-psn {
       @apply flex mb-3 h-8 items-center;
     }
-    .wgt-dscr-w {
-      @apply w-2/3;
-    }
     .wgt-dscr-stl {
       @apply pr-4 text-gray-500 font-bold;
-    }
-    .wgt-w {
-      @apply flex justify-end w-1/3;
     }
     /*====================================================others=====================================================*/
     .btn-i {

@@ -6,11 +6,11 @@
 </script>
 
 <div class="crd-itm-psn">
-  <div class="wgt-dscr-w">
+  <div class="w-2/3">
     <!-- svelte-ignore a11y-label-has-associated-control -->
     <label class="wgt-dscr-stl">{!widget.descr ? "" : widget.descr}</label>
   </div>
-  <div class="wgt-w">
+  <div class="flex justify-end w-1/3">
     <label for={widget.topic} class="items-center cursor-pointer">
       <div class="relative">
         <input on:change={() => ((widget["send"] = true), wsPush(widget.ws, widget.topic, widget.status))} bind:value={widget.status} id={widget.topic} type="checkbox" class="sr-only" />

@@ -5,11 +5,11 @@
 </script>
 
 <div class="crd-itm-psn">
-  <div class="wgt-dscr-w">
+  <div class="w-2/3">
     <!-- svelte-ignore a11y-label-has-associated-control -->
     <label class="wgt-dscr-stl">{!widget.descr ? "" : widget.descr}</label>
   </div>
-  <div class="wgt-w">
+  <div class="flex justify-end w-1/3">
     <!-- svelte-ignore a11y-label-has-associated-control -->
     <label class="wgt-adt-stl">{!widget.status ? "" : widget.status}</label>
     <!-- svelte-ignore a11y-label-has-associated-control -->
