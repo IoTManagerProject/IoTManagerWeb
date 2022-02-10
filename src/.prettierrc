@@ -24,12 +24,6 @@
       "options": {
         "printWidth": 600
       }
-    },
-    {
-      "files": "Cross.svelte",
-      "options": {
-        "printWidth": 50
-      }
     }
   ]
 }

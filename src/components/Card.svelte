@@ -1,10 +1,22 @@
 <script>
+  import CloudIcon from "../svg/Cloud.svelte";
   export let title;
+  export let cloud = false;
+  export let cloudColor;
 </script>
 
 <div class="crd">
-  {#if title}
+  {#if title && !cloud}
     <h1 class="crd-hdr">{title}</h1>
+  {:else if title && cloud}
+    <div class="flex items-center">
+      <div class="w-11/12">
+        <h1 class="crd-hdr">{title}</h1>
+      </div>
+      <div class="flex justify-end w-1/12">
+        <CloudIcon color={cloudColor} />
+      </div>
+    </div>
   {/if}
   <slot />
 </div>

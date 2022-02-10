@@ -5,6 +5,7 @@
   export let settingsJson;
   export let errorsJson;
   export let ssidJson;
+  let mqttConnected = true;
   export let ssidDropdownClick = () => {};
   export let saveSettings = () => {};
   export let rebootEsp = () => {};
@@ -65,7 +66,7 @@
     {/if}
     <button class="btn-lg" on:click={() => saveSettings()}>{"Сохранить"}</button>
   </Card>
-  <Card title="Подключение к MQTT брокеру">
+  <Card title="Подключение к MQTT брокеру" cloud={true} cloudColor={mqttConnected === true ? "text-green-500" : "text-red-500"}>
     <div class="crd-itm-psn">
       <div class="wgt-dscr-w">
         <p class="wgt-dscr-stl">Название сервера</p>
