@@ -5,12 +5,28 @@
   export let settingsJson;
   //export let settingsJsonParced;
   export let errorsJson;
-  //export let errorsJsonParced;
+  export let errorsJsonParced;
   export let ssidJson;
   //export let ssidJsonParced;
 
+  export let promiseResolve = () => {};
+
+  async function connect() {
+    console.log("connect start");
+    errorsJsonParced = false;
+    saveSettings();
+    console.log("errorsJsonParced:", errorsJsonParced);
+    return new Promise(function (resolve, reject) {
+      //установим таймаут на 1 секунду, если пройдет секнда и не будет resolve() то система выдаст ошибку
+      setTimeout(() => reject(), 20000);
+      promiseResolve = resolve;
+    });
+  }
+
+  let myPromise = 0; //connect();
+
   let promise = 0;
-  let next = (value) => new Promise((resolve) => setTimeout(() => resolve(++value), 500));
+  let next = () => new Promise((resolve) => setTimeout(() => resolve(), 1000));
 
   export let ssidDropdownClick = () => {};
   export let saveSettings = () => {};
@@ -18,9 +34,10 @@
   export let rebootEsp = () => {};
 </script>
 
-{#await promise}
-  <p>...</p>
-{:then result}
+{#await myPromise}
+  <p>Connecting...</p>
+  <button class="btn-lg" on:click={() => promiseResolve()}>resolve</button>
+{:then}
   <div class="grd-2col1">
     <Card title="Подключение к WiFi">
       <div class="crd-itm-psn">
@@ -74,7 +91,8 @@
           <Alarm title="Введен неправильный пароль" />
         </div>
       {/if}
-      <button class="btn-lg" on:click={() => (promise = next(result))}>{result}</button>
+
+      <button class="btn-lg" on:click={() => (myPromise = connect())}>try</button>
       <button class="btn-lg" on:click={() => saveSettings()}>{"Сохранить"}</button>
     </Card>
 
@@ -141,4 +159,6 @@
       <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить устройство"}</button>
     </Card>
   </div>
+{:catch}
+  <p>error</p>
 {/await}

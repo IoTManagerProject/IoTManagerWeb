@@ -36,6 +36,8 @@
   //let myip = document.location.hostname;
   let myip = "192.168.88.235";
 
+  function promiseResolve() {}
+
   //Flags
   let showInput = false;
   let showModalFlag = false;
@@ -287,6 +289,7 @@
               //delete errorsJson.errors;
               errorsJson = errorsJson;
               errorsJsonParced = true;
+              promiseResolve();
               if (debug) console.log("✔", "errorsJson json parced");
             }
           }
@@ -887,7 +890,7 @@
             <ConfigPage configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} />
           </Route>
           <Route path="/connection">
-            <ConnectionPage settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} rebootEsp={() => rebootEsp()} ssidDropdownClick={() => ssidDropdownClick()} saveSettings={() => saveSettings()} mqttConnect={() => mqttConnect()} />
+            <ConnectionPage settingsJson={settingsJson} errorsJson={errorsJson} promiseResolve={() => promiseResolve()} ssidJson={ssidJson} rebootEsp={() => rebootEsp()} ssidDropdownClick={() => ssidDropdownClick()} saveSettings={() => saveSettings()} mqttConnect={() => mqttConnect()} />
           </Route>
           <Route path="/system">
             <SystemPage settingsJson={settingsJson} errorsJson={errorsJson} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} version={version} />
