@@ -36,8 +36,6 @@
   //let myip = document.location.hostname;
   let myip = "192.168.88.235";
 
-  function promiseResolve() {}
-
   //Flags
   let showInput = false;
   let showModalFlag = false;
@@ -809,6 +807,25 @@
     errorsJson[alarmKey] = 0;
     wsSendMsg(selectedWs, '/rorre|{"' + alarmKey + '":0}');
   }
+
+  //*******************************************************awaiting********************************************************************/
+
+  let promiseResolve;
+  let myPromise = 0;
+
+  async function connect() {
+    console.log("connect start");
+    saveSettings();
+    return new Promise(function (resolve, reject) {
+      setTimeout(() => reject(), 10000);
+      promiseResolve = resolve;
+    });
+  }
+
+  function activate() {
+    myPromise = connect();
+  }
+
   //*******************************************************initialisation********************************************************************/
   onMount(async () => {
     console.log("[i]", "mounted");
@@ -890,7 +907,7 @@
             <ConfigPage configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} />
           </Route>
           <Route path="/connection">
-            <ConnectionPage settingsJson={settingsJson} errorsJson={errorsJson} promiseResolve={() => promiseResolve()} ssidJson={ssidJson} rebootEsp={() => rebootEsp()} ssidDropdownClick={() => ssidDropdownClick()} saveSettings={() => saveSettings()} mqttConnect={() => mqttConnect()} />
+            <ConnectionPage settingsJson={settingsJson} errorsJson={errorsJson} myPromise={myPromise} activate={() => activate()} ssidJson={ssidJson} rebootEsp={() => rebootEsp()} ssidDropdownClick={() => ssidDropdownClick()} saveSettings={() => saveSettings()} mqttConnect={() => mqttConnect()} />
           </Route>
           <Route path="/system">
             <SystemPage settingsJson={settingsJson} errorsJson={errorsJson} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} version={version} />

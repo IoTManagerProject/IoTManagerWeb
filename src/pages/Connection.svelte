@@ -3,30 +3,12 @@
   import Alarm from "../components/Alarm.svelte";
 
   export let settingsJson;
-  //export let settingsJsonParced;
   export let errorsJson;
-  export let errorsJsonParced;
   export let ssidJson;
-  //export let ssidJsonParced;
 
-  export let promiseResolve = () => {};
+  export let myPromise;
 
-  async function connect() {
-    console.log("connect start");
-    errorsJsonParced = false;
-    saveSettings();
-    console.log("errorsJsonParced:", errorsJsonParced);
-    return new Promise(function (resolve, reject) {
-      //установим таймаут на 1 секунду, если пройдет секнда и не будет resolve() то система выдаст ошибку
-      setTimeout(() => reject(), 20000);
-      promiseResolve = resolve;
-    });
-  }
-
-  let myPromise = 0; //connect();
-
-  let promise = 0;
-  let next = () => new Promise((resolve) => setTimeout(() => resolve(), 1000));
+  export let activate = () => {};
 
   export let ssidDropdownClick = () => {};
   export let saveSettings = () => {};
@@ -36,7 +18,7 @@
 
 {#await myPromise}
   <p>Connecting...</p>
-  <button class="btn-lg" on:click={() => promiseResolve()}>resolve</button>
+  <!--<button class="btn-lg" on:click={() => promiseResolve()}>resolve</button>-->
 {:then}
   <div class="grd-2col1">
     <Card title="Подключение к WiFi">
@@ -92,7 +74,7 @@
         </div>
       {/if}
 
-      <button class="btn-lg" on:click={() => (myPromise = connect())}>try</button>
+      <button class="btn-lg" on:click={() => activate()}>try</button>
       <button class="btn-lg" on:click={() => saveSettings()}>{"Сохранить"}</button>
     </Card>
 
