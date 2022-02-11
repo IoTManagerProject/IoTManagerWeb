@@ -84,9 +84,9 @@
           <p class="wgt-dscr-stl">Состояние подключения</p>
         </div>
         <div class="flex justify-center w-3/6 align-baseline text-sm sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base break-words">
-          {#if errorsJson.mqtt === 0}
+          {#if errorsJson.mqtt === "e5"}
             <p class="text-green-500 font-bold h-8 bg-green-50 border-2 border-gray-200 rounded w-full text-center">Подключено</p>
-          {:else if errorsJson.mqtt === 8}
+          {:else if errorsJson.mqtt === "e13"}
             <p class="text-yellow-500 font-bold h-8 bg-yellow-50 border-2 border-gray-200 rounded w-full text-center">Подключение</p>
           {:else}
             <p class="text-red-500 font-bold h-8 bg-red-50 border-2 border-gray-200 rounded w-full text-center">Ошибка</p>
