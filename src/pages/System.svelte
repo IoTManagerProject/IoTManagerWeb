@@ -124,98 +124,104 @@
   export let errorsJson;
   export let rebootEsp = () => {};
 
+  export let show;
+
   export let cancelAlarm = (alarmKey) => {};
 </script>
 
-<div class="grd-2col1">
-  <Card title="Системная информация">
-    <div class="crd-itm-psn">
-      <div class="w-3/4">
-        <p class="wgt-dscr-stl">Версия прошивки</p>
+{#if show}
+  <div class="grd-2col1">
+    <Card title="Системная информация">
+      <div class="crd-itm-psn">
+        <div class="w-3/4">
+          <p class="wgt-dscr-stl">Версия прошивки</p>
+        </div>
+        <div class="flex justify-center w-1/4">
+          <p class="text-gray-500 font-bold">{errorsJson.bver}</p>
+        </div>
       </div>
-      <div class="flex justify-center w-1/4">
-        <p class="text-gray-500 font-bold">{errorsJson.bver}</p>
+      <div class="crd-itm-psn">
+        <div class="w-3/4">
+          <p class="wgt-dscr-stl">Версия файловой системы</p>
+        </div>
+        <div class="flex justify-center w-1/4">
+          <p class="text-gray-500 font-bold">{version}</p>
+        </div>
       </div>
-    </div>
-    <div class="crd-itm-psn">
-      <div class="w-3/4">
-        <p class="wgt-dscr-stl">Версия файловой системы</p>
+      <div class="crd-itm-psn">
+        <div class="w-3/4">
+          <p class="wgt-dscr-stl">Uptime устройства</p>
+        </div>
+        <div class="flex justify-center w-1/4">
+          <p class="text-gray-500 font-bold">{errorsJson.upt}</p>
+        </div>
       </div>
-      <div class="flex justify-center w-1/4">
-        <p class="text-gray-500 font-bold">{version}</p>
+      <div class="crd-itm-psn">
+        <div class="w-3/4">
+          <p class="wgt-dscr-stl">Uptime сессии mqtt</p>
+        </div>
+        <div class="flex justify-center w-1/4">
+          <p class="text-gray-500 font-bold">{errorsJson.uptm}</p>
+        </div>
       </div>
-    </div>
-    <div class="crd-itm-psn">
-      <div class="w-3/4">
-        <p class="wgt-dscr-stl">Uptime устройства</p>
+      <div class="crd-itm-psn">
+        <div class="w-3/4">
+          <p class="wgt-dscr-stl">Качество WiFi сигнала</p>
+        </div>
+        <div class="flex justify-center w-1/4 text-xs sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base break-words">
+          {#if errorsJson.rssi === 0}
+            <p class="text-red-500 font-bold">не подключено</p>
+          {/if}
+          {#if errorsJson.rssi === 1}
+            <p class="text-red-500 font-bold">нет сигнала</p>
+          {/if}
+          {#if errorsJson.rssi === 2}
+            <p class="text-red-500 font-bold">очень низкий</p>
+          {/if}
+          {#if errorsJson.rssi === 3}
+            <p class="text-yellow-500 font-bold">низкий</p>
+          {/if}
+          {#if errorsJson.rssi === 4}
+            <p class="text-yellow-500 font-bold">хороший</p>
+          {/if}
+          {#if errorsJson.rssi === 5}
+            <p class="text-green-500 font-bold">очень хороший</p>
+          {/if}
+          {#if errorsJson.rssi === 6}
+            <p class="text-green-500 font-bold">отличный</p>
+          {/if}
+        </div>
       </div>
-      <div class="flex justify-center w-1/4">
-        <p class="text-gray-500 font-bold">{errorsJson.upt}</p>
+      <div class="crd-itm-psn">
+        <div class="w-3/4">
+          <p class="wgt-dscr-stl">Остаток оперативной памяти</p>
+        </div>
+        <div class="flex justify-center w-1/4">
+          <p class="text-green-500 font-bold">{errorsJson.heap}</p>
+        </div>
       </div>
-    </div>
-    <div class="crd-itm-psn">
-      <div class="w-3/4">
-        <p class="wgt-dscr-stl">Uptime сессии mqtt</p>
+    </Card>
+    <Card title="Системные ошибки">
+      <div class="grd-2col1">
+        <!--ошибки-->
+        {#each Object.entries(errorsJson) as [key, param]}
+          {#if key in systemErrorsRus && param in systemErrorsRus[key]}
+            <Alarm title={systemErrorsRus[key][param].descr} cross={systemErrorsRus[key][param].cancel} close={() => cancelAlarm(key)}>
+              <p class="break-words text-center">{systemErrorsRus[key][param].txt}</p>
+              {#if systemErrorsRus[key][param].num}
+                <p class="break-words text-center">{"Количество: " + errorsJson[key + "n"]}</p>
+              {/if}
+            </Alarm>
+          {/if}
+        {/each}
       </div>
-      <div class="flex justify-center w-1/4">
-        <p class="text-gray-500 font-bold">{errorsJson.uptm}</p>
-      </div>
-    </div>
-    <div class="crd-itm-psn">
-      <div class="w-3/4">
-        <p class="wgt-dscr-stl">Качество WiFi сигнала</p>
-      </div>
-      <div class="flex justify-center w-1/4 text-xs sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base break-words">
-        {#if errorsJson.rssi === 0}
-          <p class="text-red-500 font-bold">не подключено</p>
-        {/if}
-        {#if errorsJson.rssi === 1}
-          <p class="text-red-500 font-bold">нет сигнала</p>
-        {/if}
-        {#if errorsJson.rssi === 2}
-          <p class="text-red-500 font-bold">очень низкий</p>
-        {/if}
-        {#if errorsJson.rssi === 3}
-          <p class="text-yellow-500 font-bold">низкий</p>
-        {/if}
-        {#if errorsJson.rssi === 4}
-          <p class="text-yellow-500 font-bold">хороший</p>
-        {/if}
-        {#if errorsJson.rssi === 5}
-          <p class="text-green-500 font-bold">очень хороший</p>
-        {/if}
-        {#if errorsJson.rssi === 6}
-          <p class="text-green-500 font-bold">отличный</p>
-        {/if}
-      </div>
-    </div>
-    <div class="crd-itm-psn">
-      <div class="w-3/4">
-        <p class="wgt-dscr-stl">Остаток оперативной памяти</p>
-      </div>
-      <div class="flex justify-center w-1/4">
-        <p class="text-green-500 font-bold">{errorsJson.heap}</p>
-      </div>
-    </div>
-  </Card>
-  <Card title="Системные ошибки">
-    <div class="grd-2col1">
-      <!--ошибки-->
-      {#each Object.entries(errorsJson) as [key, param]}
-        {#if key in systemErrorsRus && param in systemErrorsRus[key]}
-          <Alarm title={systemErrorsRus[key][param].descr} cross={systemErrorsRus[key][param].cancel} close={() => cancelAlarm(key)}>
-            <p class="break-words text-center">{systemErrorsRus[key][param].txt}</p>
-            {#if systemErrorsRus[key][param].num}
-              <p class="break-words text-center">{"Количество: " + errorsJson[key + "n"]}</p>
-            {/if}
-          </Alarm>
-        {/if}
-      {/each}
-    </div>
-  </Card>
-</div>
-<div class="grd-1col1">
-  <Card>
-    <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить устройство"}</button>
-  </Card>
-</div>
+    </Card>
+  </div>
+  <div class="grd-1col1">
+    <Card>
+      <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить устройство"}</button>
+    </Card>
+  </div>
+{:else}
+  <Alarm title="Загрузка..." />
+{/if}

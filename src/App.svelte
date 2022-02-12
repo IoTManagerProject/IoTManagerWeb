@@ -45,25 +45,57 @@
   //dashboard
   let pages = [];
 
+  //ready flags
+  let dashReady = false;
+  let configReady = false;
+  let connectionReady = false;
+  let listReady = false;
+  let systemReady = false;
+
   //configuration
   let configJson = [];
   let configJsonFlag = false;
+  let configJsonParced = false;
 
   let widgetsJson = [];
   let widgetsJsonFlag = false;
+  let widgetsJsonParced = false;
 
   let itemsJson = [];
   let itemsJsonFlag = false;
+  let itemsJsonParced = false;
 
   let layoutJson = [];
   let layoutJsonFlag = false;
+  let layoutJsonParced = false;
 
   let settingsJson = {};
   let settingsJsonFlag = false;
+  let settingsJsonParced = false;
 
   let errorsJson = {};
+  let errorsJsonParced = false;
 
   let ssidJson = {};
+  let ssidJsonParced = false;
+
+  let paramsJson = {};
+  let paramsJsonParced = false;
+
+  let statusJsonParced = false;
+
+  let incDeviceList = [];
+  let incDeviceListParced = false;
+
+  let deviceList = [];
+  deviceList = [
+    {
+      name: "--",
+      id: "--",
+      ip: myip,
+      status: false,
+    },
+  ];
 
   //web sockets
   let socket = [];
@@ -76,19 +108,6 @@
   let coreMessages = [];
 
   let oneOfJsonPackageError = false;
-
-  let deviceList = [];
-  deviceList = [
-    {
-      name: "--",
-      id: "--",
-      ip: myip,
-      status: false,
-    },
-  ];
-
-  let incDeviceList = [];
-  let incDeviceListParced = false;
 
   //***********************************************************blob**************************************************************/
   var MyBlobBuilder = function () {
@@ -235,16 +254,16 @@
               udateStatusOfWidget(statusJson);
               wigetsUpdate();
               if (debug) console.log("✔", "statusJson parced");
+              statusJsonParced = true;
               onParced("status");
             }
           }
           //сборщик paramsJson сообщений======================================
           if (data.includes("params")) {
             if (IsJsonParse(data)) {
-              let paramsJson = JSON.parse(data);
-              udateStatusOfAllWidgets(paramsJson);
-              wigetsUpdate();
+              paramsJson = JSON.parse(data);
               if (debug) console.log("✔", "paramsJson parced");
+              paramsJsonParced = true;
               onParced("params");
             }
           }
@@ -254,6 +273,7 @@
               ssidJson = JSON.parse(data);
               ssidJson = ssidJson;
               if (debug) console.log("✔", "ssidJson parced");
+              ssidJsonParced = true;
               onParced("ssid");
             }
           }
@@ -267,6 +287,7 @@
               deviceList = deviceList;
               whenDeviceListWasUpdated();
               connectToAllDevices();
+
               if (debug) console.log("✔", "incDeviceList json parced");
               onParced("devicelist");
             }
@@ -276,8 +297,8 @@
             if (IsJsonParse(data)) {
               errorsJson = JSON.parse(data);
               errorsJson = errorsJson;
+              errorsJsonParced = true;
               if (debug) console.log("✔", "errorsJson json parced");
-              //dataReceived();
               onParced("errors");
             }
           }
@@ -295,6 +316,7 @@
               if (IsJsonParse(configJsonResult)) {
                 configJson = JSON.parse(configJsonResult);
                 configJson = configJson;
+                configJsonParced = true;
                 if (debug) console.log("✔", "configJson parced");
                 onParced("config");
               }
@@ -314,6 +336,7 @@
               if (IsJsonParse(widgetsJsonResult)) {
                 widgetsJson = JSON.parse(widgetsJsonResult);
                 widgetsJson = widgetsJson;
+                widgetsJsonParced = true;
                 if (debug) console.log("✔", "widgetsJson parced");
                 onParced("widgets");
               }
@@ -333,6 +356,7 @@
               if (IsJsonParse(itemsJsonResult)) {
                 itemsJson = JSON.parse(itemsJsonResult);
                 itemsJson = itemsJson;
+                itemsJsonParced = true;
                 if (debug) console.log("✔", "itemsJson parced");
                 onParced("items");
               }
@@ -353,6 +377,7 @@
                 layoutJson = JSON.parse(layoutJsonResult);
                 layoutJson = layoutJson;
                 wigetsUpdate();
+                layoutJsonParced = true;
                 if (debug) console.log("✔", "layoutJson parced");
                 onParced("layout");
               }
@@ -374,6 +399,7 @@
                 settingsJson = settingsJson;
                 wigetsUpdate();
                 updateThisDeviceInList();
+                settingsJsonParced = true;
                 if (debug) console.log("✔", "settingsJson parced");
                 onParced("settings");
               }
@@ -398,6 +424,36 @@
       });
     } else {
       if (debug) console.log("[e]", "socket not exist");
+    }
+  }
+
+  function onParced(file) {
+    if (currentPageName === "/|" && layoutJsonParced && paramsJsonParced) {
+      clearParcedFlags();
+      if (debug) console.log("✔✔", "dashboard data parced");
+      udateStatusOfAllWidgets(paramsJson);
+      wigetsUpdate();
+      dashReady = true;
+    }
+    if (currentPageName === "/config|" && itemsJsonParced && widgetsJsonParced && configJsonParced && settingsJsonParced) {
+      clearParcedFlags();
+      if (debug) console.log("✔✔", "config data parced");
+      configReady = true;
+    }
+    if (currentPageName === "/connection|" && ssidJsonParced && settingsJsonParced && errorsJsonParced) {
+      clearParcedFlags();
+      if (debug) console.log("✔✔", "connection data parced");
+      connectionReady = true;
+    }
+    if (currentPageName === "/list|" && incDeviceListParced) {
+      clearParcedFlags();
+      if (debug) console.log("✔✔", "list data parced");
+      listReady = true;
+    }
+    if (currentPageName === "/system|" && errorsJsonParced) {
+      clearParcedFlags();
+      if (debug) console.log("✔✔", "system data parced");
+      systemReady = true;
     }
   }
 
@@ -501,7 +557,28 @@
 
     errorsJson = {};
 
+    dashReady = false;
+    configReady = false;
+    connectionReady = false;
+    listReady = false;
+    systemReady = false;
+
+    clearParcedFlags();
+
     if (debug) console.log("[i]", "all app data cleared");
+  }
+
+  function clearParcedFlags() {
+    configJsonParced = false;
+    widgetsJsonParced = false;
+    itemsJsonParced = false;
+    layoutJsonParced = false;
+    settingsJsonParced = false;
+    errorsJsonParced = false;
+    ssidJsonParced = false;
+    paramsJsonParced = false;
+    statusJsonParced = false;
+    incDeviceListParced = false;
   }
 
   function wsPush(ws, topic, status) {
@@ -802,8 +879,6 @@
     wsSendMsg(selectedWs, '/rorre|{"' + alarmKey + '":0}');
   }
 
-  function onParced(file) {}
-
   //*******************************************************initialisation********************************************************************/
   onMount(async () => {
     console.log("[i]", "mounted");
@@ -879,16 +954,19 @@
           <Alarm title="Нет соединения" />
         {:else}
           <Route path="/">
-            <DashboardPage layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
+            <DashboardPage show={dashReady} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
           </Route>
           <Route path="/config">
-            <ConfigPage configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} />
+            <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} />
           </Route>
           <Route path="/connection">
-            <ConnectionPage rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />
+            <ConnectionPage show={connectionReady} rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />
+          </Route>
+          <Route path="/list">
+            <ListPage show={listReady} deviceList={deviceList} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} />
           </Route>
           <Route path="/system">
-            <SystemPage settingsJson={settingsJson} errorsJson={errorsJson} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} version={version} />
+            <SystemPage show={systemReady} settingsJson={settingsJson} errorsJson={errorsJson} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} version={version} />
           </Route>
 
           <!--<Route path="/utilities">-->
@@ -901,9 +979,6 @@
           <!--<AboutPage wigetsUpdate={wigetsUpdate} layoutJson={layoutJson} showModal={() => showModal()} syntaxHighlight={(json) => syntaxHighlight(json)} />-->
           <!--</Route>-->
         {/if}
-        <Route path="/list">
-          <ListPage deviceList={deviceList} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} />
-        </Route>
       </div>
     </ul>
   </main>
