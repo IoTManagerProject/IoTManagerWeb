@@ -136,7 +136,6 @@
   function sendCurrentPageName() {
     if (selectedWs !== undefined) {
       wsSendMsg(selectedWs, currentPageName);
-      wsSendMsg(selectedWs, "/all|");
     }
   }
 
@@ -431,9 +430,7 @@
       window.alert("Ошибка");
     }
     clearData();
-    sendCurrentPageName();
     wsSendMsg(selectedWs, "/mqtt|");
-    errorsJson.mqtt = "e13";
   }
 
   function generateLayout() {

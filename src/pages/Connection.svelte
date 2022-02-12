@@ -79,6 +79,8 @@
           <p class="text-green-500 font-bold h-8 bg-green-50 border-2 border-gray-200 rounded w-full text-center">Подключено</p>
         {:else if errorsJson.mqtt === "e13"}
           <p class="text-yellow-500 font-bold h-8 bg-yellow-50 border-2 border-gray-200 rounded w-full text-center">Подключение</p>
+        {:else if errorsJson.mqtt === undefined}
+          <p class="text-blue-500 font-bold h-8 bg-blue-50 border-2 border-gray-200 rounded w-full text-center">Ожидание</p>
         {:else}
           <p class="text-red-500 font-bold h-8 bg-red-50 border-2 border-gray-200 rounded w-full text-center">Ошибка</p>
         {/if}
