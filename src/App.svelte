@@ -8,16 +8,16 @@
   import Alarm from "./components/Alarm.svelte";
   import Progress from "./components/Progress.svelte";
 
-  import Modal from "./components/Modal.svelte";
+  //import Modal from "./components/Modal.svelte";
   import DashboardPage from "./pages/Dashboard.svelte";
   import ConfigPage from "./pages/Config.svelte";
   import ConnectionPage from "./pages/Connection.svelte";
   import ListPage from "./pages/List.svelte";
   import SystemPage from "./pages/System.svelte";
 
-  import UtilitiesPage from "./pages/Utilities.svelte";
-  import LogPage from "./pages/Log.svelte";
-  import AboutPage from "./pages/About.svelte";
+  //import UtilitiesPage from "./pages/Utilities.svelte";
+  //import LogPage from "./pages/Log.svelte";
+  //import AboutPage from "./pages/About.svelte";
 
   import CloudIcon from "./svg/Cloud.svelte";
 
@@ -33,8 +33,8 @@
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
-  //let myip = document.location.hostname;
-  let myip = "192.168.88.235";
+  let myip = document.location.hostname;
+  //let myip = "192.168.88.235";
 
   //Flags
   let showInput = false;
@@ -48,29 +48,22 @@
   //configuration
   let configJson = [];
   let configJsonFlag = false;
-  let configJsonParced = false;
 
   let widgetsJson = [];
   let widgetsJsonFlag = false;
-  let widgetsJsonParced = false;
 
   let itemsJson = [];
   let itemsJsonFlag = false;
-  let itemsJsonParced = false;
 
   let layoutJson = [];
   let layoutJsonFlag = false;
-  let layoutJsonParced = false;
 
   let settingsJson = {};
   let settingsJsonFlag = false;
-  let settingsJsonParced = false;
 
   let errorsJson = {};
-  let errorsJsonParced = false;
 
   let ssidJson = {};
-  let ssidJsonParced = false;
 
   //web sockets
   let socket = [];
@@ -243,8 +236,8 @@
               let statusJson = JSON.parse(data);
               udatelayoutJson(statusJson);
               wigetsUpdate();
-              //if (debug) console.log(statusJson);
               if (debug) console.log("✔", "statusJson parced");
+              onParced("status");
             }
           }
           //сборщик paramsJson сообщений======================================
@@ -254,23 +247,22 @@
               //udatelayoutJson(statusJson);
               //wigetsUpdate();
               if (debug) console.log("✔", "paramsJson parced");
+              onParced("params");
             }
           }
           //сборщик ssidJson сообщений======================================
           if (data.includes("ssid")) {
             if (IsJsonParse(data)) {
               ssidJson = JSON.parse(data);
-              //delete ssidJson.ssid;
               ssidJson = ssidJson;
-              ssidJsonParced = true;
               if (debug) console.log("✔", "ssidJson parced");
+              onParced("ssid");
             }
           }
           //сборщик deviceList сообщений======================================
           if (data.includes("devicelist")) {
             if (IsJsonParse(data)) {
               incDeviceList = JSON.parse(data);
-              //delete incDeviceList.devicelist;
               incDeviceList = incDeviceList;
               incDeviceListParced = true;
               deviceList = combineArrays(deviceList, incDeviceList);
@@ -278,26 +270,24 @@
               whenDeviceListWasUpdated();
               connectToAllDevices();
               if (debug) console.log("✔", "incDeviceList json parced");
+              onParced("devicelist");
             }
           }
           //сборщик errorsJson сообщений======================================
           if (data.includes("errors")) {
             if (IsJsonParse(data)) {
               errorsJson = JSON.parse(data);
-              //delete errorsJson.errors;
               errorsJson = errorsJson;
-              errorsJsonParced = true;
-              promiseResolve();
               if (debug) console.log("✔", "errorsJson json parced");
+              //dataReceived();
+              onParced("errors");
             }
           }
           //сборщик configJson пакетов========================================
           if (data === "/st/config.json") {
-            //if (debug) console.log("[i]", "configJson start!");
             configJsonFlag = true;
           }
           if (data === "/end/config.json") {
-            //if (debug) console.log("[i]", "configJson end!");
             configJsonFlag = false;
             var bb = configJsonBlob.getBlob();
             let configJsonReader = new FileReader();
@@ -307,18 +297,16 @@
               if (IsJsonParse(configJsonResult)) {
                 configJson = JSON.parse(configJsonResult);
                 configJson = configJson;
-                configJsonParced = true;
                 if (debug) console.log("✔", "configJson parced");
+                onParced("config");
               }
             };
           }
           //сборщик widgetsJson пакетов========================================
           if (data === "/st/widgets.json") {
-            //if (debug) console.log("[i]", "widgetsJson start!");
             widgetsJsonFlag = true;
           }
           if (data === "/end/widgets.json") {
-            //if (debug) console.log("[i]", "widgetsJson end!");
             widgetsJsonFlag = false;
             var bb = widgetsJsonBlob.getBlob();
             let widgetsJsonReader = new FileReader();
@@ -328,18 +316,16 @@
               if (IsJsonParse(widgetsJsonResult)) {
                 widgetsJson = JSON.parse(widgetsJsonResult);
                 widgetsJson = widgetsJson;
-                widgetsJsonParced = true;
                 if (debug) console.log("✔", "widgetsJson parced");
+                onParced("widgets");
               }
             };
           }
           //сборщик itemsJson пакетов========================================
           if (data === "/st/items.json") {
-            //if (debug) console.log("[i]", "itemsJson start!");
             itemsJsonFlag = true;
           }
           if (data === "/end/items.json") {
-            //if (debug) console.log("[i]", "itemsJson end!");
             itemsJsonFlag = false;
             var bb = itemsJsonBlob.getBlob();
             let itemsJsonReader = new FileReader();
@@ -349,18 +335,16 @@
               if (IsJsonParse(itemsJsonResult)) {
                 itemsJson = JSON.parse(itemsJsonResult);
                 itemsJson = itemsJson;
-                itemsJsonParced = true;
                 if (debug) console.log("✔", "itemsJson parced");
+                onParced("items");
               }
             };
           }
           //сборщик layoutJson пакетов========================================
           if (data === "/st/layout.json") {
-            //if (debug) console.log("[i]", "layoutJson start!");
             layoutJsonFlag = true;
           }
           if (data === "/end/layout.json") {
-            //if (debug) console.log("[i]", "layoutJson end!");
             layoutJsonFlag = false;
             var bb = layoutJsonBlob.getBlob();
             let layoutJsonReader = new FileReader();
@@ -371,18 +355,16 @@
                 layoutJson = JSON.parse(layoutJsonResult);
                 layoutJson = layoutJson;
                 wigetsUpdate();
-                layoutJsonParced = true;
                 if (debug) console.log("✔", "layoutJson parced");
+                onParced("layout");
               }
             };
           }
           //сборщик settingsJson пакетов========================================
           if (data === "/st/settings.json") {
-            //if (debug) console.log("[i]", "settingsJson start!");
             settingsJsonFlag = true;
           }
           if (data === "/end/settings.json") {
-            //if (debug) console.log("[i]", "settingsJson end!");
             settingsJsonFlag = false;
             var bb = settingsJsonBlob.getBlob();
             let settingsJsonReader = new FileReader();
@@ -393,9 +375,9 @@
                 settingsJson = JSON.parse(settingsJsonResult);
                 settingsJson = settingsJson;
                 wigetsUpdate();
-                settingsJsonParced = true;
                 updateThisDeviceInList();
                 if (debug) console.log("✔", "settingsJson parced");
+                onParced("settings");
               }
             };
           }
@@ -428,11 +410,30 @@
     sendCurrentPageName();
   }
 
-  function saveSettings() {
-    console.log("[i]", settingsJson);
-    wsSendMsg(selectedWs, "/sgnittes|" + JSON.stringify(settingsJson));
+  function saveSett() {
+    var size = Object.keys(settingsJson).length;
+    console.log("[i]", "settingsJson length: " + size);
+    if (size > 5) {
+      wsSendMsg(selectedWs, "/sgnittes|" + JSON.stringify(settingsJson));
+    } else {
+      window.alert("Ошибка");
+    }
     clearData();
     sendCurrentPageName();
+  }
+
+  function saveMqtt() {
+    var size = Object.keys(settingsJson).length;
+    console.log("[i]", "settingsJson length: " + size);
+    if (size > 5) {
+      wsSendMsg(selectedWs, "/sgnittes|" + JSON.stringify(settingsJson));
+    } else {
+      window.alert("Ошибка");
+    }
+    clearData();
+    sendCurrentPageName();
+    wsSendMsg(selectedWs, "/mqtt|");
+    errorsJson.mqtt = "e13";
   }
 
   function generateLayout() {
@@ -489,13 +490,6 @@
     settingsJsonBlob.clear();
 
     errorsJson = {};
-
-    configJsonParced = false;
-    widgetsJsonParced = false;
-    itemsJsonParced = false;
-    layoutJsonParced = false;
-    settingsJsonParced = false;
-    ssidJsonParced = false;
 
     if (debug) console.log("[i]", "all app data cleared");
   }
@@ -618,7 +612,7 @@
     }
   }
 
-  function devListSave() {
+  function addDevInList() {
     //createDefaultDevice();
     if (!showInput) {
       if (newDevice.name !== undefined && newDevice.ip !== undefined && newDevice.id !== undefined) {
@@ -772,7 +766,7 @@
 
   //************************************************elements and presets dropdown************************************************************/
 
-  function ssidDropdownClick() {
+  function ssidClick() {
     wsSendMsg(selectedWs, "/scan|");
   }
 
@@ -784,16 +778,6 @@
     wsSendMsg(selectedWs, "/reboot|");
     rebootingInProgress = true;
     myTimeout = setTimeout(rebootingTask, rebootingTimeout);
-  }
-
-  function mqttConnect() {
-    errorsJson.mqtt = 8;
-    console.log("[i]", settingsJson);
-    wsSendMsg(selectedWs, "/sgnittes|" + JSON.stringify(settingsJson));
-    //wsSendMsg(selectedWs, '/rorre|{"mqtt":8}');
-    wsSendMsg(selectedWs, "/mqtt|");
-    clearData();
-    sendCurrentPageName();
   }
 
   function rebootingTask() {
@@ -808,23 +792,7 @@
     wsSendMsg(selectedWs, '/rorre|{"' + alarmKey + '":0}');
   }
 
-  //*******************************************************awaiting********************************************************************/
-
-  let promiseResolve;
-  let myPromise = 0;
-
-  async function connect() {
-    console.log("connect start");
-    saveSettings();
-    return new Promise(function (resolve, reject) {
-      setTimeout(() => reject(), 10000);
-      promiseResolve = resolve;
-    });
-  }
-
-  function activate() {
-    myPromise = connect();
-  }
+  function onParced(file) {}
 
   //*******************************************************initialisation********************************************************************/
   onMount(async () => {
@@ -907,7 +875,7 @@
             <ConfigPage configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} />
           </Route>
           <Route path="/connection">
-            <ConnectionPage settingsJson={settingsJson} errorsJson={errorsJson} myPromise={myPromise} activate={() => activate()} ssidJson={ssidJson} rebootEsp={() => rebootEsp()} ssidDropdownClick={() => ssidDropdownClick()} saveSettings={() => saveSettings()} mqttConnect={() => mqttConnect()} />
+            <ConnectionPage rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />
           </Route>
           <Route path="/system">
             <SystemPage settingsJson={settingsJson} errorsJson={errorsJson} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} version={version} />
@@ -924,7 +892,7 @@
           <!--</Route>-->
         {/if}
         <Route path="/list">
-          <ListPage deviceList={deviceList} showInput={showInput} devListSave={() => devListSave()} newDevice={newDevice} />
+          <ListPage deviceList={deviceList} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} />
         </Route>
       </div>
     </ul>

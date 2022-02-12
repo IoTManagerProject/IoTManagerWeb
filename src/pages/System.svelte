@@ -139,10 +139,18 @@
     </div>
     <div class="crd-itm-psn">
       <div class="w-3/4">
-        <p class="wgt-dscr-stl">Время работы устройства</p>
+        <p class="wgt-dscr-stl">Uptime устройства</p>
       </div>
       <div class="flex justify-center w-1/4">
         <p class="text-gray-500 font-bold">{errorsJson.upt}</p>
+      </div>
+    </div>
+    <div class="crd-itm-psn">
+      <div class="w-3/4">
+        <p class="wgt-dscr-stl">Uptime сессии mqtt</p>
+      </div>
+      <div class="flex justify-center w-1/4">
+        <p class="text-gray-500 font-bold">{errorsJson.uptm}</p>
       </div>
     </div>
     <div class="crd-itm-psn">

@@ -9,7 +9,7 @@
   export let showInput;
   export let newDevice = {};
 
-  export let devListSave = () => {};
+  export let addDevInList = () => {};
 
   let debug = true;
 
@@ -57,7 +57,7 @@
         {/if}
       </tbody>
     </table>
-    <button class="btn-lg" on:click={() => ((showInput = !showInput), devListSave())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
+    <button class="btn-lg" on:click={() => ((showInput = !showInput), addDevInList())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
   </Card>
   <Alarm>
     <p>Список устройств будет обновляться автоматически. Подключенные к одному роутеру устройства будут появляться в списке в течении двух минут. Ручное добавление сделано в целях проверки для разработчика.</p>
