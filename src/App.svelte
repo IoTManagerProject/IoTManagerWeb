@@ -33,8 +33,8 @@
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
-  let myip = document.location.hostname;
-  //let myip = "192.168.88.235";
+  //let myip = document.location.hostname;
+  let myip = "192.168.88.235";
 
   //Flags
   let showInput = false;
@@ -132,7 +132,6 @@
     sendCurrentPageName();
   }
 
-  //отправляем запрос данных для данной страницы и запрос данных для всех страниц - /all
   function sendCurrentPageName() {
     if (selectedWs !== undefined) {
       wsSendMsg(selectedWs, currentPageName);
@@ -233,7 +232,7 @@
           if (data.includes("status")) {
             if (IsJsonParse(data)) {
               let statusJson = JSON.parse(data);
-              udatelayoutJson(statusJson);
+              udateStatusOfWidget(statusJson);
               wigetsUpdate();
               if (debug) console.log("✔", "statusJson parced");
               onParced("status");
@@ -243,8 +242,8 @@
           if (data.includes("params")) {
             if (IsJsonParse(data)) {
               let paramsJson = JSON.parse(data);
-              //udatelayoutJson(statusJson);
-              //wigetsUpdate();
+              udateStatusOfAllWidgets(paramsJson);
+              wigetsUpdate();
               if (debug) console.log("✔", "paramsJson parced");
               onParced("params");
             }
@@ -460,12 +459,26 @@
     return layout;
   }
 
-  function udatelayoutJson(newStatusJson) {
+  function udateStatusOfWidget(newStatusJson) {
     for (let i = 0; i < layoutJson.length; i++) {
       let topic = layoutJson[i].topic;
       if (topic === newStatusJson.topic) {
         layoutJson[i].status = newStatusJson.status;
         break;
+      }
+    }
+  }
+
+  function udateStatusOfAllWidgets(paramsJson) {
+    for (const [key, value] of Object.entries(paramsJson)) {
+      for (let i = 0; i < layoutJson.length; i++) {
+        let topic = layoutJson[i].topic;
+        topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
+        if (key === topic) {
+          console.log("[i]", "value " + topic + " updated");
+          layoutJson[i].status = value;
+          break;
+        }
       }
     }
   }

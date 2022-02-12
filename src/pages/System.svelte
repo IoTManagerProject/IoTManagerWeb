@@ -108,6 +108,14 @@
         num: true,
       },
     },
+    jse3: {
+      1: {
+        descr: "Ошибка json",
+        color: "text-red-500",
+        txt: "Ошибка чтения файла json с виджетами",
+        cancel: true,
+      },
+    },
   };
 
   import Card from "../components/Card.svelte";
