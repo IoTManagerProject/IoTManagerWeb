@@ -33,10 +33,11 @@
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
-  let myip = document.location.hostname;
-  //let myip = "192.168.88.235";
+  //let myip = document.location.hostname;
+  let myip = "192.168.88.235";
 
   //Flags
+  let firstDevListRequest = true;
   let showInput = false;
   let showModalFlag = false;
 
@@ -93,6 +94,7 @@
       name: "--",
       id: "--",
       ip: myip,
+      ws: 0,
       status: false,
     },
   ];
@@ -164,7 +166,6 @@
     getSelectedDeviceData(selectedWs);
     let ws = 0;
     deviceList.forEach((device) => {
-      //if (debug) console.log("[i]", device.name, ws, device.ip, device.id);
       device.ws = ws;
       if (!device.status) {
         wsConnect(ws);
@@ -173,7 +174,6 @@
       ws++;
     });
     deviceList = deviceList;
-    //socketConnected = selectedDeviceData.status;
   }
 
   function closeAllConnection() {
@@ -218,7 +218,6 @@
     } else {
       socket[ws] = new WebSocket("ws://" + ip + ":81");
       socket.binaryType = "blob";
-      //socket[ws] = new WebSocket("ws://" + ip + "/ws");
       if (debug) console.log("[i]", ip, "started connecting...");
     }
   }
@@ -240,13 +239,33 @@
       socket[ws].addEventListener("open", function (event) {
         if (debug) console.log("[i]", ip, "completed connecting");
         markDeviceStatus(ws, true);
+        if (firstDevListRequest) wsSendMsg(0, "/list|");
         sendCurrentPageName();
-        //socket[ws].send("HELLO");
       });
       socket[ws].addEventListener("message", function (event) {
         if (typeof event.data === "string") {
           let data = event.data;
           //if (debug) console.log("[i]", getIP(ws), "msg received", data); //
+          //сборщик deviceList сообщений======================================
+          if (data.includes("devicelist")) {
+            if (IsJsonParse(data)) {
+              incDeviceList = JSON.parse(data);
+              incDeviceList = incDeviceList;
+              incDeviceListParced = true;
+              if (debug) console.log("✔", "incDeviceList json parced");
+              onParced("devicelist");
+              if (firstDevListRequest) {
+                deviceList = incDeviceList;
+                deviceList[0].status = true;
+              } else {
+                deviceList = combineArrays(deviceList, incDeviceList);
+              }
+              firstDevListRequest = false;
+              deviceList = deviceList;
+              whenDeviceListWasUpdated();
+              connectToAllDevices();
+            }
+          }
           //сборщик statusJson сообщений======================================
           if (data.includes("status")) {
             if (IsJsonParse(data)) {
@@ -277,21 +296,7 @@
               onParced("ssid");
             }
           }
-          //сборщик deviceList сообщений======================================
-          if (data.includes("devicelist")) {
-            if (IsJsonParse(data)) {
-              incDeviceList = JSON.parse(data);
-              incDeviceList = incDeviceList;
-              incDeviceListParced = true;
-              deviceList = combineArrays(deviceList, incDeviceList);
-              deviceList = deviceList;
-              whenDeviceListWasUpdated();
-              connectToAllDevices();
 
-              if (debug) console.log("✔", "incDeviceList json parced");
-              onParced("devicelist");
-            }
-          }
           //сборщик errorsJson сообщений======================================
           if (data.includes("errors")) {
             if (IsJsonParse(data)) {
@@ -398,7 +403,7 @@
                 settingsJson = JSON.parse(settingsJsonResult);
                 settingsJson = settingsJson;
                 wigetsUpdate();
-                updateThisDeviceInList();
+                //updateThisDeviceInList();
                 settingsJsonParced = true;
                 if (debug) console.log("✔", "settingsJson parced");
                 onParced("settings");
@@ -882,9 +887,10 @@
   //*******************************************************initialisation********************************************************************/
   onMount(async () => {
     console.log("[i]", "mounted");
+    whenDeviceListWasUpdated();
+    firstDevListRequest = true;
     connectToAllDevices();
     wsTestMsgTask();
-    whenDeviceListWasUpdated();
     findNewPage();
   });
 </script>
