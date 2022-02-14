@@ -13,6 +13,8 @@
 
   export let addDevInList = () => {};
 
+  export let sendToAllDevices = (msg) => {};
+
   let debug = true;
 
   function deleteLineFromDevlist(num) {
@@ -60,7 +62,8 @@
           {/if}
         </tbody>
       </table>
-      <button class="btn-lg" on:click={() => ((showInput = !showInput), addDevInList())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
+      <button class="btn-lg mb-2" on:click={() => ((showInput = !showInput), addDevInList())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
+      <button class="btn-lg" on:click={(msg) => sendToAllDevices("/reboot|")}>{"Перезагрузить все устройства"}</button>
     </Card>
     <Alarm>
       <p>Список устройств будет обновляться автоматически. Подключенные к одному роутеру устройства будут появляться в списке в течении двух минут. Ручное добавление сделано в целях проверки для разработчика.</p>

@@ -34,7 +34,7 @@
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  //let myip = "192.168.88.235";
+  //let myip = "192.168.88.224";
 
   //Flags
   let firstDevListRequest = true;
@@ -142,6 +142,8 @@
   var layoutJsonBlob = new MyBlobBuilder();
   var settingsJsonBlob = new MyBlobBuilder();
 
+  //var blobArr = new MyBlobBuilder()[10];
+
   router.subscribe(handleNavigation);
 
   function handleNavigation() {
@@ -150,7 +152,11 @@
     //название страницы служит заголовком, поэтому отметим конец заголовка "|"
     currentPageName = currentPageName + "|";
     console.log("[i]", "user on page:", currentPageName);
+    //if (currentPageName === "/|") {
+    //  sendToAllDevices(currentPageName);
+    //} else {
     sendCurrentPageName();
+    //}
   }
 
   function sendCurrentPageName() {
@@ -278,14 +284,16 @@
             }
           }
           //сборщик paramsJson сообщений======================================
+          //if (ws === 0) {
           if (data.includes("params")) {
             if (IsJsonParse(data)) {
               paramsJson = JSON.parse(data);
-              if (debug) console.log("✔", "paramsJson parced");
+              if (debug) console.log("✔", "paramsJson parced", ws);
               paramsJsonParced = true;
               onParced("params");
             }
           }
+          //}
           //сборщик ssidJson сообщений======================================
           if (data.includes("ssid")) {
             if (IsJsonParse(data)) {
@@ -296,7 +304,6 @@
               onParced("ssid");
             }
           }
-
           //сборщик errorsJson сообщений======================================
           if (data.includes("errors")) {
             if (IsJsonParse(data)) {
@@ -368,6 +375,7 @@
             };
           }
           //сборщик layoutJson пакетов========================================
+          //if (ws === 0) {
           if (data === "/st/layout.json") {
             layoutJsonFlag = true;
           }
@@ -383,11 +391,12 @@
                 layoutJson = layoutJson;
                 wigetsUpdate();
                 layoutJsonParced = true;
-                if (debug) console.log("✔", "layoutJson parced");
+                if (debug) console.log("✔", "layoutJson parced", ws);
                 onParced("layout");
               }
             };
           }
+          //}
           //сборщик settingsJson пакетов========================================
           if (data === "/st/settings.json") {
             settingsJsonFlag = true;
@@ -615,6 +624,14 @@
     } else {
       if (debug) console.log("[e]", getIP(ws), "msg not send", msg);
     }
+  }
+
+  function sendToAllDevices(msg) {
+    deviceList.forEach((device) => {
+      if (device.status) {
+        wsSendMsg(device.ws, msg);
+      }
+    });
   }
 
   //***********************************************************dashboard***************************************************************/
@@ -969,7 +986,7 @@
             <ConnectionPage show={connectionReady} rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />
           </Route>
           <Route path="/list">
-            <ListPage show={listReady} deviceList={deviceList} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} />
+            <ListPage show={listReady} deviceList={deviceList} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} />
           </Route>
           <Route path="/system">
             <SystemPage show={systemReady} settingsJson={settingsJson} errorsJson={errorsJson} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} version={version} />
