@@ -255,8 +255,8 @@
           let data = event.data;
           //if (debug) console.log("[i]", getIP(ws), "msg received", data); //
 
-          //STRING============================================================
           if (ws === selectedWs) {
+            //STRING============================================================
             //сборщик deviceList сообщений======================================
             if (data.includes("devicelist")) {
               if (IsJsonParse(data)) {
