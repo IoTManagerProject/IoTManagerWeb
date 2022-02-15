@@ -14,6 +14,7 @@
   let debug = true;
 
   export let saveConfig = () => {};
+  export let rebootEsp = () => {};
 
   let hideAllSubParams = true;
 
@@ -113,7 +114,8 @@
           {/each}
         </tbody>
       </table>
-      <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить"}</button>
+      <button class="btn-lg mb-2" on:click={() => saveConfig()}>{"Сохранить"}</button>
+      <button class="btn-lg mb-2" on:click={() => rebootEsp()}>{"Перезагрузить"}</button>
     </Card>
   </div>
 {:else}

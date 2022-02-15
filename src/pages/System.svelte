@@ -121,6 +121,7 @@
   import Card from "../components/Card.svelte";
   import Alarm from "../components/Alarm.svelte";
   export let version;
+
   export let errorsJson;
   export let rebootEsp = () => {};
 
@@ -132,6 +133,14 @@
 {#if show}
   <div class="grd-2col1">
     <Card title="Системная информация">
+      <div class="crd-itm-psn">
+        <div class="w-3/4">
+          <p class="wgt-dscr-stl">Название прошивки</p>
+        </div>
+        <div class="flex justify-center w-1/4">
+          <p class="text-gray-500 font-bold">{errorsJson.bn}</p>
+        </div>
+      </div>
       <div class="crd-itm-psn">
         <div class="w-3/4">
           <p class="wgt-dscr-stl">Версия прошивки</p>
@@ -198,6 +207,14 @@
         </div>
         <div class="flex justify-center w-1/4">
           <p class="text-green-500 font-bold">{errorsJson.heap}</p>
+        </div>
+      </div>
+      <div class="crd-itm-psn">
+        <div class="w-3/4">
+          <p class="wgt-dscr-stl">Количество записей на flash</p>
+        </div>
+        <div class="flex justify-center w-1/4">
+          <p class="text-green-500 font-bold">{errorsJson.fl}</p>
         </div>
       </div>
     </Card>

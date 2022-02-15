@@ -23,7 +23,7 @@
 
   //****************************************************constants section*********************************************************/
   //******************************************************************************************************************************/
-  let version = 403;
+  let version = 404;
   let debug = true;
   let LOG_MAX_MESSAGES = 10;
   let reconnectTimeout = 20000;
@@ -33,8 +33,8 @@
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
-  let myip = document.location.hostname;
-  //let myip = "192.168.88.224";
+  //let myip = document.location.hostname;
+  let myip = "192.168.88.224";
 
   //Flags
   let firstDevListRequest = true;
@@ -140,7 +140,6 @@
   var widgetsJsonBlob = new MyBlobBuilder();
   var itemsJsonBlob = new MyBlobBuilder();
   var layoutJsonBlob = new MyBlobBuilder();
-  var settingsJsonBlob = new MyBlobBuilder();
 
   //var blobArr = new MyBlobBuilder()[10];
 
@@ -255,7 +254,8 @@
         if (typeof event.data === "string") {
           let data = event.data;
           //if (debug) console.log("[i]", getIP(ws), "msg received", data); //
-          //принимаем данные только для выбранного устройства
+
+          //STRING============================================================
           if (ws === selectedWs) {
             //сборщик deviceList сообщений======================================
             if (data.includes("devicelist")) {
@@ -289,7 +289,6 @@
               }
             }
             //сборщик paramsJson сообщений======================================
-            //if (ws === 0) {
             if (data.includes("params")) {
               if (IsJsonParse(data)) {
                 paramsJson = JSON.parse(data);
@@ -298,7 +297,6 @@
                 onParced("params");
               }
             }
-            //}
             //сборщик ssidJson сообщений======================================
             if (data.includes("ssid")) {
               if (IsJsonParse(data)) {
@@ -319,6 +317,19 @@
                 onParced("errors");
               }
             }
+            //сборщик settingsJson сообщений======================================
+            if (data.includes("settings")) {
+              if (IsJsonParse(data)) {
+                settingsJson = JSON.parse(data);
+                settingsJson = settingsJson;
+                wigetsUpdate();
+                settingsJsonParced = true;
+                if (debug) console.log("✔", "settingsJson json parced");
+                onParced("settings");
+              }
+            }
+
+            //BLOB==============================================================
             //сборщик configJson пакетов========================================
             if (data === "/st/config.json") {
               configJsonFlag = true;
@@ -380,7 +391,6 @@
               };
             }
             //сборщик layoutJson пакетов========================================
-            //if (ws === 0) {
             if (data === "/st/layout.json") {
               layoutJsonFlag = true;
             }
@@ -401,29 +411,6 @@
                 }
               };
             }
-            //}
-            //сборщик settingsJson пакетов========================================
-            if (data === "/st/settings.json") {
-              settingsJsonFlag = true;
-            }
-            if (data === "/end/settings.json") {
-              settingsJsonFlag = false;
-              var bb = settingsJsonBlob.getBlob();
-              let settingsJsonReader = new FileReader();
-              settingsJsonReader.readAsText(bb);
-              settingsJsonReader.onload = () => {
-                let settingsJsonResult = settingsJsonReader.result;
-                if (IsJsonParse(settingsJsonResult)) {
-                  settingsJson = JSON.parse(settingsJsonResult);
-                  settingsJson = settingsJson;
-                  wigetsUpdate();
-                  //updateThisDeviceInList();
-                  settingsJsonParced = true;
-                  if (debug) console.log("✔", "settingsJson parced");
-                  onParced("settings");
-                }
-              };
-            }
           }
         }
         if (event.data instanceof Blob) {
@@ -433,7 +420,6 @@
             if (widgetsJsonFlag) widgetsJsonBlob.append(event.data);
             if (itemsJsonFlag) itemsJsonBlob.append(event.data);
             if (layoutJsonFlag) layoutJsonBlob.append(event.data);
-            if (settingsJsonFlag) settingsJsonBlob.append(event.data);
           }
         }
       });
@@ -578,7 +564,6 @@
     layoutJsonBlob.clear();
 
     settingsJson = {};
-    settingsJsonBlob.clear();
 
     errorsJson = {};
 
@@ -1003,7 +988,7 @@
             <DashboardPage show={dashReady} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
           </Route>
           <Route path="/config">
-            <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} />
+            <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} rebootEsp={() => rebootEsp()} />
           </Route>
           <Route path="/connection">
             <ConnectionPage show={connectionReady} rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />
@@ -1055,7 +1040,7 @@
     }
     /*=============================================card and items inside===============================================*/
     .crd-itm-psn {
-      @apply flex mb-3 h-8 items-center;
+      @apply flex mb-2 h-8 items-center;
     }
     .wgt-dscr-stl {
       @apply pr-4 text-gray-500 font-bold;
