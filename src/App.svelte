@@ -23,7 +23,7 @@
 
   //****************************************************constants section*********************************************************/
   //******************************************************************************************************************************/
-  let version = 401;
+  let version = 403;
   let debug = true;
   let LOG_MAX_MESSAGES = 10;
   let reconnectTimeout = 20000;
@@ -224,7 +224,7 @@
     } else {
       socket[ws] = new WebSocket("ws://" + ip + ":81");
       socket.binaryType = "blob";
-      if (debug) console.log("[i]", ip, "started connecting...");
+      if (debug) console.log("[i]", ip, ws, "started connecting...");
     }
   }
 
@@ -241,191 +241,200 @@
   function wsEventAdd(ws) {
     if (socket[ws]) {
       let ip = getIP(ws);
-      if (debug) console.log("[i]", ip, "web socket events added");
+      if (debug) console.log("[i]", ip, ws, "web socket events added");
       socket[ws].addEventListener("open", function (event) {
-        if (debug) console.log("[i]", ip, "completed connecting");
+        if (debug) console.log("[i]", ip, ws, "completed connecting");
         markDeviceStatus(ws, true);
         if (firstDevListRequest) wsSendMsg(0, "/list|");
-        sendCurrentPageName();
+        //отправим запрос только выбранному устройству
+        if (ws === selectedWs) {
+          sendCurrentPageName();
+        }
       });
       socket[ws].addEventListener("message", function (event) {
         if (typeof event.data === "string") {
           let data = event.data;
           //if (debug) console.log("[i]", getIP(ws), "msg received", data); //
-          //сборщик deviceList сообщений======================================
-          if (data.includes("devicelist")) {
-            if (IsJsonParse(data)) {
-              incDeviceList = JSON.parse(data);
-              incDeviceList = incDeviceList;
-              incDeviceListParced = true;
-              if (debug) console.log("✔", "incDeviceList json parced");
-              onParced("devicelist");
-              if (firstDevListRequest) {
-                deviceList = incDeviceList;
-                deviceList[0].status = true;
-              } else {
-                deviceList = combineArrays(deviceList, incDeviceList);
+          //принимаем данные только для выбранного устройства
+          if (ws === selectedWs) {
+            //сборщик deviceList сообщений======================================
+            if (data.includes("devicelist")) {
+              if (IsJsonParse(data)) {
+                incDeviceList = JSON.parse(data);
+                incDeviceList = incDeviceList;
+                incDeviceListParced = true;
+                if (debug) console.log("✔", "incDeviceList json parced");
+                onParced("devicelist");
+                if (firstDevListRequest) {
+                  deviceList = incDeviceList;
+                  deviceList[0].status = true;
+                } else {
+                  deviceList = combineArrays(deviceList, incDeviceList);
+                }
+                firstDevListRequest = false;
+                deviceList = deviceList;
+                whenDeviceListWasUpdated();
+                connectToAllDevices();
               }
-              firstDevListRequest = false;
-              deviceList = deviceList;
-              whenDeviceListWasUpdated();
-              connectToAllDevices();
             }
-          }
-          //сборщик statusJson сообщений======================================
-          if (data.includes("status")) {
-            if (IsJsonParse(data)) {
-              let statusJson = JSON.parse(data);
-              udateStatusOfWidget(statusJson);
-              wigetsUpdate();
-              if (debug) console.log("✔", "statusJson parced");
-              statusJsonParced = true;
-              onParced("status");
-            }
-          }
-          //сборщик paramsJson сообщений======================================
-          //if (ws === 0) {
-          if (data.includes("params")) {
-            if (IsJsonParse(data)) {
-              paramsJson = JSON.parse(data);
-              if (debug) console.log("✔", "paramsJson parced", ws);
-              paramsJsonParced = true;
-              onParced("params");
-            }
-          }
-          //}
-          //сборщик ssidJson сообщений======================================
-          if (data.includes("ssid")) {
-            if (IsJsonParse(data)) {
-              ssidJson = JSON.parse(data);
-              ssidJson = ssidJson;
-              if (debug) console.log("✔", "ssidJson parced");
-              ssidJsonParced = true;
-              onParced("ssid");
-            }
-          }
-          //сборщик errorsJson сообщений======================================
-          if (data.includes("errors")) {
-            if (IsJsonParse(data)) {
-              errorsJson = JSON.parse(data);
-              errorsJson = errorsJson;
-              errorsJsonParced = true;
-              if (debug) console.log("✔", "errorsJson json parced");
-              onParced("errors");
-            }
-          }
-          //сборщик configJson пакетов========================================
-          if (data === "/st/config.json") {
-            configJsonFlag = true;
-          }
-          if (data === "/end/config.json") {
-            configJsonFlag = false;
-            var bb = configJsonBlob.getBlob();
-            let configJsonReader = new FileReader();
-            configJsonReader.readAsText(bb);
-            configJsonReader.onload = () => {
-              let configJsonResult = configJsonReader.result;
-              if (IsJsonParse(configJsonResult)) {
-                configJson = JSON.parse(configJsonResult);
-                configJson = configJson;
-                configJsonParced = true;
-                if (debug) console.log("✔", "configJson parced");
-                onParced("config");
-              }
-            };
-          }
-          //сборщик widgetsJson пакетов========================================
-          if (data === "/st/widgets.json") {
-            widgetsJsonFlag = true;
-          }
-          if (data === "/end/widgets.json") {
-            widgetsJsonFlag = false;
-            var bb = widgetsJsonBlob.getBlob();
-            let widgetsJsonReader = new FileReader();
-            widgetsJsonReader.readAsText(bb);
-            widgetsJsonReader.onload = () => {
-              let widgetsJsonResult = widgetsJsonReader.result;
-              if (IsJsonParse(widgetsJsonResult)) {
-                widgetsJson = JSON.parse(widgetsJsonResult);
-                widgetsJson = widgetsJson;
-                widgetsJsonParced = true;
-                if (debug) console.log("✔", "widgetsJson parced");
-                onParced("widgets");
-              }
-            };
-          }
-          //сборщик itemsJson пакетов========================================
-          if (data === "/st/items.json") {
-            itemsJsonFlag = true;
-          }
-          if (data === "/end/items.json") {
-            itemsJsonFlag = false;
-            var bb = itemsJsonBlob.getBlob();
-            let itemsJsonReader = new FileReader();
-            itemsJsonReader.readAsText(bb);
-            itemsJsonReader.onload = () => {
-              let itemsJsonResult = itemsJsonReader.result;
-              if (IsJsonParse(itemsJsonResult)) {
-                itemsJson = JSON.parse(itemsJsonResult);
-                itemsJson = itemsJson;
-                itemsJsonParced = true;
-                if (debug) console.log("✔", "itemsJson parced");
-                onParced("items");
-              }
-            };
-          }
-          //сборщик layoutJson пакетов========================================
-          //if (ws === 0) {
-          if (data === "/st/layout.json") {
-            layoutJsonFlag = true;
-          }
-          if (data === "/end/layout.json") {
-            layoutJsonFlag = false;
-            var bb = layoutJsonBlob.getBlob();
-            let layoutJsonReader = new FileReader();
-            layoutJsonReader.readAsText(bb);
-            layoutJsonReader.onload = () => {
-              let layoutJsonResult = layoutJsonReader.result;
-              if (IsJsonParse(layoutJsonResult)) {
-                layoutJson = JSON.parse(layoutJsonResult);
-                layoutJson = layoutJson;
+            //сборщик statusJson сообщений======================================
+            if (data.includes("status")) {
+              if (IsJsonParse(data)) {
+                let statusJson = JSON.parse(data);
+                udateStatusOfWidget(statusJson);
                 wigetsUpdate();
-                layoutJsonParced = true;
-                if (debug) console.log("✔", "layoutJson parced", ws);
-                onParced("layout");
+                if (debug) console.log("✔", "statusJson parced");
+                statusJsonParced = true;
+                onParced("status");
               }
-            };
-          }
-          //}
-          //сборщик settingsJson пакетов========================================
-          if (data === "/st/settings.json") {
-            settingsJsonFlag = true;
-          }
-          if (data === "/end/settings.json") {
-            settingsJsonFlag = false;
-            var bb = settingsJsonBlob.getBlob();
-            let settingsJsonReader = new FileReader();
-            settingsJsonReader.readAsText(bb);
-            settingsJsonReader.onload = () => {
-              let settingsJsonResult = settingsJsonReader.result;
-              if (IsJsonParse(settingsJsonResult)) {
-                settingsJson = JSON.parse(settingsJsonResult);
-                settingsJson = settingsJson;
-                wigetsUpdate();
-                //updateThisDeviceInList();
-                settingsJsonParced = true;
-                if (debug) console.log("✔", "settingsJson parced");
-                onParced("settings");
+            }
+            //сборщик paramsJson сообщений======================================
+            //if (ws === 0) {
+            if (data.includes("params")) {
+              if (IsJsonParse(data)) {
+                paramsJson = JSON.parse(data);
+                if (debug) console.log("✔", "paramsJson parced", ws);
+                paramsJsonParced = true;
+                onParced("params");
               }
-            };
+            }
+            //}
+            //сборщик ssidJson сообщений======================================
+            if (data.includes("ssid")) {
+              if (IsJsonParse(data)) {
+                ssidJson = JSON.parse(data);
+                ssidJson = ssidJson;
+                if (debug) console.log("✔", "ssidJson parced");
+                ssidJsonParced = true;
+                onParced("ssid");
+              }
+            }
+            //сборщик errorsJson сообщений======================================
+            if (data.includes("errors")) {
+              if (IsJsonParse(data)) {
+                errorsJson = JSON.parse(data);
+                errorsJson = errorsJson;
+                errorsJsonParced = true;
+                if (debug) console.log("✔", "errorsJson json parced");
+                onParced("errors");
+              }
+            }
+            //сборщик configJson пакетов========================================
+            if (data === "/st/config.json") {
+              configJsonFlag = true;
+            }
+            if (data === "/end/config.json") {
+              configJsonFlag = false;
+              var bb = configJsonBlob.getBlob();
+              let configJsonReader = new FileReader();
+              configJsonReader.readAsText(bb);
+              configJsonReader.onload = () => {
+                let configJsonResult = configJsonReader.result;
+                if (IsJsonParse(configJsonResult)) {
+                  configJson = JSON.parse(configJsonResult);
+                  configJson = configJson;
+                  configJsonParced = true;
+                  if (debug) console.log("✔", "configJson parced");
+                  onParced("config");
+                }
+              };
+            }
+            //сборщик widgetsJson пакетов========================================
+            if (data === "/st/widgets.json") {
+              widgetsJsonFlag = true;
+            }
+            if (data === "/end/widgets.json") {
+              widgetsJsonFlag = false;
+              var bb = widgetsJsonBlob.getBlob();
+              let widgetsJsonReader = new FileReader();
+              widgetsJsonReader.readAsText(bb);
+              widgetsJsonReader.onload = () => {
+                let widgetsJsonResult = widgetsJsonReader.result;
+                if (IsJsonParse(widgetsJsonResult)) {
+                  widgetsJson = JSON.parse(widgetsJsonResult);
+                  widgetsJson = widgetsJson;
+                  widgetsJsonParced = true;
+                  if (debug) console.log("✔", "widgetsJson parced");
+                  onParced("widgets");
+                }
+              };
+            }
+            //сборщик itemsJson пакетов========================================
+            if (data === "/st/items.json") {
+              itemsJsonFlag = true;
+            }
+            if (data === "/end/items.json") {
+              itemsJsonFlag = false;
+              var bb = itemsJsonBlob.getBlob();
+              let itemsJsonReader = new FileReader();
+              itemsJsonReader.readAsText(bb);
+              itemsJsonReader.onload = () => {
+                let itemsJsonResult = itemsJsonReader.result;
+                if (IsJsonParse(itemsJsonResult)) {
+                  itemsJson = JSON.parse(itemsJsonResult);
+                  itemsJson = itemsJson;
+                  itemsJsonParced = true;
+                  if (debug) console.log("✔", "itemsJson parced");
+                  onParced("items");
+                }
+              };
+            }
+            //сборщик layoutJson пакетов========================================
+            //if (ws === 0) {
+            if (data === "/st/layout.json") {
+              layoutJsonFlag = true;
+            }
+            if (data === "/end/layout.json") {
+              layoutJsonFlag = false;
+              var bb = layoutJsonBlob.getBlob();
+              let layoutJsonReader = new FileReader();
+              layoutJsonReader.readAsText(bb);
+              layoutJsonReader.onload = () => {
+                let layoutJsonResult = layoutJsonReader.result;
+                if (IsJsonParse(layoutJsonResult)) {
+                  layoutJson = JSON.parse(layoutJsonResult);
+                  layoutJson = layoutJson;
+                  wigetsUpdate();
+                  layoutJsonParced = true;
+                  if (debug) console.log("✔", "layoutJson parced", ws);
+                  onParced("layout");
+                }
+              };
+            }
+            //}
+            //сборщик settingsJson пакетов========================================
+            if (data === "/st/settings.json") {
+              settingsJsonFlag = true;
+            }
+            if (data === "/end/settings.json") {
+              settingsJsonFlag = false;
+              var bb = settingsJsonBlob.getBlob();
+              let settingsJsonReader = new FileReader();
+              settingsJsonReader.readAsText(bb);
+              settingsJsonReader.onload = () => {
+                let settingsJsonResult = settingsJsonReader.result;
+                if (IsJsonParse(settingsJsonResult)) {
+                  settingsJson = JSON.parse(settingsJsonResult);
+                  settingsJson = settingsJson;
+                  wigetsUpdate();
+                  //updateThisDeviceInList();
+                  settingsJsonParced = true;
+                  if (debug) console.log("✔", "settingsJson parced");
+                  onParced("settings");
+                }
+              };
+            }
           }
         }
         if (event.data instanceof Blob) {
-          if (configJsonFlag) configJsonBlob.append(event.data);
-          if (widgetsJsonFlag) widgetsJsonBlob.append(event.data);
-          if (itemsJsonFlag) itemsJsonBlob.append(event.data);
-          if (layoutJsonFlag) layoutJsonBlob.append(event.data);
-          if (settingsJsonFlag) settingsJsonBlob.append(event.data);
+          //принимаем данные только для выбранного устройства
+          if (ws === selectedWs) {
+            if (configJsonFlag) configJsonBlob.append(event.data);
+            if (widgetsJsonFlag) widgetsJsonBlob.append(event.data);
+            if (itemsJsonFlag) itemsJsonBlob.append(event.data);
+            if (layoutJsonFlag) layoutJsonBlob.append(event.data);
+            if (settingsJsonFlag) settingsJsonBlob.append(event.data);
+          }
         }
       });
       socket[ws].addEventListener("close", (event) => {
@@ -482,6 +491,8 @@
     var size = Object.keys(settingsJson).length;
     console.log("[i]", "settingsJson length: " + size);
     if (size > 5) {
+      jsonArrWrite(deviceList, "ip", getIP(selectedWs), "name", settingsJson.name);
+      deviceList = deviceList;
       wsSendMsg(selectedWs, "/sgnittes|" + JSON.stringify(settingsJson));
     } else {
       window.alert("Ошибка");
@@ -620,9 +631,9 @@
   function wsSendMsg(ws, msg) {
     if (socket[ws] && socket[ws].readyState === 1) {
       socket[ws].send(msg);
-      if (debug) console.log("[i]", getIP(ws), "msg send success", msg);
+      if (debug) console.log("[i]", getIP(ws), ws, "msg send success", msg);
     } else {
-      if (debug) console.log("[e]", getIP(ws), "msg not send", msg);
+      if (debug) console.log("[e]", getIP(ws), ws, "msg not send", msg);
     }
   }
 
@@ -781,7 +792,7 @@
       JSON.parse(str);
     } catch (e) {
       oneOfJsonPackageError = true;
-      if (debug) console.log("[e]", "json error");
+      if (debug) console.log("[e]", "json parce error");
       return false;
     }
     oneOfJsonPackageError = false;
@@ -799,6 +810,18 @@
     });
     widgetsDropdown = widgetsDropdown;
     if (debug) console.log("[i]", widgetsDropdown);
+  }
+
+  function jsonArrWrite(jsonArr, idKey, idValue, paramKey, paramValue) {
+    for (let i = 0; i < jsonArr.length; i++) {
+      let obj = jsonArr[i];
+      for (const [key, value] of Object.entries(obj)) {
+        if (key == idKey && value == idValue) {
+          obj[paramKey] = paramValue;
+          break;
+        }
+      }
+    }
   }
 
   //**********************************************************post and get*****************************************************************/
@@ -989,7 +1012,7 @@
             <ListPage show={listReady} deviceList={deviceList} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} />
           </Route>
           <Route path="/system">
-            <SystemPage show={systemReady} settingsJson={settingsJson} errorsJson={errorsJson} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} version={version} />
+            <SystemPage show={systemReady} errorsJson={errorsJson} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} version={version} />
           </Route>
 
           <!--<Route path="/utilities">-->
