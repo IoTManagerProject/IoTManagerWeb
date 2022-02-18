@@ -123,7 +123,13 @@
   export let version;
 
   export let errorsJson;
+
   export let rebootEsp = () => {};
+
+  export let versionsList;
+  export let choosingVersion;
+
+  export let startUpdate = () => {};
 
   export let show;
 
@@ -139,6 +145,20 @@
         </div>
         <div class="flex justify-center w-1/4">
           <p class="text-gray-500 font-bold">{errorsJson.bn}</p>
+        </div>
+      </div>
+      <div class="crd-itm-psn">
+        <div class="w-3/4">
+          <p class="wgt-dscr-stl">Версии прошивки на сервере</p>
+        </div>
+        <div class="flex justify-center w-1/4">
+          <select class="border border-indigo-500 border-4" bind:value={choosingVersion}>
+            {#each Object.entries(versionsList) as [key, param]}
+              <option value={param}>
+                {param}
+              </option>
+            {/each}
+          </select>
         </div>
       </div>
       <div class="crd-itm-psn">
@@ -236,7 +256,10 @@
   </div>
   <div class="grd-1col1">
     <Card>
-      <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить устройство"}</button>
+      <div class="grd-2col1">
+        <button class="btn-lg" on:click={() => startUpdate()}>{"Обновить прошивку"}</button>
+        <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить устройство"}</button>
+      </div>
     </Card>
   </div>
 {:else}

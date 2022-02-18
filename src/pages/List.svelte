@@ -62,8 +62,10 @@
           {/if}
         </tbody>
       </table>
-      <button class="btn-lg mb-2" on:click={() => ((showInput = !showInput), addDevInList())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
-      <button class="btn-lg" on:click={(msg) => sendToAllDevices("/reboot|")}>{"Перезагрузить все устройства"}</button>
+      <div class="grd-2col1">
+        <button class="btn-lg" on:click={() => ((showInput = !showInput), addDevInList())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
+        <button class="btn-lg" on:click={(msg) => sendToAllDevices("/reboot|")}>{"Перезагрузить все устройства"}</button>
+      </div>
     </Card>
     <Alarm>
       <p>Прошитые прошивкой IoT Manager устройства появятся в списке автоматически в течении минуты. Для обновления названий устройств нужно обновить страницу. Устройства должны быть подключены к одному wifi роутеру.</p>

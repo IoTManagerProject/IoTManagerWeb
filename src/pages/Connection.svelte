@@ -63,6 +63,14 @@
           <input bind:value={settingsJson.routerpass} class="ipt-rnd text-left focus:border-indigo-500" type="text" />
         </div>
       </div>
+      <div class="crd-itm-psn">
+        <div class="w-4/6">
+          <p class="wgt-dscr-stl">Сервер обновления</p>
+        </div>
+        <div class="flex justify-end w-3/6">
+          <input bind:value={settingsJson.serverip} class="ipt-rnd text-left focus:border-indigo-500" type="text" />
+        </div>
+      </div>
       {#if errorsJson.passer === 1}
         <div class="grd-1col1">
           <Alarm title="Введен неправильный пароль" />

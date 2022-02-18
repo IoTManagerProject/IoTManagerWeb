@@ -114,8 +114,10 @@
           {/each}
         </tbody>
       </table>
-      <button class="btn-lg mb-2" on:click={() => saveConfig()}>{"Сохранить"}</button>
-      <button class="btn-lg mb-2" on:click={() => rebootEsp()}>{"Перезагрузить"}</button>
+      <div class="grd-2col1">
+        <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить"}</button>
+        <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить"}</button>
+      </div>
     </Card>
   </div>
 {:else}

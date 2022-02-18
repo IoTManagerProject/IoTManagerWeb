@@ -23,7 +23,7 @@
 
   //****************************************************constants section*********************************************************/
   //******************************************************************************************************************************/
-  let version = 404;
+  let version = 405;
   let debug = true;
   let LOG_MAX_MESSAGES = 10;
   let reconnectTimeout = 20000;
@@ -33,8 +33,8 @@
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
-  //let myip = document.location.hostname;
-  let myip = "192.168.88.224";
+  let myip = document.location.hostname;
+  //let myip = "192.168.8.127";
 
   //Flags
   let firstDevListRequest = true;
@@ -52,6 +52,10 @@
   let connectionReady = false;
   let listReady = false;
   let systemReady = false;
+
+  //update esp
+  let versionsList = {};
+  let choosingVersion = undefined;
 
   //configuration
   let configJson = [];
@@ -459,8 +463,9 @@
       if (debug) console.log("✔✔", "list data parced");
       listReady = true;
     }
-    if (currentPageName === "/system|" && errorsJsonParced) {
+    if (currentPageName === "/system|" && errorsJsonParced && settingsJsonParced) {
       clearParcedFlags();
+      getVersionsList();
       if (debug) console.log("✔✔", "system data parced");
       systemReady = true;
     }
@@ -850,14 +855,18 @@
   }
 
   async function getRequestJson(url) {
-    let res = await fetch(url, {
-      mode: "no-cors",
-      method: "GET",
-    });
-    if (res.ok) {
-      configSetupJson = await res.json();
-    } else {
-      console.log("error", res.status);
+    try {
+      let res = await fetch(url, {
+        mode: "no-cors",
+        method: "GET",
+      });
+      if (res.ok) {
+        configSetupJson = await res.json();
+      } else {
+        console.log("error", res.status);
+      }
+    } catch (e) {
+      console.log(e);
     }
   }
 
@@ -907,6 +916,52 @@
     console.log("[x]", alarmKey);
     errorsJson[alarmKey] = 0;
     wsSendMsg(selectedWs, '/rorre|{"' + alarmKey + '":0}');
+  }
+
+  //************************************************update esp firm************************************************************//
+
+  async function getVersionsList() {
+    try {
+      let url = settingsJson.serverip + "/iotm/ver.json";
+      console.log("url", url);
+      let res = await fetch(url, {
+        mode: "cors",
+        method: "GET",
+      });
+      if (res.ok) {
+        versionsList = await res.json();
+        versionsList = versionsList[errorsJson.bn];
+        choosingVersion = errorsJson.bver;
+        console.log(JSON.stringify(versionsList));
+      } else {
+        choosingVersion = undefined;
+        console.log("error, versions list not received", res.statusText);
+      }
+    } catch (e) {
+      choosingVersion = undefined;
+      console.log("error, versions list not received");
+      console.log(e);
+    }
+  }
+
+  function startUpdate() {
+    if (choosingVersion !== undefined) {
+      if (choosingVersion === errorsJson.bver) {
+        window.alert("Эта версия уже установленна");
+      } else {
+        if (confirm("Запустить обновление?")) {
+          console.log("start update...");
+          //запишем выбранную версию в файл на esp
+          wsSendMsg(selectedWs, '/rorre|{"chver":' + choosingVersion + "}");
+          //начнем обновление
+          wsSendMsg(selectedWs, "/update|");
+        } else {
+          console.log("update canceled");
+        }
+      }
+    } else {
+      window.alert("Версия не выбрана или сервер недоступен");
+    }
   }
 
   //*******************************************************initialisation********************************************************************/
@@ -997,7 +1052,7 @@
             <ListPage show={listReady} deviceList={deviceList} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} />
           </Route>
           <Route path="/system">
-            <SystemPage show={systemReady} errorsJson={errorsJson} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} version={version} />
+            <SystemPage show={systemReady} errorsJson={errorsJson} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} version={version} versionsList={versionsList} bind:choosingVersion startUpdate={() => startUpdate()} />
           </Route>
 
           <!--<Route path="/utilities">-->
