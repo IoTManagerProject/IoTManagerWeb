@@ -28,6 +28,7 @@
   let LOG_MAX_MESSAGES = 10;
   let reconnectTimeout = 20000;
   let rebootingTimeout = 20000;
+  let updatingTimeout = 80000;
   let opened = false;
   let preventMove = false;
 
@@ -955,6 +956,8 @@
           wsSendMsg(selectedWs, '/rorre|{"chver":' + choosingVersion + "}");
           //начнем обновление
           wsSendMsg(selectedWs, "/update|");
+          rebootingInProgress = true;
+          myTimeout = setTimeout(rebootingTask, updatingTimeout);
         } else {
           console.log("update canceled");
         }
