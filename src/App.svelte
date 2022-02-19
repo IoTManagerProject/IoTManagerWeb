@@ -1,4 +1,8 @@
 <script>
+  /******************************************************************************************************************************
+   **
+   ******************************************************************************************************************************/
+
   //******************************************************import section*********************************************************/
   //*****************************************************************************************************************************/
   import { onMount } from "svelte";
@@ -23,9 +27,9 @@
 
   //****************************************************constants section*********************************************************/
   //******************************************************************************************************************************/
-  let version = 405;
+  let version = 407;
   let debug = true;
-  let LOG_MAX_MESSAGES = 10;
+  let LOG_MAX_MESSAGES = 100;
   let reconnectTimeout = 20000;
   let rebootingTimeout = 20000;
   let updatingTimeout = 80000;
@@ -35,7 +39,7 @@
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  //let myip = "192.168.8.127";
+  //let myip = "192.168.8.128";
 
   //Flags
   let firstDevListRequest = true;
@@ -334,6 +338,14 @@
               }
             }
 
+            //сборщик log сообщений======================================
+            if (data.includes("/log|")) {
+              data = data.replace("/log|", "");
+              //let msg = data.toString();
+              if (debug) console.log("", data);
+              addCoreMsg(data);
+            }
+
             //BLOB==============================================================
             //сборщик configJson пакетов========================================
             if (data === "/st/config.json") {
@@ -573,6 +585,8 @@
 
     errorsJson = {};
 
+    coreMessages = [];
+
     dashReady = false;
     configReady = false;
     connectionReady = false;
@@ -668,14 +682,13 @@
 
   //***********************************************************logging******************************************************************/
   const addCoreMsg = (msg) => {
-    if (coreMessages.length > Number(LOG_MAX_MESSAGES)) {
-      coreMessages = coreMessages.slice(0);
+    if (coreMessages.length >= LOG_MAX_MESSAGES) {
+      coreMessages.shift();
     }
-    const time = new Date().getTime();
+    //const time = new Date().getTime();
     coreMessages = [
       ...coreMessages,
       {
-        time,
         msg,
       },
     ];
@@ -1055,7 +1068,7 @@
             <ListPage show={listReady} deviceList={deviceList} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} />
           </Route>
           <Route path="/system">
-            <SystemPage show={systemReady} errorsJson={errorsJson} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} version={version} versionsList={versionsList} bind:choosingVersion startUpdate={() => startUpdate()} />
+            <SystemPage show={systemReady} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} version={version} versionsList={versionsList} bind:choosingVersion startUpdate={() => startUpdate()} coreMessages={coreMessages} />
           </Route>
 
           <!--<Route path="/utilities">-->

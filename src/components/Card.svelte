@@ -1,13 +1,16 @@
 <script>
   export let title = false;
+  export let show = true;
 </script>
 
-<div class="crd">
-  {#if title}
-    <h1 class="crd-hdr">{title}</h1>
-  {/if}
-  <slot />
-</div>
+{#if show}
+  <div class="crd">
+    {#if title}
+      <h1 class="crd-hdr">{title}</h1>
+    {/if}
+    <slot />
+  </div>
+{/if}
 
 <style lang="postcss" global>
   @tailwind base;
