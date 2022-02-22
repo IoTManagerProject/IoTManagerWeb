@@ -1,7 +1,9 @@
 <script>
-  /******************************************************************************************************************************
-   **
-   ******************************************************************************************************************************/
+  /*
+   Svelte IoT Manager app
+   created by Dmitry Borisenko
+   Sandgasse 46/4, Vienna 1190, Austria
+  */
 
   //******************************************************import section*********************************************************/
   //*****************************************************************************************************************************/
@@ -27,11 +29,11 @@
 
   //****************************************************constants section*********************************************************/
   //******************************************************************************************************************************/
-  let version = 407;
+  let version = 408;
   let debug = true;
   let LOG_MAX_MESSAGES = 100;
   let reconnectTimeout = 20000;
-  let rebootingTimeout = 20000;
+  let rebootingTimeout = 15000;
   let updatingTimeout = 80000;
   let opened = false;
   let preventMove = false;
@@ -39,7 +41,7 @@
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  //let myip = "192.168.8.128";
+  //let myip = "192.168.88.224";
 
   //Flags
   let firstDevListRequest = true;
@@ -281,6 +283,15 @@
                   deviceList = combineArrays(deviceList, incDeviceList);
                 }
                 firstDevListRequest = false;
+                deviceList.sort(function (a, b) {
+                  if (a.name < b.name) {
+                    return -1;
+                  }
+                  if (a.name > b.name) {
+                    return 1;
+                  }
+                  return 0;
+                });
                 deviceList = deviceList;
                 whenDeviceListWasUpdated();
                 connectToAllDevices();
@@ -1068,7 +1079,7 @@
             <ListPage show={listReady} deviceList={deviceList} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} />
           </Route>
           <Route path="/system">
-            <SystemPage show={systemReady} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} version={version} versionsList={versionsList} bind:choosingVersion startUpdate={() => startUpdate()} coreMessages={coreMessages} />
+            <SystemPage show={systemReady} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion startUpdate={() => startUpdate()} coreMessages={coreMessages} />
           </Route>
 
           <!--<Route path="/utilities">-->

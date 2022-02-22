@@ -103,7 +103,7 @@
       1: {
         descr: "Ошибка json",
         color: "text-red-500",
-        txt: "Ошибка записи/чтения json. Устройство может вести себя непредсказуемо. Обратитесь к разработчику.",
+        txt: "Ошибка записи/чтения json.",
         cancel: true,
         num: true,
       },
@@ -112,7 +112,7 @@
       1: {
         descr: "Ошибка json",
         color: "text-red-500",
-        txt: "Ошибка чтения файла json с виджетами",
+        txt: "Ошибка чтения json файла с виджетами",
         cancel: true,
       },
     },
@@ -120,7 +120,6 @@
 
   import Card from "../components/Card.svelte";
   import Alarm from "../components/Alarm.svelte";
-  export let version;
 
   export let errorsJson;
 
@@ -144,19 +143,19 @@
     <!--INFORMATION-->
     <Card title="Системная информация">
       <div class="flex mb-2 h-6 items-center">
-        <div class="w-3/4">
-          <p class="pr-4 text-gray-500 font-bold text-sm">Название прошивки</p>
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Название прошивки</p>
         </div>
-        <div class="flex justify-center w-1/4">
-          <p class="text-gray-500 font-bold text-sm">{errorsJson.bn}</p>
+        <div class="flex justify-center w-1/3">
+          <p class="text-gray-500 font-bold text-sm text-center truncate">{errorsJson.bn}</p>
         </div>
       </div>
       <div class="flex mb-2 h-6 items-center">
-        <div class="w-3/4">
-          <p class="pr-4 text-gray-500 font-bold text-sm">Версии прошивки на сервере</p>
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Доступные версии</p>
         </div>
-        <div class="flex justify-center w-1/4">
-          <select class="border border-indigo-500 border-4" bind:value={choosingVersion}>
+        <div class="flex justify-center w-1/3">
+          <select class="border border-indigo-500 border-4 text-center" bind:value={choosingVersion}>
             {#each Object.entries(versionsList) as [key, param]}
               <option value={param}>
                 {param}
@@ -166,79 +165,87 @@
         </div>
       </div>
       <div class="flex mb-2 h-6 items-center">
-        <div class="w-3/4">
-          <p class="pr-4 text-gray-500 font-bold text-sm">Версия прошивки</p>
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Версия прошивки</p>
         </div>
-        <div class="flex justify-center w-1/4">
-          <p class="text-gray-500 font-bold text-sm">{errorsJson.bver}</p>
-        </div>
-      </div>
-      <div class="flex mb-2 h-6 items-center">
-        <div class="w-3/4">
-          <p class="pr-4 text-gray-500 font-bold text-sm">Версия файловой системы</p>
-        </div>
-        <div class="flex justify-center w-1/4">
-          <p class="text-gray-500 font-bold text-sm">{version}</p>
+        <div class="flex justify-center w-1/3">
+          <p class="text-gray-500 font-bold text-sm text-center truncate">{errorsJson.bver}</p>
         </div>
       </div>
       <div class="flex mb-2 h-6 items-center">
-        <div class="w-3/4">
-          <p class="pr-4 text-gray-500 font-bold text-sm">Uptime устройства</p>
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Uptime устройства</p>
         </div>
-        <div class="flex justify-center w-1/4">
-          <p class="text-gray-500 font-bold text-sm">{errorsJson.upt}</p>
-        </div>
-      </div>
-      <div class="flex mb-2 h-6 items-center">
-        <div class="w-3/4">
-          <p class="pr-4 text-gray-500 font-bold text-sm">Uptime сессии mqtt</p>
-        </div>
-        <div class="flex justify-center w-1/4">
-          <p class="text-gray-500 font-bold text-sm">{errorsJson.uptm}</p>
+        <div class="flex justify-center w-1/3">
+          <p class="text-gray-500 font-bold text-sm text-center truncate">{errorsJson.upt}</p>
         </div>
       </div>
       <div class="flex mb-2 h-6 items-center">
-        <div class="w-3/4">
-          <p class="pr-4 text-gray-500 font-bold text-sm">Качество WiFi сигнала</p>
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Uptime сессии mqtt</p>
         </div>
-        <div class="flex justify-center w-1/4 text-xs sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base break-words">
+        <div class="flex justify-center w-1/3">
+          <p class="text-gray-500 font-bold text-sm text-center truncate">{errorsJson.uptm}</p>
+        </div>
+      </div>
+      <div class="flex mb-2 h-6 items-center">
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Uptime сессии wifi</p>
+        </div>
+        <div class="flex justify-center w-1/3">
+          <p class="text-gray-500 font-bold text-sm text-center truncate">{errorsJson.uptw}</p>
+        </div>
+      </div>
+      <div class="flex mb-2 h-6 items-center">
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Качество WiFi сигнала</p>
+        </div>
+        <div class="flex justify-center w-1/3 text-xs sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base break-words">
           {#if errorsJson.rssi === 0}
-            <p class="text-red-500 font-bold text-sm">не подключено</p>
+            <p class="text-red-500 font-bold text-sm text-center truncate">не подключено</p>
           {/if}
           {#if errorsJson.rssi === 1}
-            <p class="text-red-500 font-bold text-sm">нет сигнала</p>
+            <p class="text-red-500 font-bold text-sm text-center truncate">нет сигнала</p>
           {/if}
           {#if errorsJson.rssi === 2}
-            <p class="text-red-500 font-bold text-sm">очень низкий</p>
+            <p class="text-red-500 font-bold text-sm text-center truncate">очень низкий</p>
           {/if}
           {#if errorsJson.rssi === 3}
-            <p class="text-yellow-500 font-bold text-sm">низкий</p>
+            <p class="text-yellow-500 font-bold text-sm text-center truncate">низкий</p>
           {/if}
           {#if errorsJson.rssi === 4}
-            <p class="text-yellow-500 font-bold text-sm">хороший</p>
+            <p class="text-yellow-500 font-bold text-sm text-center truncate">хороший</p>
           {/if}
           {#if errorsJson.rssi === 5}
-            <p class="text-green-500 font-bold text-sm">очень хороший</p>
+            <p class="text-green-500 font-bold text-sm text-center truncate">очень хороший</p>
           {/if}
           {#if errorsJson.rssi === 6}
-            <p class="text-green-500 font-bold text-sm">отличный</p>
+            <p class="text-green-500 font-bold text-sm text-center truncate">отличный</p>
           {/if}
         </div>
       </div>
       <div class="flex mb-2 h-6 items-center">
-        <div class="w-3/4">
-          <p class="pr-4 text-gray-500 font-bold text-sm">Остаток оперативной памяти</p>
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Остаток RAM</p>
         </div>
-        <div class="flex justify-center w-1/4">
-          <p class="text-green-500 font-bold">{errorsJson.heap}</p>
+        <div class="flex justify-center w-1/3 text-sm text-center">
+          <p class="text-green-500 font-bold text-center truncate">{errorsJson.heap}</p>
         </div>
       </div>
       <div class="flex mb-2 h-6 items-center">
-        <div class="w-3/4">
-          <p class="pr-4 text-gray-500 font-bold text-sm">Количество записей на flash</p>
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Кол-во записей на flash</p>
         </div>
-        <div class="flex justify-center w-1/4">
-          <p class="text-green-500 font-bold">{errorsJson.fl}</p>
+        <div class="flex justify-center w-1/3 text-sm">
+          <p class="text-green-500 font-bold text-center truncate">{errorsJson.fl}</p>
+        </div>
+      </div>
+      <div class="flex mb-2 h-6 items-center">
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Причина перезагрузки</p>
+        </div>
+        <div class="flex justify-center w-1/3 text-sm">
+          <p class="{errorsJson.rst.includes('Watchdog') || errorsJson.rst.includes('Exception') ? 'text-red-500' : 'text-green-500'} font-bold text-center truncate">{errorsJson.rst}</p>
         </div>
       </div>
       <button class="btn-lg" on:click={() => startUpdate()}>{"Обновить прошивку"}</button>
@@ -247,7 +254,7 @@
     <Card title="Системные настройки">
       <div class="flex mb-2 h-6 items-center">
         <div class="w-5/6">
-          <p class="pr-4 text-gray-500 font-bold text-sm">Включить лог</p>
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Включить лог</p>
         </div>
         <div class="flex justify-center w-1/6">
           <input bind:checked={settingsJson.log} on:change={() => saveSett()} type="checkbox" class="form-checkbox h-4 w-4 text-gray-600" />
