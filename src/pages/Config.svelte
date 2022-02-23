@@ -10,6 +10,8 @@
 
   export let show;
 
+  export let scenarioTxt;
+
   let itemsJsonBind = 0;
   let debug = true;
 
@@ -47,7 +49,7 @@
 
 {#if show}
   <div class="grd-1col1">
-    <Card>
+    <Card title="Конфигуратор">
       <div class="grd-2col2">
         <select class="slct-lg" bind:value={itemsJsonBind} on:change={() => elementsDropdownChange()}>
           {#each itemsJson as item}
@@ -114,6 +116,11 @@
           {/each}
         </tbody>
       </table>
+    </Card>
+  </div>
+  <div class="grd-1col1">
+    <Card title="Сценарии">
+      <textarea bind:value={scenarioTxt} class="ipt-big h-80 w-full" />
       <div class="grd-2col1">
         <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить"}</button>
         <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить"}</button>

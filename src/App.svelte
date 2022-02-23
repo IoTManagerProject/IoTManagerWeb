@@ -99,6 +99,10 @@
   let incDeviceList = [];
   let incDeviceListParced = false;
 
+  let scenarioTxt = "";
+  let scenarioTxtFlag = false;
+  let scenarioTxtParced = false;
+
   let deviceList = [];
   deviceList = [
     {
@@ -151,6 +155,8 @@
   var widgetsJsonBlob = new MyBlobBuilder();
   var itemsJsonBlob = new MyBlobBuilder();
   var layoutJsonBlob = new MyBlobBuilder();
+  var layoutJsonBlob = new MyBlobBuilder();
+  var scenarioTxtBlob = new MyBlobBuilder();
 
   //var blobArr = new MyBlobBuilder()[10];
 
@@ -283,15 +289,15 @@
                   deviceList = combineArrays(deviceList, incDeviceList);
                 }
                 firstDevListRequest = false;
-                deviceList.sort(function (a, b) {
-                  if (a.name < b.name) {
-                    return -1;
-                  }
-                  if (a.name > b.name) {
-                    return 1;
-                  }
-                  return 0;
-                });
+                //deviceList.sort(function (a, b) {
+                //  if (a.name < b.name) {
+                //    return -1;
+                //  }
+                //  if (a.name > b.name) {
+                //    return 1;
+                //  }
+                //  return 0;
+                //});
                 deviceList = deviceList;
                 whenDeviceListWasUpdated();
                 connectToAllDevices();
@@ -358,6 +364,24 @@
             }
 
             //BLOB==============================================================
+            //сборщик scenario.txt пакетов======================================
+            if (data === "/st/scenario.txt") {
+              scenarioTxtFlag = true;
+            }
+            if (data === "/end/scenario.txt") {
+              scenarioTxtFlag = false;
+              var bb = scenarioTxtBlob.getBlob();
+              let scenarioTxtReader = new FileReader();
+              scenarioTxtReader.readAsText(bb);
+              scenarioTxtReader.onload = () => {
+                let scenarioTxtResult = scenarioTxtReader.result;
+                scenarioTxt = scenarioTxtResult;
+                scenarioTxt = scenarioTxt;
+                scenarioTxtParced = true;
+                if (debug) console.log("✔", "scenarioTxt parced");
+                onParced("scenario");
+              };
+            }
             //сборщик configJson пакетов========================================
             if (data === "/st/config.json") {
               configJsonFlag = true;
@@ -448,6 +472,7 @@
             if (widgetsJsonFlag) widgetsJsonBlob.append(event.data);
             if (itemsJsonFlag) itemsJsonBlob.append(event.data);
             if (layoutJsonFlag) layoutJsonBlob.append(event.data);
+            if (scenarioTxtFlag) scenarioTxtBlob.append(event.data);
           }
         }
       });
@@ -472,7 +497,7 @@
       wigetsUpdate();
       dashReady = true;
     }
-    if (currentPageName === "/config|" && itemsJsonParced && widgetsJsonParced && configJsonParced && settingsJsonParced) {
+    if (currentPageName === "/config|" && itemsJsonParced && widgetsJsonParced && configJsonParced && settingsJsonParced && scenarioTxtParced) {
       clearParcedFlags();
       if (debug) console.log("✔✔", "config data parced");
       configReady = true;
@@ -498,6 +523,7 @@
   function saveConfig() {
     wsSendMsg(selectedWs, "/tuoyal|" + JSON.stringify(generateLayout()));
     wsSendMsg(selectedWs, "/gifnoc|" + JSON.stringify(configJson));
+    wsSendMsg(selectedWs, "/oiranecs|" + scenarioTxt);
     clearData();
     sendCurrentPageName();
   }
@@ -598,6 +624,9 @@
 
     coreMessages = [];
 
+    scenarioTxt = "";
+    scenarioTxtBlob.clear();
+
     dashReady = false;
     configReady = false;
     connectionReady = false;
@@ -620,6 +649,7 @@
     paramsJsonParced = false;
     statusJsonParced = false;
     incDeviceListParced = false;
+    scenarioTxtParced = false;
   }
 
   function wsPush(ws, topic, status) {
@@ -1070,7 +1100,7 @@
             <DashboardPage show={dashReady} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
           </Route>
           <Route path="/config">
-            <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} rebootEsp={() => rebootEsp()} />
+            <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} bind:scenarioTxt saveConfig={() => saveConfig()} rebootEsp={() => rebootEsp()} />
           </Route>
           <Route path="/connection">
             <ConnectionPage show={connectionReady} rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />

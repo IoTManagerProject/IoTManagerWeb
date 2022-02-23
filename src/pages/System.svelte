@@ -245,7 +245,7 @@
           <p class="pr-4 text-gray-500 font-bold text-sm truncate">Причина перезагрузки</p>
         </div>
         <div class="flex justify-center w-1/3 text-sm">
-          <p class="{errorsJson.rst.includes('Watchdog') || errorsJson.rst.includes('Exception') ? 'text-red-500' : 'text-green-500'} font-bold text-center truncate">{errorsJson.rst}</p>
+          <p class="{errorsJson.rst.toString().includes('Watchdog') || errorsJson.rst.toString().includes('Exception') ? 'text-red-500' : 'text-green-500'} font-bold text-center truncate">{errorsJson.rst}</p>
         </div>
       </div>
       <button class="btn-lg" on:click={() => startUpdate()}>{"Обновить прошивку"}</button>
