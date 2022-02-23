@@ -28,7 +28,7 @@
 
   @layer components {
     .alm {
-      @apply mb-2 w-full p-2 sm:p-2 md:p-2 lg:p-2 xl:px-4 xl:py-2 2xl:px-4 2xl:py-2 bg-white shadow-md lg:shadow-lg border border-gray-200 rounded-lg;
+      @apply mt-4 w-full p-2 sm:p-2 md:p-2 lg:p-2 xl:px-4 xl:py-2 2xl:px-4 2xl:py-2 bg-white shadow-md lg:shadow-lg border border-gray-200 rounded-lg;
     }
     .alm-hdr {
       @apply text-center text-base text-red-400 font-bold pb-0;

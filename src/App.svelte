@@ -29,11 +29,11 @@
 
   //****************************************************constants section*********************************************************/
   //******************************************************************************************************************************/
-  let version = 408;
+  let version = 410;
   let debug = true;
   let LOG_MAX_MESSAGES = 100;
   let reconnectTimeout = 20000;
-  let rebootingTimeout = 15000;
+  let rebootingTimeout = 18000;
   let updatingTimeout = 80000;
   let opened = false;
   let preventMove = false;
@@ -47,6 +47,9 @@
   let firstDevListRequest = true;
   let showInput = false;
   let showModalFlag = false;
+
+  let rebootingUpdatingInProgress = false;
+  const myTimeout = undefined;
 
   let additionalParams = false;
 
@@ -119,7 +122,7 @@
   let selectedDeviceData = undefined;
   let selectedWs = 0;
 
-  let flag = true;
+  let firstTime = true;
   let newDevice = {};
   let coreMessages = [];
 
@@ -669,18 +672,22 @@
 
   function wsTestMsgTask() {
     setTimeout(wsTestMsgTask, reconnectTimeout);
-    if (debug) console.log("[i]", "----timer tick----");
-    if (!flag) {
-      deviceList.forEach((device) => {
-        if (!getDeviceStatus(device.ws)) {
-          wsConnect(device.ws);
-          wsEventAdd(device.ws);
-        } else {
-          wsSendMsg(device.ws, "/tst|");
-        }
-      });
+    if (!rebootingUpdatingInProgress) {
+      if (debug) console.log("[i]", "----timer tick----");
+      if (!firstTime) {
+        deviceList.forEach((device) => {
+          if (!getDeviceStatus(device.ws)) {
+            wsConnect(device.ws);
+            wsEventAdd(device.ws);
+          } else {
+            wsSendMsg(device.ws, "/tst|");
+          }
+        });
+      }
+      firstTime = false;
+    } else {
+      if (debug) console.log("[i]", "----timer skipped----");
     }
-    flag = false;
   }
 
   function wsSendMsg(ws, msg) {
@@ -960,13 +967,10 @@
     wsSendMsg(selectedWs, "/scan|");
   }
 
-  let rebootingInProgress = false;
-  const myTimeout = undefined;
-
   function rebootEsp() {
     if (debug) console.log("[i]", "reboot...");
     wsSendMsg(selectedWs, "/reboot|");
-    rebootingInProgress = true;
+    rebootingUpdatingInProgress = true;
     myTimeout = setTimeout(rebootingTask, rebootingTimeout);
   }
 
@@ -974,7 +978,7 @@
     clearTimeout(myTimeout);
     clearData();
     connectToAllDevices();
-    rebootingInProgress = false;
+    rebootingUpdatingInProgress = false;
   }
 
   function cancelAlarm(alarmKey) {
@@ -1020,7 +1024,7 @@
           wsSendMsg(selectedWs, '/rorre|{"chver":' + choosingVersion + "}");
           //начнем обновление
           wsSendMsg(selectedWs, "/update|");
-          rebootingInProgress = true;
+          rebootingUpdatingInProgress = true;
           myTimeout = setTimeout(rebootingTask, updatingTimeout);
         } else {
           console.log("update canceled");
@@ -1036,7 +1040,7 @@
   <!--{#if errorsJson.wscle === 1}-->
   <!--<Modal header={"Ошибка web sockets"} text={"Слишком много клиентов было открыто. Допускается не более четырех. Для исчезновения ошибки перезагрузите устройство"} />-->
   <!--{/if}-->
-  {#if rebootingInProgress}
+  {#if rebootingUpdatingInProgress}
     <Progress />
   {/if}
   <header class="h-10 w-full bg-gray-100 overflow-auto shadow-md">
@@ -1057,7 +1061,8 @@
   </header>
 
   <nav class="flex">
-    <input bind:checked={opened} on:change={() => onCheck()} id="menu__toggle" type="checkbox" />
+    <input class="w-0 h-0" bind:checked={opened} on:change={() => onCheck()} id="menu__toggle" type="checkbox" />
+
     <label class="menu__btn" for="menu__toggle">
       <span />
     </label>
@@ -1078,15 +1083,6 @@
       <li>
         <a class="menu__item" href="/system">{"Системные"}</a>
       </li>
-      <!--<li>-->
-      <!--<a class="menu__item" href="/utilities">{"Утилиты"}</a>-->
-      <!--</li>-->
-      <!--<li>-->
-      <!--<a class="menu__item" href="/log">{"Лог"}</a>-->
-      <!--</li>-->
-      <!--<li>-->
-      <!--<a class="menu__item" href="/about">{"О проекте"}</a>-->
-      <!--</li>-->
     </ul>
   </nav>
 
@@ -1111,16 +1107,6 @@
           <Route path="/system">
             <SystemPage show={systemReady} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion startUpdate={() => startUpdate()} coreMessages={coreMessages} />
           </Route>
-
-          <!--<Route path="/utilities">-->
-          <!--<UtilitiesPage />-->
-          <!--</Route>-->
-          <!--<Route path="/log">-->
-          <!--<LogPage coreMessages={coreMessages} />-->
-          <!--</Route>-->
-          <!--<Route path="/about">-->
-          <!--<AboutPage wigetsUpdate={wigetsUpdate} layoutJson={layoutJson} showModal={() => showModal()} syntaxHighlight={(json) => syntaxHighlight(json)} />-->
-          <!--</Route>-->
         {/if}
       </div>
     </ul>

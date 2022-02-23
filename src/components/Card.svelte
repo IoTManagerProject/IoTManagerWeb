@@ -19,7 +19,7 @@
 
   @layer components {
     .crd {
-      @apply w-full mb-2 p-2 sm:p-2 md:p-2 lg:p-2 xl:px-4 xl:py-4 2xl:px-4 2xl:py-4 bg-white shadow-md lg:shadow-lg border border-gray-200 rounded-lg;
+      @apply w-full mt-4 p-2 sm:p-2 md:p-2 lg:p-2 xl:px-4 xl:py-4 2xl:px-4 2xl:py-4 bg-white shadow-md lg:shadow-lg border border-gray-200 rounded-lg;
     }
     .crd-hdr {
       @apply text-center text-lg text-gray-500 font-bold pb-4;
