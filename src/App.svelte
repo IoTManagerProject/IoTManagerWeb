@@ -40,8 +40,8 @@
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
-  let myip = document.location.hostname;
-  //let myip = "192.168.88.224";
+  //let myip = document.location.hostname;
+  let myip = "192.168.88.224";
 
   //Flags
   let firstDevListRequest = true;
@@ -82,7 +82,6 @@
   let layoutJsonParced = false;
 
   let settingsJson = {};
-  let settingsJsonFlag = false;
   let settingsJsonParced = false;
 
   let errorsJson = {};
@@ -97,7 +96,7 @@
   let statusJsonParced = false;
 
   let incDeviceList = [];
-  let incDeviceListParced = false;
+  let deviceListParced = false;
 
   let scenarioTxt = "";
   let scenarioTxtFlag = false;
@@ -163,6 +162,7 @@
   router.subscribe(handleNavigation);
 
   function handleNavigation() {
+    console.log("[i]", "handle navigation");
     clearData();
     currentPageName = $router.path.toString();
     //название страницы служит заголовком, поэтому отметим конец заголовка "|"
@@ -180,6 +180,16 @@
       wsSendMsg(selectedWs, currentPageName);
     }
   }
+
+  //*******************************************************initialisation********************************************************************/
+  onMount(async () => {
+    console.log("[i]", "mounted");
+    whenDeviceListWasUpdated();
+    firstDevListRequest = true;
+    connectToAllDevices();
+    wsTestMsgTask();
+    findNewPage();
+  });
 
   //****************************************************web sockets section******************************************************/
   function connectToAllDevices() {
@@ -279,9 +289,6 @@
               if (IsJsonParse(data)) {
                 incDeviceList = JSON.parse(data);
                 incDeviceList = incDeviceList;
-                incDeviceListParced = true;
-                if (debug) console.log("✔", "incDeviceList json parced");
-                onParced("devicelist");
                 if (firstDevListRequest) {
                   deviceList = incDeviceList;
                   deviceList[0].status = true;
@@ -289,16 +296,21 @@
                   deviceList = combineArrays(deviceList, incDeviceList);
                 }
                 firstDevListRequest = false;
-                //deviceList.sort(function (a, b) {
-                //  if (a.name < b.name) {
-                //    return -1;
-                //  }
-                //  if (a.name > b.name) {
-                //    return 1;
-                //  }
-                //  return 0;
-                //});
+
+                // deviceList.sort(function (a, b) {
+                //   if (a.name < b.name) {
+                //     return -1;
+                //   }
+                //   if (a.name > b.name) {
+                //     return 1;
+                //   }
+                //   return 0;
+                // });
+
                 deviceList = deviceList;
+                deviceListParced = true;
+                if (debug) console.log("✔", "deviceList json parced");
+                onParced();
                 whenDeviceListWasUpdated();
                 connectToAllDevices();
               }
@@ -311,7 +323,7 @@
                 wigetsUpdate();
                 if (debug) console.log("✔", "statusJson parced");
                 statusJsonParced = true;
-                onParced("status");
+                onParced();
               }
             }
             //сборщик paramsJson сообщений======================================
@@ -320,7 +332,7 @@
                 paramsJson = JSON.parse(data);
                 if (debug) console.log("✔", "paramsJson parced", ws);
                 paramsJsonParced = true;
-                onParced("params");
+                onParced();
               }
             }
             //сборщик ssidJson сообщений======================================
@@ -330,7 +342,7 @@
                 ssidJson = ssidJson;
                 if (debug) console.log("✔", "ssidJson parced");
                 ssidJsonParced = true;
-                onParced("ssid");
+                onParced();
               }
             }
             //сборщик errorsJson сообщений======================================
@@ -340,7 +352,7 @@
                 errorsJson = errorsJson;
                 errorsJsonParced = true;
                 if (debug) console.log("✔", "errorsJson json parced");
-                onParced("errors");
+                onParced();
               }
             }
             //сборщик settingsJson сообщений======================================
@@ -351,7 +363,7 @@
                 wigetsUpdate();
                 settingsJsonParced = true;
                 if (debug) console.log("✔", "settingsJson json parced");
-                onParced("settings");
+                onParced();
               }
             }
 
@@ -374,12 +386,11 @@
               let scenarioTxtReader = new FileReader();
               scenarioTxtReader.readAsText(bb);
               scenarioTxtReader.onload = () => {
-                let scenarioTxtResult = scenarioTxtReader.result;
-                scenarioTxt = scenarioTxtResult;
+                scenarioTxt = scenarioTxtReader.result;
                 scenarioTxt = scenarioTxt;
                 scenarioTxtParced = true;
                 if (debug) console.log("✔", "scenarioTxt parced");
-                onParced("scenario");
+                onParced();
               };
             }
             //сборщик configJson пакетов========================================
@@ -398,7 +409,7 @@
                   configJson = configJson;
                   configJsonParced = true;
                   if (debug) console.log("✔", "configJson parced");
-                  onParced("config");
+                  onParced();
                 }
               };
             }
@@ -418,7 +429,7 @@
                   widgetsJson = widgetsJson;
                   widgetsJsonParced = true;
                   if (debug) console.log("✔", "widgetsJson parced");
-                  onParced("widgets");
+                  onParced();
                 }
               };
             }
@@ -438,7 +449,7 @@
                   itemsJson = itemsJson;
                   itemsJsonParced = true;
                   if (debug) console.log("✔", "itemsJson parced");
-                  onParced("items");
+                  onParced();
                 }
               };
             }
@@ -459,7 +470,7 @@
                   wigetsUpdate();
                   layoutJsonParced = true;
                   if (debug) console.log("✔", "layoutJson parced", ws);
-                  onParced("layout");
+                  onParced();
                 }
               };
             }
@@ -489,7 +500,7 @@
     }
   }
 
-  function onParced(file) {
+  function onParced() {
     if (currentPageName === "/|" && layoutJsonParced && paramsJsonParced) {
       clearParcedFlags();
       if (debug) console.log("✔✔", "dashboard data parced");
@@ -507,7 +518,7 @@
       if (debug) console.log("✔✔", "connection data parced");
       connectionReady = true;
     }
-    if (currentPageName === "/list|" && incDeviceListParced) {
+    if (currentPageName === "/list|" && deviceListParced) {
       clearParcedFlags();
       if (debug) console.log("✔✔", "list data parced");
       listReady = true;
@@ -618,14 +629,12 @@
     layoutJson = [];
     layoutJsonBlob.clear();
 
-    settingsJson = {};
-
-    errorsJson = {};
-
-    coreMessages = [];
-
     scenarioTxt = "";
     scenarioTxtBlob.clear();
+
+    settingsJson = {};
+    errorsJson = {};
+    coreMessages = [];
 
     dashReady = false;
     configReady = false;
@@ -648,7 +657,7 @@
     ssidJsonParced = false;
     paramsJsonParced = false;
     statusJsonParced = false;
-    incDeviceListParced = false;
+    deviceListParced = false;
     scenarioTxtParced = false;
   }
 
@@ -963,6 +972,7 @@
 
   function rebootingTask() {
     clearTimeout(myTimeout);
+    clearData();
     connectToAllDevices();
     rebootingInProgress = false;
   }
@@ -1020,16 +1030,6 @@
       window.alert("Версия не выбрана или сервер недоступен");
     }
   }
-
-  //*******************************************************initialisation********************************************************************/
-  onMount(async () => {
-    console.log("[i]", "mounted");
-    whenDeviceListWasUpdated();
-    firstDevListRequest = true;
-    connectToAllDevices();
-    wsTestMsgTask();
-    findNewPage();
-  });
 </script>
 
 <div class="flex flex-col h-screen bg-gray-50">
