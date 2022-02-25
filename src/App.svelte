@@ -83,6 +83,7 @@
   let layoutJson = [];
   let layoutJsonFlag = false;
   let layoutJsonParced = false;
+  let layoutJsonArrayParced = [];
 
   let settingsJson = {};
   let settingsJsonParced = false;
@@ -157,10 +158,9 @@
   var widgetsJsonBlob = new MyBlobBuilder();
   var itemsJsonBlob = new MyBlobBuilder();
   var layoutJsonBlob = new MyBlobBuilder();
-  var layoutJsonBlob = new MyBlobBuilder();
   var scenarioTxtBlob = new MyBlobBuilder();
 
-  //var blobArr = new MyBlobBuilder()[10];
+  var layoutJsonArray = [];
 
   router.subscribe(handleNavigation);
 
@@ -275,9 +275,12 @@
         if (debug) console.log("[i]", ip, ws, "completed connecting");
         markDeviceStatus(ws, true);
         if (firstDevListRequest) wsSendMsg(0, "/list|");
-        //отправим запрос только выбранному устройству
-        if (ws === selectedWs) {
-          sendCurrentPageName();
+        if (currentPageName === "/|") {
+          wsSendMsg(ws, currentPageName);
+        } else {
+          if (ws === selectedWs) {
+            sendCurrentPageName();
+          }
         }
       });
       socket[ws].addEventListener("message", function (event) {
@@ -456,27 +459,29 @@
                 }
               };
             }
-            //сборщик layoutJson пакетов========================================
-            if (data === "/st/layout.json") {
-              layoutJsonFlag = true;
-            }
-            if (data === "/end/layout.json") {
-              layoutJsonFlag = false;
-              var bb = layoutJsonBlob.getBlob();
-              let layoutJsonReader = new FileReader();
-              layoutJsonReader.readAsText(bb);
-              layoutJsonReader.onload = () => {
-                let layoutJsonResult = layoutJsonReader.result;
-                if (IsJsonParse(layoutJsonResult)) {
-                  layoutJson = JSON.parse(layoutJsonResult);
-                  layoutJson = layoutJson;
-                  wigetsUpdate();
-                  layoutJsonParced = true;
-                  if (debug) console.log("✔", "layoutJson parced", ws);
-                  onParced();
-                }
-              };
-            }
+          }
+          //сборщик layoutJson пакетов========================================
+          if (data === "/st/layout.json") {
+            //layoutJsonArrayParced[ws] = false;
+            layoutJsonFlag = true;
+          }
+          if (data === "/end/layout.json") {
+            layoutJsonArrayParced[ws] = true;
+            layoutJsonFlag = false;
+            var bb = layoutJsonBlob.getBlob();
+            let layoutJsonReader = new FileReader();
+            layoutJsonReader.readAsText(bb);
+            layoutJsonReader.onload = () => {
+              let layoutJsonResult = layoutJsonReader.result;
+              if (IsJsonParse(layoutJsonResult)) {
+                layoutJson = JSON.parse(layoutJsonResult);
+                layoutJson = layoutJson;
+                wigetsUpdate();
+                layoutJsonParced = true;
+                if (debug) console.log("✔", "layoutJson parced", ws);
+                onParced();
+              }
+            };
           }
         }
         if (event.data instanceof Blob) {
@@ -487,6 +492,11 @@
             if (itemsJsonFlag) itemsJsonBlob.append(event.data);
             if (layoutJsonFlag) layoutJsonBlob.append(event.data);
             if (scenarioTxtFlag) scenarioTxtBlob.append(event.data);
+          }
+          if (!layoutJsonArray[ws]) layoutJsonArray[ws] = new MyBlobBuilder();
+          layoutJsonArray[ws].append(event.data);
+          if (layoutJsonArrayParced.every(Boolean) === true) {
+            if (debug) console.log("✔", "!!! !!!");
           }
         }
       });
@@ -501,6 +511,18 @@
     } else {
       if (debug) console.log("[e]", "socket not exist");
     }
+  }
+
+  function testBlob() {
+    for (let i = 0; i < layoutJsonArray.length; i++) {
+      var bb = layoutJsonArray[i].getBlob();
+      let reader = new FileReader();
+      reader.readAsText(bb);
+      reader.onload = () => {
+        console.log(i, reader.result);
+      };
+    }
+    layoutJsonArray = [];
   }
 
   function onParced() {
@@ -1037,9 +1059,6 @@
 </script>
 
 <div class="flex flex-col h-screen bg-gray-50">
-  <!--{#if errorsJson.wscle === 1}-->
-  <!--<Modal header={"Ошибка web sockets"} text={"Слишком много клиентов было открыто. Допускается не более четырех. Для исчезновения ошибки перезагрузите устройство"} />-->
-  <!--{/if}-->
   {#if rebootingUpdatingInProgress}
     <Progress />
   {/if}
@@ -1094,6 +1113,7 @@
         {:else}
           <Route path="/">
             <DashboardPage show={dashReady} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
+            <button class="btn-lg" on:click={() => testBlob()}>{"Test"}</button>
           </Route>
           <Route path="/config">
             <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} bind:scenarioTxt saveConfig={() => saveConfig()} rebootEsp={() => rebootEsp()} />
