@@ -81,9 +81,7 @@
   let itemsJsonParced = false;
 
   let layoutJson = [];
-  let layoutJsonFlag = false;
-  let layoutJsonParced = false;
-  let layoutJsonArrayParced = [];
+  let layoutJsonArrayParced = false;
 
   let settingsJson = {};
   let settingsJsonParced = false;
@@ -157,7 +155,6 @@
   var configJsonBlob = new MyBlobBuilder();
   var widgetsJsonBlob = new MyBlobBuilder();
   var itemsJsonBlob = new MyBlobBuilder();
-  var layoutJsonBlob = new MyBlobBuilder();
   var scenarioTxtBlob = new MyBlobBuilder();
 
   var layoutJsonArray = [];
@@ -168,14 +165,14 @@
     console.log("[i]", "handle navigation");
     clearData();
     currentPageName = $router.path.toString();
-    //название страницы служит заголовком, поэтому отметим конец заголовка "|"
     currentPageName = currentPageName + "|";
     console.log("[i]", "user on page:", currentPageName);
-    //if (currentPageName === "/|") {
-    //  sendToAllDevices(currentPageName);
-    //} else {
-    sendCurrentPageName();
-    //}
+
+    if (currentPageName === "/|") {
+      sendToAllDevices(currentPageName);
+    } else {
+      sendCurrentPageName();
+    }
   }
 
   function sendCurrentPageName() {
@@ -191,7 +188,7 @@
     firstDevListRequest = true;
     connectToAllDevices();
     wsTestMsgTask();
-    findNewPage();
+    sortingLayout();
   });
 
   //****************************************************web sockets section******************************************************/
@@ -275,9 +272,12 @@
         if (debug) console.log("[i]", ip, ws, "completed connecting");
         markDeviceStatus(ws, true);
         if (firstDevListRequest) wsSendMsg(0, "/list|");
+        //при подключении отправляем название страницы
         if (currentPageName === "/|") {
+          //всем устройствам
           wsSendMsg(ws, currentPageName);
         } else {
+          //только выбранному
           if (ws === selectedWs) {
             sendCurrentPageName();
           }
@@ -321,26 +321,7 @@
                 connectToAllDevices();
               }
             }
-            //сборщик statusJson сообщений======================================
-            if (data.includes("status")) {
-              if (IsJsonParse(data)) {
-                let statusJson = JSON.parse(data);
-                udateStatusOfWidget(statusJson);
-                wigetsUpdate();
-                if (debug) console.log("✔", "statusJson parced");
-                statusJsonParced = true;
-                onParced();
-              }
-            }
-            //сборщик paramsJson сообщений======================================
-            if (data.includes("params")) {
-              if (IsJsonParse(data)) {
-                paramsJson = JSON.parse(data);
-                if (debug) console.log("✔", "paramsJson parced", ws);
-                paramsJsonParced = true;
-                onParced();
-              }
-            }
+
             //сборщик ssidJson сообщений======================================
             if (data.includes("ssid")) {
               if (IsJsonParse(data)) {
@@ -366,7 +347,7 @@
               if (IsJsonParse(data)) {
                 settingsJson = JSON.parse(data);
                 settingsJson = settingsJson;
-                wigetsUpdate();
+                //sortingLayout();
                 settingsJsonParced = true;
                 if (debug) console.log("✔", "settingsJson json parced");
                 onParced();
@@ -462,26 +443,51 @@
           }
           //сборщик layoutJson пакетов========================================
           if (data === "/st/layout.json") {
-            //layoutJsonArrayParced[ws] = false;
-            layoutJsonFlag = true;
+            deviceList[ws].lp = false;
           }
           if (data === "/end/layout.json") {
-            layoutJsonArrayParced[ws] = true;
-            layoutJsonFlag = false;
-            var bb = layoutJsonBlob.getBlob();
-            let layoutJsonReader = new FileReader();
-            layoutJsonReader.readAsText(bb);
-            layoutJsonReader.onload = () => {
-              let layoutJsonResult = layoutJsonReader.result;
-              if (IsJsonParse(layoutJsonResult)) {
-                layoutJson = JSON.parse(layoutJsonResult);
-                layoutJson = layoutJson;
-                wigetsUpdate();
-                layoutJsonParced = true;
-                if (debug) console.log("✔", "layoutJson parced", ws);
-                onParced();
+            deviceList[ws].lp = true;
+            for (let i = 0; i < deviceList.length; i++) {
+              if (deviceList[i].lp === false || deviceList[i].lp === undefined) {
+                layoutJsonArrayParced = false;
+                break;
+              } else {
+                layoutJsonArrayParced = true;
               }
-            };
+            }
+            if (layoutJsonArrayParced) console.log("✔", "layoutJsonArray parced");
+            onParced();
+          }
+          //сборщик paramsJson сообщений======================================
+          if (data.includes("params")) {
+            if (IsJsonParse(data)) {
+              paramsJson = {
+                ...paramsJson,
+                ...JSON.parse(data),
+              };
+              paramsJson = paramsJson;
+              deviceList[ws].pp = true;
+              for (let i = 0; i < deviceList.length; i++) {
+                if (deviceList[i].pp === false || deviceList[i].pp === undefined) {
+                  paramsJsonParced = false;
+                  break;
+                } else {
+                  paramsJsonParced = true;
+                }
+              }
+              if (paramsJsonParced) console.log("✔", "paramsJson parced");
+              onParced();
+            }
+          }
+          //сборщик statusJson сообщений======================================
+          if (data.includes("status")) {
+            if (IsJsonParse(data)) {
+              let statusJson = JSON.parse(data);
+              udateStatusOfWidget(statusJson);
+              sortingLayout();
+              if (debug) console.log("[i]", statusJson);
+              statusJsonParced = true;
+            }
           }
         }
         if (event.data instanceof Blob) {
@@ -490,14 +496,11 @@
             if (configJsonFlag) configJsonBlob.append(event.data);
             if (widgetsJsonFlag) widgetsJsonBlob.append(event.data);
             if (itemsJsonFlag) itemsJsonBlob.append(event.data);
-            if (layoutJsonFlag) layoutJsonBlob.append(event.data);
             if (scenarioTxtFlag) scenarioTxtBlob.append(event.data);
           }
+          //принимаем данные от всех устройств
           if (!layoutJsonArray[ws]) layoutJsonArray[ws] = new MyBlobBuilder();
           layoutJsonArray[ws].append(event.data);
-          if (layoutJsonArrayParced.every(Boolean) === true) {
-            if (debug) console.log("✔", "!!! !!!");
-          }
         }
       });
       socket[ws].addEventListener("close", (event) => {
@@ -513,24 +516,53 @@
     }
   }
 
-  function testBlob() {
+  async function createFinalLayout() {
+    console.log("[i]", "create Final Layout");
     for (let i = 0; i < layoutJsonArray.length; i++) {
       var bb = layoutJsonArray[i].getBlob();
       let reader = new FileReader();
       reader.readAsText(bb);
       reader.onload = () => {
-        console.log(i, reader.result);
+        layoutJson = layoutJson.concat(JSON.parse(reader.result));
       };
     }
-    layoutJsonArray = [];
+    console.log("[i]", "creating Final Layout done: ", layoutJson);
+    return layoutJson;
   }
 
-  function onParced() {
-    if (currentPageName === "/|" && layoutJsonParced && paramsJsonParced) {
+  function udateStatusOfAllWidgets() {
+    console.log("[i]", "udate Status Of All Widgets");
+    for (const [key, value] of Object.entries(paramsJson)) {
+      for (let i = 0; i < layoutJson.length; i++) {
+        let topic = layoutJson[i].topic;
+        topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
+        if (key === topic) {
+          console.log("[i]", "value " + topic + " updated");
+          layoutJson[i].status = value;
+          break;
+        }
+      }
+    }
+  }
+
+  function udateStatusOfWidget(newStatusJson) {
+    for (let i = 0; i < layoutJson.length; i++) {
+      let topic = layoutJson[i].topic;
+      if (topic === newStatusJson.topic) {
+        layoutJson[i].status = newStatusJson.status;
+        break;
+      }
+    }
+  }
+
+  async function onParced() {
+    if (currentPageName === "/|" && layoutJsonArrayParced && paramsJsonParced) {
       clearParcedFlags();
       if (debug) console.log("✔✔", "dashboard data parced");
-      udateStatusOfAllWidgets(paramsJson);
-      wigetsUpdate();
+      await createFinalLayout();
+      sortingLayout();
+      console.log(paramsJson);
+      udateStatusOfAllWidgets();
       dashReady = true;
     }
     if (currentPageName === "/config|" && itemsJsonParced && widgetsJsonParced && configJsonParced && settingsJsonParced && scenarioTxtParced) {
@@ -617,30 +649,6 @@
     return layout;
   }
 
-  function udateStatusOfWidget(newStatusJson) {
-    for (let i = 0; i < layoutJson.length; i++) {
-      let topic = layoutJson[i].topic;
-      if (topic === newStatusJson.topic) {
-        layoutJson[i].status = newStatusJson.status;
-        break;
-      }
-    }
-  }
-
-  function udateStatusOfAllWidgets(paramsJson) {
-    for (const [key, value] of Object.entries(paramsJson)) {
-      for (let i = 0; i < layoutJson.length; i++) {
-        let topic = layoutJson[i].topic;
-        topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
-        if (key === topic) {
-          console.log("[i]", "value " + topic + " updated");
-          layoutJson[i].status = value;
-          break;
-        }
-      }
-    }
-  }
-
   function clearData() {
     configJson = [];
     configJsonBlob.clear();
@@ -652,7 +660,7 @@
     itemsJsonBlob.clear();
 
     layoutJson = [];
-    layoutJsonBlob.clear();
+    layoutJsonArray = [];
 
     scenarioTxt = "";
     scenarioTxtBlob.clear();
@@ -676,7 +684,7 @@
     configJsonParced = false;
     widgetsJsonParced = false;
     itemsJsonParced = false;
-    layoutJsonParced = false;
+    layoutJsonArrayParced = false;
     settingsJsonParced = false;
     errorsJsonParced = false;
     ssidJsonParced = false;
@@ -684,6 +692,14 @@
     statusJsonParced = false;
     deviceListParced = false;
     scenarioTxtParced = false;
+    clearFlags();
+  }
+
+  function clearFlags() {
+    for (let i = 0; i < deviceList.length; i++) {
+      deviceList[i].pp = false;
+      deviceList[i].lp = false;
+    }
   }
 
   function wsPush(ws, topic, status) {
@@ -730,7 +746,7 @@
   }
 
   //***********************************************************dashboard***************************************************************/
-  function findNewPage() {
+  function sortingLayout() {
     pages = [];
     const newPage = Array.from(new Set(Array.from(layoutJson, ({ page }) => page)));
     newPage.forEach(function (item, i, arr) {
@@ -752,11 +768,6 @@
       }
       return 0;
     });
-  }
-
-  function wigetsUpdate() {
-    findNewPage();
-    layoutJson = layoutJson;
   }
 
   //***********************************************************logging******************************************************************/
@@ -1113,7 +1124,7 @@
         {:else}
           <Route path="/">
             <DashboardPage show={dashReady} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
-            <button class="btn-lg" on:click={() => testBlob()}>{"Test"}</button>
+            <!--<button class="btn-lg" on:click={() => createFinalLayout()}>{"Test"}</button>-->
           </Route>
           <Route path="/config">
             <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} bind:scenarioTxt saveConfig={() => saveConfig()} rebootEsp={() => rebootEsp()} />
