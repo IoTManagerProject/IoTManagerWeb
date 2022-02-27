@@ -125,8 +125,6 @@
   let newDevice = {};
   let coreMessages = [];
 
-  let oneOfJsonPackageError = false;
-
   //***********************************************************blob**************************************************************/
   var MyBlobBuilder = function () {
     this.parts = [];
@@ -286,12 +284,11 @@
       socket[ws].addEventListener("message", function (event) {
         if (typeof event.data === "string") {
           let data = event.data;
-          //if (debug) console.log("[i]", getIP(ws), "msg received", data); //
-
+          //if (debug) console.log("[i]", getIP(ws), "msg received", data);//
           if (ws === selectedWs) {
             //STRING============================================================
             //сборщик deviceList сообщений======================================
-            if (data.includes("devicelist")) {
+            if (data.includes('devicelist":"')) {
               if (IsJsonParse(data)) {
                 incDeviceList = JSON.parse(data);
                 incDeviceList = incDeviceList;
@@ -323,7 +320,7 @@
             }
 
             //сборщик ssidJson сообщений======================================
-            if (data.includes("ssid")) {
+            if (data.includes('ssid":"')) {
               if (IsJsonParse(data)) {
                 ssidJson = JSON.parse(data);
                 ssidJson = ssidJson;
@@ -333,7 +330,7 @@
               }
             }
             //сборщик errorsJson сообщений======================================
-            if (data.includes("errors")) {
+            if (data.includes('errors":"')) {
               if (IsJsonParse(data)) {
                 errorsJson = JSON.parse(data);
                 errorsJson = errorsJson;
@@ -343,7 +340,7 @@
               }
             }
             //сборщик settingsJson сообщений======================================
-            if (data.includes("settings")) {
+            if (data.includes('settings":"')) {
               if (IsJsonParse(data)) {
                 settingsJson = JSON.parse(data);
                 settingsJson = settingsJson;
@@ -459,7 +456,7 @@
             onParced();
           }
           //сборщик paramsJson сообщений======================================
-          if (data.includes("params")) {
+          if (data.includes('"params":"')) {
             if (IsJsonParse(data)) {
               paramsJson = {
                 ...paramsJson,
@@ -485,7 +482,7 @@
               let statusJson = JSON.parse(data);
               udateStatusOfWidget(statusJson);
               sortingLayout();
-              if (debug) console.log("[i]", statusJson);
+              //if (debug) console.log("[i]", statusJson);
               statusJsonParced = true;
             }
           }
@@ -517,21 +514,30 @@
   }
 
   async function createFinalLayout() {
-    console.log("[i]", "create Final Layout");
-    for (let i = 0; i < layoutJsonArray.length; i++) {
+    var t0 = performance.now();
+    let length = layoutJsonArray.length;
+    for (let i = 0; i < length; i++) {
       var bb = layoutJsonArray[i].getBlob();
       let reader = new FileReader();
       reader.readAsText(bb);
       reader.onload = () => {
         layoutJson = layoutJson.concat(JSON.parse(reader.result));
+        if (i === length - 1) {
+          sortingLayout();
+          console.log(paramsJson);
+          udateStatusOfAllWidgets();
+          dashReady = true;
+          var t1 = performance.now();
+          console.log("layout time: " + (t1 - t0) + " mls");
+        }
       };
     }
-    console.log("[i]", "creating Final Layout done: ", layoutJson);
     return layoutJson;
   }
 
   function udateStatusOfAllWidgets() {
     console.log("[i]", "udate Status Of All Widgets");
+
     for (const [key, value] of Object.entries(paramsJson)) {
       for (let i = 0; i < layoutJson.length; i++) {
         let topic = layoutJson[i].topic;
@@ -559,11 +565,7 @@
     if (currentPageName === "/|" && layoutJsonArrayParced && paramsJsonParced) {
       clearParcedFlags();
       if (debug) console.log("✔✔", "dashboard data parced");
-      await createFinalLayout();
-      sortingLayout();
-      console.log(paramsJson);
-      udateStatusOfAllWidgets();
-      dashReady = true;
+      createFinalLayout();
     }
     if (currentPageName === "/config|" && itemsJsonParced && widgetsJsonParced && configJsonParced && settingsJsonParced && scenarioTxtParced) {
       clearParcedFlags();
@@ -885,11 +887,9 @@
     try {
       JSON.parse(str);
     } catch (e) {
-      oneOfJsonPackageError = true;
-      if (debug) console.log("[e]", "json parce error");
+      if (debug) console.log("[e]", "json parce error: ", str);
       return false;
     }
-    oneOfJsonPackageError = false;
     return true;
   }
 
