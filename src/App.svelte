@@ -445,12 +445,15 @@
           if (data === "/end/layout.json") {
             deviceList[ws].lp = true;
             for (let i = 0; i < deviceList.length; i++) {
+              //выполняем только для устройств online
+              //if (deviceList[i].status) {
               if (deviceList[i].lp === false || deviceList[i].lp === undefined) {
                 layoutJsonArrayParced = false;
                 break;
               } else {
                 layoutJsonArrayParced = true;
               }
+              //}
             }
             if (layoutJsonArrayParced) console.log("✔", "layoutJsonArray parced");
             onParced();
@@ -465,12 +468,15 @@
               paramsJson = paramsJson;
               deviceList[ws].pp = true;
               for (let i = 0; i < deviceList.length; i++) {
+                //выполняем только для устройств online
+                //if (deviceList[i].status) {
                 if (deviceList[i].pp === false || deviceList[i].pp === undefined) {
                   paramsJsonParced = false;
                   break;
                 } else {
                   paramsJsonParced = true;
                 }
+                //}
               }
               if (paramsJsonParced) console.log("✔", "paramsJson parced");
               onParced();
@@ -482,7 +488,7 @@
               let statusJson = JSON.parse(data);
               udateStatusOfWidget(statusJson);
               sortingLayout();
-              //if (debug) console.log("[i]", statusJson);
+              if (debug) console.log("[i]", statusJson);
               statusJsonParced = true;
             }
           }
@@ -536,8 +542,6 @@
   }
 
   function udateStatusOfAllWidgets() {
-    console.log("[i]", "udate Status Of All Widgets");
-
     for (const [key, value] of Object.entries(paramsJson)) {
       for (let i = 0; i < layoutJson.length; i++) {
         let topic = layoutJson[i].topic;
