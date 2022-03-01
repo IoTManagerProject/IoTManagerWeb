@@ -440,23 +440,10 @@
           }
           //сборщик layoutJson пакетов========================================
           if (data === "/st/layout.json") {
-            deviceList[ws].lp = false;
           }
           if (data === "/end/layout.json") {
-            deviceList[ws].lp = true;
-            for (let i = 0; i < deviceList.length; i++) {
-              //выполняем только для устройств online
-              //if (deviceList[i].status) {
-              if (deviceList[i].lp === false || deviceList[i].lp === undefined) {
-                layoutJsonArrayParced = false;
-                break;
-              } else {
-                layoutJsonArrayParced = true;
-              }
-              //}
-            }
-            if (layoutJsonArrayParced) console.log("✔", "layoutJsonArray parced");
-            onParced();
+            dashReady = true;
+            createLayoutUnderLoading(ws);
           }
           //сборщик paramsJson сообщений======================================
           if (data.includes('"params":"')) {
@@ -466,19 +453,7 @@
                 ...JSON.parse(data),
               };
               paramsJson = paramsJson;
-              deviceList[ws].pp = true;
-              for (let i = 0; i < deviceList.length; i++) {
-                //выполняем только для устройств online
-                //if (deviceList[i].status) {
-                if (deviceList[i].pp === false || deviceList[i].pp === undefined) {
-                  paramsJsonParced = false;
-                  break;
-                } else {
-                  paramsJsonParced = true;
-                }
-                //}
-              }
-              if (paramsJsonParced) console.log("✔", "paramsJson parced");
+              if (paramsJsonParced) console.log("✔", "paramsJson parced", paramsJson);
               onParced();
             }
           }
@@ -519,27 +494,35 @@
     }
   }
 
-  async function createFinalLayout() {
-    var t0 = performance.now();
-    let length = layoutJsonArray.length;
-    for (let i = 0; i < length; i++) {
-      var bb = layoutJsonArray[i].getBlob();
-      let reader = new FileReader();
-      reader.readAsText(bb);
-      reader.onload = () => {
-        layoutJson = layoutJson.concat(JSON.parse(reader.result));
-        if (i === length - 1) {
-          sortingLayout();
-          console.log(paramsJson);
-          udateStatusOfAllWidgets();
-          dashReady = true;
-          var t1 = performance.now();
-          console.log("layout time: " + (t1 - t0) + " mls");
-        }
-      };
-    }
-    return layoutJson;
+  async function createLayoutUnderLoading(ws) {
+    var bb = layoutJsonArray[ws].getBlob();
+    let reader = new FileReader();
+    reader.readAsText(bb);
+    reader.onload = () => {
+      let devLayout = JSON.parse(reader.result);
+      udateStatusOfDevWidgets(devLayout);
+      layoutJson = layoutJson.concat(devLayout);
+      sortingLayout();
+    };
   }
+
+  function udateStatusOfDevWidgets(devLayout) {
+    for (const [key, value] of Object.entries(paramsJson)) {
+      for (let i = 0; i < devLayout.length; i++) {
+        let topic = devLayout[i].topic;
+        topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
+        if (key === topic) {
+          console.log("[i]", "value " + topic + " updated");
+          devLayout[i].status = value;
+          break;
+        }
+      }
+    }
+  }
+
+  //var t0 = performance.now();
+  //var t1 = performance.now();
+  //console.log("layout time: " + (t1 - t0) + " mls");
 
   function udateStatusOfAllWidgets() {
     for (const [key, value] of Object.entries(paramsJson)) {
@@ -566,10 +549,10 @@
   }
 
   async function onParced() {
-    if (currentPageName === "/|" && layoutJsonArrayParced && paramsJsonParced) {
+    if (currentPageName === "/|" && paramsJsonParced) {
       clearParcedFlags();
       if (debug) console.log("✔✔", "dashboard data parced");
-      createFinalLayout();
+      //createFinalLayout();
     }
     if (currentPageName === "/config|" && itemsJsonParced && widgetsJsonParced && configJsonParced && settingsJsonParced && scenarioTxtParced) {
       clearParcedFlags();
