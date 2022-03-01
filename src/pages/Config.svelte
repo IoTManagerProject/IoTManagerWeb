@@ -120,7 +120,7 @@
   </div>
   <div class="grd-1col1">
     <Card title="Сценарии">
-      <textarea bind:value={scenarioTxt} class="ipt-big h-80 w-full" />
+      <textarea bind:value={scenarioTxt} class="ipt-big h-40 w-full" />
       <div class="grd-2col1">
         <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить"}</button>
         <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить"}</button>

@@ -18,9 +18,9 @@
     {#if layoutJson === []}
       <Card title={"Ваша панель управления пуста, вначале добавьте новые элементы в конфигураторе!"} />
     {/if}
-    {#each pages as pagesName, i}
+    {#each pages as pagesName, p}
       <Card title={pagesName.page}>
-        {#each layoutJson as widget, i}
+        {#each layoutJson as widget, l}
           {#if widget.page === pagesName.page}
             {#if widget.widget === "input"}
               <Input bind:value={widget.status} widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />

@@ -40,8 +40,8 @@
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
-  //let myip = document.location.hostname;
-  let myip = "192.168.88.224";
+  let myip = document.location.hostname;
+  //let myip = "192.168.88.224";
 
   //Flags
   let firstDevListRequest = true;
@@ -442,18 +442,17 @@
           if (data === "/st/layout.json") {
           }
           if (data === "/end/layout.json") {
-            dashReady = true;
             createLayoutUnderLoading(ws);
           }
           //сборщик paramsJson сообщений======================================
           if (data.includes('"params":"')) {
             if (IsJsonParse(data)) {
+              //как добавить в объект json новый объект
               paramsJson = {
                 ...paramsJson,
                 ...JSON.parse(data),
               };
               paramsJson = paramsJson;
-              if (paramsJsonParced) console.log("✔", "paramsJson parced", paramsJson);
               onParced();
             }
           }
@@ -462,9 +461,7 @@
             if (IsJsonParse(data)) {
               let statusJson = JSON.parse(data);
               udateStatusOfWidget(statusJson);
-              sortingLayout();
               if (debug) console.log("[i]", statusJson);
-              statusJsonParced = true;
             }
           }
         }
@@ -520,10 +517,6 @@
     }
   }
 
-  //var t0 = performance.now();
-  //var t1 = performance.now();
-  //console.log("layout time: " + (t1 - t0) + " mls");
-
   function udateStatusOfAllWidgets() {
     for (const [key, value] of Object.entries(paramsJson)) {
       for (let i = 0; i < layoutJson.length; i++) {
@@ -549,10 +542,10 @@
   }
 
   async function onParced() {
-    if (currentPageName === "/|" && paramsJsonParced) {
+    if (currentPageName === "/|") {
       clearParcedFlags();
-      if (debug) console.log("✔✔", "dashboard data parced");
-      //createFinalLayout();
+      if (debug) console.log("✔", "dashboard packet received");
+      dashReady = true;
     }
     if (currentPageName === "/config|" && itemsJsonParced && widgetsJsonParced && configJsonParced && settingsJsonParced && scenarioTxtParced) {
       clearParcedFlags();
@@ -736,6 +729,17 @@
 
   //***********************************************************dashboard***************************************************************/
   function sortingLayout() {
+    //сортируем весь layout по алфавиту
+    layoutJson.sort(function (a, b) {
+      if (a.descr < b.descr) {
+        return -1;
+      }
+      if (a.descr > b.descr) {
+        return 1;
+      }
+      return 0;
+    });
+    //формируем json всех карточек
     pages = [];
     const newPage = Array.from(new Set(Array.from(layoutJson, ({ page }) => page)));
     newPage.forEach(function (item, i, arr) {
@@ -748,6 +752,7 @@
         ),
       ];
     });
+    //сортируем карточки по алфавиту
     pages.sort(function (a, b) {
       if (a.page < b.page) {
         return -1;
