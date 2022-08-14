@@ -511,7 +511,12 @@
         topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
         if (key === topic) {
           console.log("[i]", "value " + topic + " updated");
-          devLayout[i].status = value;
+          if (devLayout[i].widget == "toggle") {
+            if (value == "1") devLayout[i].status = 1;
+            if (value == "0") devLayout[i].status = 0;
+          } else {
+            devLayout[i].status = value;
+          }
           break;
         }
       }
@@ -537,6 +542,16 @@
       let topic = layoutJson[i].topic;
       if (topic === newStatusJson.topic) {
         layoutJson[i].status = newStatusJson.status;
+        break;
+      }
+    }
+  }
+
+  function udateSingleStatusOfWidget(newStatus, widgetTopic) {
+    for (let i = 0; i < layoutJson.length; i++) {
+      let topic = layoutJson[i].topic;
+      if (topic === widgetTopic) {
+        layoutJson[i].status = newStatus;
         break;
       }
     }
@@ -688,11 +703,9 @@
   function wsPush(ws, topic, status) {
     let msg = topic + " " + status;
     if (debug) console.log("[i]", "ws: ", ws, msg);
-    //if (ws) {
-    wsSendMsg(ws, "/control| " + status); //  "/tst|"
-    //} else {
-    //  console.log("[i]", "ws undefined");
-    //}
+    layoutJson = layoutJson;
+    let key = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
+    wsSendMsg(ws, "/control|" + key + "/" + status);
   }
 
   function wsTestMsgTask() {
