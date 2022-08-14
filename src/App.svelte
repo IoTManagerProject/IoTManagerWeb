@@ -40,8 +40,8 @@
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
-  let myip = document.location.hostname;
-  //let myip = "192.168.88.224";
+  //let myip = document.location.hostname;
+  let myip = "192.168.88.228";
 
   //Flags
   let firstDevListRequest = true;
@@ -497,16 +497,17 @@
     reader.readAsText(bb);
     reader.onload = () => {
       let devLayout = JSON.parse(reader.result);
-      udateStatusOfDevWidgets(devLayout);
+      udateStatusOfDevWidgets(devLayout, ws);
       layoutJson = layoutJson.concat(devLayout);
       sortingLayout();
     };
   }
 
-  function udateStatusOfDevWidgets(devLayout) {
+  function udateStatusOfDevWidgets(devLayout, ws) {
     for (const [key, value] of Object.entries(paramsJson)) {
       for (let i = 0; i < devLayout.length; i++) {
         let topic = devLayout[i].topic;
+        devLayout[i].ws = ws;
         topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
         if (key === topic) {
           console.log("[i]", "value " + topic + " updated");
@@ -686,8 +687,12 @@
 
   function wsPush(ws, topic, status) {
     let msg = topic + " " + status;
-    if (debug) console.log("[i]", "send to ws msg:", msg);
-    wsSendMsg(ws, msg);
+    if (debug) console.log("[i]", "ws: ", ws, msg);
+    //if (ws) {
+    wsSendMsg(ws, "/control| " + status); //  "/tst|"
+    //} else {
+    //  console.log("[i]", "ws undefined");
+    //}
   }
 
   function wsTestMsgTask() {
@@ -1117,6 +1122,7 @@
           <Route path="/">
             <DashboardPage show={dashReady} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
             <!--<button class="btn-lg" on:click={() => createFinalLayout()}>{"Test"}</button>-->
+            <textarea value={JSON.stringify(layoutJson)} class="ipt-big h-40 w-full" />
           </Route>
           <Route path="/config">
             <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} bind:scenarioTxt saveConfig={() => saveConfig()} rebootEsp={() => rebootEsp()} />

@@ -1,7 +1,11 @@
 <script>
+  import App from "../App.svelte";
+
   export let widget;
   export let value;
+
   value = value;
+
   export let wsPush = (ws, topic, status) => {};
 </script>
 
@@ -13,10 +17,15 @@
   <div class="flex justify-end w-1/3">
     <label for={widget.topic} class="items-center cursor-pointer">
       <div class="relative">
-        <input on:change={() => ((widget["send"] = true), wsPush(widget.ws, widget.topic, widget.status))} bind:value={widget.status} id={widget.topic} type="checkbox" class="sr-only" />
+        <input on:change={() => ((widget["send"] = true), wsPush(widget.ws, widget.topic, widget.status))} bind:checked={widget.status} id={widget.topic} type="checkbox" class="sr-only" />
         <div class="block bg-gray-600 w-10 h-6 rounded-full" />
         <div class="dot {widget['send'] == true ? 'bg-red-400' : 'bg-white'} absolute left-1 top-1  w-4 h-4 rounded-full transition" />
       </div>
+      {#if widget.status}
+        <p>yes</p>
+      {:else}
+        <p>no</p>
+      {/if}
     </label>
   </div>
 </div>
