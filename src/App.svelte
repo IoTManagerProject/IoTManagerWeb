@@ -511,12 +511,12 @@
         topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
         if (key === topic) {
           console.log("[i]", "value " + topic + " updated");
-          if (devLayout[i].widget == "toggle") {
-            if (value == "1") devLayout[i].status = 1;
-            if (value == "0") devLayout[i].status = 0;
-          } else {
-            devLayout[i].status = value;
-          }
+          //if (devLayout[i].widget == "toggle") {
+          //if (value == "1") devLayout[i].status = 1;
+          //if (value == "0") devLayout[i].status = 0;
+          //} else {
+          devLayout[i].status = value;
+          //}
           break;
         }
       }
