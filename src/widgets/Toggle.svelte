@@ -1,26 +1,22 @@
 <script>
   import App from "../App.svelte";
-  import { onMount } from "svelte";
-  import { handle_promise } from "svelte/internal";
-  onMount(async () => {
-    setDefaultValue();
-  });
   export let widget;
-
+  export let toggleState = false;
   export let wsPush = (ws, topic, status) => {};
 
-  let st = false;
+  $: widget.status, setValue();
 
-  function setDefaultValue() {
+  function setValue() {
     if (widget.status == "1") {
-      st = true;
+      toggleState = true;
     } else if (widget.status == "0") {
-      st = false;
+      toggleState = false;
     }
   }
 
   function changeValue() {
-    if (st) {
+    widget.sent = true;
+    if (toggleState) {
       widget.status = "1";
     } else {
       widget.status = "0";
@@ -36,9 +32,9 @@
   <div class="flex justify-end w-1/3">
     <label for={widget.topic} class="items-center cursor-pointer">
       <div class="relative">
-        <input bind:checked={st} on:change={() => (changeValue(), wsPush(widget.ws, widget.topic, widget.status))} id={widget.topic} type="checkbox" class="sr-only" />
+        <input bind:checked={toggleState} on:change={() => (changeValue(), wsPush(widget.ws, widget.topic, widget.status))} id={widget.topic} type="checkbox" class="sr-only" />
         <div class="block bg-gray-600 w-10 h-6 rounded-full" />
-        <div class="dot {widget['send'] == true ? 'bg-red-400' : 'bg-white'} absolute left-1 top-1  w-4 h-4 rounded-full transition" />
+        <div class="dot {widget.sent ? 'bg-red-400' : 'bg-white'} absolute left-1 top-1  w-4 h-4 rounded-full transition" />
       </div>
     </label>
   </div>

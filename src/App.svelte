@@ -511,12 +511,7 @@
         topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
         if (key === topic) {
           console.log("[i]", "value " + topic + " updated");
-          //if (devLayout[i].widget == "toggle") {
-          //if (value == "1") devLayout[i].status = 1;
-          //if (value == "0") devLayout[i].status = 0;
-          //} else {
           devLayout[i].status = value;
-          //}
           break;
         }
       }
@@ -542,6 +537,8 @@
       let topic = layoutJson[i].topic;
       if (topic === newStatusJson.topic) {
         layoutJson[i].status = newStatusJson.status;
+        //получен ответ - выключаем красный цвет
+        layoutJson[i].sent = false;
         break;
       }
     }
@@ -1125,7 +1122,7 @@
           <Route path="/">
             <DashboardPage show={dashReady} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
             <!--<button class="btn-lg" on:click={() => createFinalLayout()}>{"Test"}</button>-->
-            <textarea value={JSON.stringify(layoutJson)} class="ipt-big h-40 w-full" />
+            <!--<textarea value={JSON.stringify(layoutJson)} class="ipt-big h-40 w-full" />-->
           </Route>
           <Route path="/config">
             <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} bind:scenarioTxt saveConfig={() => saveConfig()} rebootEsp={() => rebootEsp()} />
