@@ -547,16 +547,6 @@
     }
   }
 
-  function udateSingleStatusOfWidget(newStatus, widgetTopic) {
-    for (let i = 0; i < layoutJson.length; i++) {
-      let topic = layoutJson[i].topic;
-      if (topic === widgetTopic) {
-        layoutJson[i].status = newStatus;
-        break;
-      }
-    }
-  }
-
   async function onParced() {
     if (currentPageName === "/|") {
       clearParcedFlags();

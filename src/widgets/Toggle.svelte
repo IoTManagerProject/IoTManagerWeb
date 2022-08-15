@@ -1,6 +1,7 @@
 <script>
   import App from "../App.svelte";
   import { onMount } from "svelte";
+  import { handle_promise } from "svelte/internal";
   onMount(async () => {
     setDefaultValue();
   });
