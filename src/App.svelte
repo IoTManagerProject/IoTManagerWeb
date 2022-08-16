@@ -29,7 +29,6 @@
 
   //****************************************************constants section*********************************************************/
   //******************************************************************************************************************************/
-  let version = 410;
   let debug = true;
   let LOG_MAX_MESSAGES = 100;
   let reconnectTimeout = 20000;
@@ -37,11 +36,12 @@
   let updatingTimeout = 80000;
   let opened = false;
   let preventMove = false;
+  let devMode = true;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  //let myip = "192.168.88.228";
+  if (devMode) myip = "192.168.88.228";
 
   //Flags
   let firstDevListRequest = true;
@@ -1122,7 +1122,9 @@
           <Route path="/">
             <DashboardPage show={dashReady} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
             <!--<button class="btn-lg" on:click={() => createFinalLayout()}>{"Test"}</button>-->
-            <!--<textarea value={JSON.stringify(layoutJson)} class="ipt-big h-40 w-full" />-->
+            {#if devMode}
+              <textarea value={JSON.stringify(layoutJson)} class="ipt-big h-40 w-full" />
+            {/if}
           </Route>
           <Route path="/config">
             <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} bind:scenarioTxt saveConfig={() => saveConfig()} rebootEsp={() => rebootEsp()} />

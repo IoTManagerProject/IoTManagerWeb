@@ -33,8 +33,8 @@
     <label for={widget.topic} class="items-center cursor-pointer">
       <div class="relative">
         <input bind:checked={toggleState} on:change={() => (changeValue(), wsPush(widget.ws, widget.topic, widget.status))} id={widget.topic} type="checkbox" class="sr-only" />
-        <div class="block bg-gray-600 w-10 h-6 rounded-full" />
-        <div class="dot {widget.sent ? 'bg-red-400' : 'bg-white'} absolute left-1 top-1  w-4 h-4 rounded-full transition" />
+        <div class="block {toggleState ? 'bg-blue-600' : 'bg-gray-600'} w-10 h-6 rounded-full shadow-lg" />
+        <div class="dot {widget.sent ? 'bg-red-300' : 'bg-gray-100'} absolute left-1 top-1  w-4 h-4 rounded-full transition shadow-lg" />
       </div>
     </label>
   </div>
