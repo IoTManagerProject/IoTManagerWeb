@@ -37,6 +37,7 @@
   let opened = false;
   let preventMove = false;
   let devMode = true;
+  let showWidjetJson = false;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
@@ -1122,7 +1123,7 @@
           <Route path="/">
             <DashboardPage show={dashReady} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
             <!--<button class="btn-lg" on:click={() => createFinalLayout()}>{"Test"}</button>-->
-            {#if devMode}
+            {#if showWidjetJson}
               <textarea value={JSON.stringify(layoutJson)} class="ipt-big h-40 w-full" />
             {/if}
           </Route>
