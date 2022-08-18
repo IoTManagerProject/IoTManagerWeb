@@ -135,6 +135,8 @@
 
   export let show;
 
+  export let paramsBeenChanged = false;
+
   export let cancelAlarm = (alarmKey) => {};
 </script>
 
@@ -172,6 +174,16 @@
           <p class="text-gray-500 font-bold text-sm text-center truncate">{errorsJson.bver}</p>
         </div>
       </div>
+
+      <div class="flex mb-2 h-6 items-center">
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Время на устройстве</p>
+        </div>
+        <div class="flex justify-center w-1/3">
+          <p class="text-gray-500 font-bold text-sm text-center truncate">{errorsJson.timenow}</p>
+        </div>
+      </div>
+
       <div class="flex mb-2 h-6 items-center">
         <div class="w-2/3">
           <p class="pr-4 text-gray-500 font-bold text-sm truncate">Uptime устройства</p>
@@ -253,14 +265,33 @@
     <!--SETTINGS-->
     <Card title="Системные настройки">
       <div class="flex mb-2 h-6 items-center">
-        <div class="w-5/6">
+        <div class="w-2/3">
           <p class="pr-4 text-gray-500 font-bold text-sm truncate">Включить лог</p>
         </div>
-        <div class="flex justify-center w-1/6">
-          <input bind:checked={settingsJson.log} on:change={() => saveSett()} type="checkbox" class="form-checkbox h-4 w-4 text-gray-600" />
+        <div class="flex justify-center w-1/3">
+          <label for="log" class="items-center cursor-pointer">
+            <div class="relative">
+              <input bind:checked={settingsJson.log} on:change={() => (paramsBeenChanged = true)} id="log" type="checkbox" class="sr-only" />
+              <div class="block {settingsJson.log ? 'bg-blue-600' : 'bg-gray-600'} w-10 h-6 rounded-full shadow-lg" />
+              <div class="dot bg-gray-100 absolute left-1 top-1  w-4 h-4 rounded-full transition shadow-lg" />
+            </div>
+          </label>
         </div>
       </div>
-      <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить устройство"}</button>
+      <div class="flex mb-2 h-6 items-center">
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Часовой пояс</p>
+        </div>
+        <div class="flex justify-center w-1/3">
+          <input bind:value={settingsJson.timezone} on:change={() => (paramsBeenChanged = true)} class="ipt-rnd text-center focus:border-indigo-500" type="number" />
+        </div>
+      </div>
+      <!--<div class="grd-2col1">-->
+      {#if paramsBeenChanged}
+        <button class="btn-lg animate-pulse" on:click={() => (saveSett(), (paramsBeenChanged = false))}>{"Сохранить"}</button>
+      {/if}
+      <!--<button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить"}</button>-->
+      <!--</div>-->
     </Card>
     <!--LOG-->
     <Card title="Лог" class="z-50">
