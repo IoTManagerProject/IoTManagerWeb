@@ -10,7 +10,7 @@
 
   export let show;
 
-  export let scenarioTxt;
+  export let scenarioJson;
 
   let itemsJsonBind = 0;
   let debug = true;
@@ -46,10 +46,11 @@
     }
   }
 
-  $: scenarioTxt, windowHeight();
+  $: scenarioJson, windowHeight();
   let height;
   function windowHeight() {
-    height = Math.round(scenarioTxt.split("\n").length) + 1;
+    let scenStr = JSON.stringify(scenarioJson);
+    height = scenStr.split("\\n").length;
   }
 </script>
 
@@ -125,7 +126,7 @@
     </Card>
 
     <Card title="Сценарии">
-      <textarea bind:value={scenarioTxt} rows={height} cols="50" class="px-2 bg-gray-50 border-2 border-gray-200 rounded text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500 w-full" />
+      <textarea bind:value={scenarioJson.scen} rows={height} cols="50" class="px-2 bg-gray-50 border-2 border-gray-200 rounded text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500 w-full" />
     </Card>
   </div>
   <div class="grd-1col1">

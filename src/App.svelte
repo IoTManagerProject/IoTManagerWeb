@@ -68,7 +68,7 @@
   let versionsList = {};
   let choosingVersion = undefined;
 
-  //configuration
+  //JSON Files====================================
   let configJson = [];
   let configJsonFlag = false;
   let configJsonParced = false;
@@ -80,6 +80,12 @@
   let itemsJson = [];
   let itemsJsonFlag = false;
   let itemsJsonParced = false;
+
+  let scenarioJson = {};
+  let scenarioJsonFlag = false;
+  let scenarioJsonParced = false;
+
+  //===============================================
 
   let layoutJson = [];
   let layoutJsonArrayParced = false;
@@ -96,14 +102,10 @@
   let paramsJson = {};
   let paramsJsonParced = false;
 
-  let statusJsonParced = false;
-
   let incDeviceList = [];
   let deviceListParced = false;
 
-  let scenarioTxt = "";
-  let scenarioTxtFlag = false;
-  let scenarioTxtParced = false;
+  let statusJsonParced = false;
 
   let deviceList = [];
   deviceList = [
@@ -361,21 +363,24 @@
             }
 
             //BLOB==============================================================
-            //сборщик scenario.txt пакетов======================================
-            if (data === "/st/scenario.txt") {
-              scenarioTxtFlag = true;
+            //сборщик scenarioJson пакетов======================================
+            if (data === "/st/scenario.json") {
+              scenarioJsonFlag = true;
             }
-            if (data === "/end/scenario.txt") {
-              scenarioTxtFlag = false;
+            if (data === "/end/scenario.json") {
+              scenarioJsonFlag = false;
               var bb = scenarioTxtBlob.getBlob();
-              let scenarioTxtReader = new FileReader();
-              scenarioTxtReader.readAsText(bb);
-              scenarioTxtReader.onload = () => {
-                scenarioTxt = scenarioTxtReader.result;
-                scenarioTxt = scenarioTxt;
-                scenarioTxtParced = true;
-                if (debug) console.log("✔", "scenarioTxt parced");
-                onParced();
+              let scenarioJsonReader = new FileReader();
+              scenarioJsonReader.readAsText(bb);
+              scenarioJsonReader.onload = () => {
+                let scenarioJsonResult = scenarioJsonReader.result;
+                if (IsJsonParse(scenarioJsonResult)) {
+                  scenarioJson = JSON.parse(scenarioJsonResult);
+                  scenarioJson = scenarioJson;
+                  scenarioJsonParced = true;
+                  if (debug) console.log("✔", "scenarioJson parced", scenarioJson);
+                  onParced();
+                }
               };
             }
             //сборщик configJson пакетов========================================
@@ -472,7 +477,7 @@
             if (configJsonFlag) configJsonBlob.append(event.data);
             if (widgetsJsonFlag) widgetsJsonBlob.append(event.data);
             if (itemsJsonFlag) itemsJsonBlob.append(event.data);
-            if (scenarioTxtFlag) scenarioTxtBlob.append(event.data);
+            if (scenarioJsonFlag) scenarioTxtBlob.append(event.data);
           }
           //принимаем данные от всех устройств
           if (!layoutJsonArray[ws]) layoutJsonArray[ws] = new MyBlobBuilder();
@@ -551,7 +556,7 @@
       if (debug) console.log("✔", "dashboard packet received");
       dashReady = true;
     }
-    if (currentPageName === "/config|" && itemsJsonParced && widgetsJsonParced && configJsonParced && settingsJsonParced && scenarioTxtParced) {
+    if (currentPageName === "/config|" && itemsJsonParced && widgetsJsonParced && configJsonParced && settingsJsonParced && scenarioJsonParced) {
       clearParcedFlags();
       if (debug) console.log("✔✔", "config data parced");
       configReady = true;
@@ -575,10 +580,9 @@
   }
 
   function saveConfig() {
-    scenarioTxt = scenarioTxt;
     wsSendMsg(selectedWs, "/tuoyal|" + JSON.stringify(generateLayout()));
     wsSendMsg(selectedWs, "/gifnoc|" + JSON.stringify(configJson));
-    wsSendMsg(selectedWs, "/oiranecs|" + scenarioTxt);
+    wsSendMsg(selectedWs, "/oiranecs|" + JSON.stringify(scenarioJson));
     clearData();
     sendCurrentPageName();
   }
@@ -649,7 +653,7 @@
     layoutJson = [];
     layoutJsonArray = [];
 
-    scenarioTxt = "";
+    scenarioJson = "";
     scenarioTxtBlob.clear();
 
     settingsJson = {};
@@ -678,7 +682,7 @@
     paramsJsonParced = false;
     statusJsonParced = false;
     deviceListParced = false;
-    scenarioTxtParced = false;
+    scenarioJsonParced = false;
     clearFlags();
   }
 
@@ -1129,7 +1133,7 @@
             {/if}
           </Route>
           <Route path="/config">
-            <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} rebootEsp={() => rebootEsp()} scenarioTxt={scenarioTxt} />
+            <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} rebootEsp={() => rebootEsp()} scenarioJson={scenarioJson} />
           </Route>
           <Route path="/connection">
             <ConnectionPage show={connectionReady} rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />
@@ -1138,7 +1142,7 @@
             <ListPage show={listReady} deviceList={deviceList} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} />
           </Route>
           <Route path="/system">
-            <SystemPage show={systemReady} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion startUpdate={() => startUpdate()} coreMessages={coreMessages} />
+            <SystemPage show={systemReady} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion startUpdate={() => startUpdate()} coreMessages={coreMessages} />
           </Route>
         {/if}
       </div>

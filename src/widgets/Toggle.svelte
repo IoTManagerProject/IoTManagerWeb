@@ -1,5 +1,4 @@
 <script>
-  import App from "../App.svelte";
   export let widget;
   export let toggleState = false;
   export let wsPush = (ws, topic, status) => {};

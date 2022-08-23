@@ -123,7 +123,7 @@
 
   export let errorsJson;
 
-  export let rebootEsp = () => {};
+  //export let rebootEsp = () => {};
 
   export let versionsList;
   export let choosingVersion;
