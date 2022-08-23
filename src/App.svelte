@@ -575,6 +575,7 @@
   }
 
   function saveConfig() {
+    scenarioTxt = scenarioTxt;
     wsSendMsg(selectedWs, "/tuoyal|" + JSON.stringify(generateLayout()));
     wsSendMsg(selectedWs, "/gifnoc|" + JSON.stringify(configJson));
     wsSendMsg(selectedWs, "/oiranecs|" + scenarioTxt);
@@ -1128,7 +1129,7 @@
             {/if}
           </Route>
           <Route path="/config">
-            <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} bind:scenarioTxt saveConfig={() => saveConfig()} rebootEsp={() => rebootEsp()} />
+            <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} rebootEsp={() => rebootEsp()} scenarioTxt={scenarioTxt} />
           </Route>
           <Route path="/connection">
             <ConnectionPage show={connectionReady} rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />

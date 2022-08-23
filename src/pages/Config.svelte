@@ -125,7 +125,7 @@
     </Card>
 
     <Card title="Сценарии">
-      <textarea rows={height} cols="50" bind:value={scenarioTxt} class="px-2 bg-gray-50 border-2 border-gray-200 rounded text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500 w-full" />
+      <textarea bind:value={scenarioTxt} rows={height} cols="50" class="px-2 bg-gray-50 border-2 border-gray-200 rounded text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500 w-full" />
     </Card>
   </div>
   <div class="grd-1col1">
