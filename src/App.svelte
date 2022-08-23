@@ -814,7 +814,8 @@
   function devicesDropdownChange() {
     whenDeviceListWasUpdated();
     clearData();
-    sendCurrentPageName();
+    handleNavigation();
+    //sendCurrentPageName();
     if (debug) console.log("[i]", "user selected device:", selectedDeviceData.name);
     if (selectedDeviceData.ip === myip) {
       if (debug) console.log("[i]", "user selected original device", selectedDeviceData.name);
