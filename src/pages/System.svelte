@@ -132,6 +132,7 @@
 
   export let startUpdate = () => {};
   export let saveSett = () => {};
+  export let cleanLogs = () => {};
 
   export let show;
 
@@ -264,6 +265,25 @@
     </Card>
     <!--SETTINGS-->
     <Card title="Системные настройки">
+      <!--ZONE-->
+      <div class="flex mb-2 h-6 items-center">
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Часовой пояс</p>
+        </div>
+        <div class="flex justify-center w-1/3">
+          <input bind:value={settingsJson.timezone} on:change={() => (paramsBeenChanged = true)} class="ipt-rnd h-7 text-center focus:border-indigo-500" type="number" />
+        </div>
+      </div>
+      <!--CLEAN-->
+      <div class="flex mb-2 h-6 items-center">
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Данные графиков</p>
+        </div>
+        <div class="flex justify-center w-1/3">
+          <button class="btn-lg h-7" on:click={() => cleanLogs()}>{"Очистить"}</button>
+        </div>
+      </div>
+      <!--LOG-->
       <div class="flex mb-2 h-6 items-center">
         <div class="w-2/3">
           <p class="pr-4 text-gray-500 font-bold text-sm truncate">Включить лог</p>
@@ -278,14 +298,7 @@
           </label>
         </div>
       </div>
-      <div class="flex mb-2 h-6 items-center">
-        <div class="w-2/3">
-          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Часовой пояс</p>
-        </div>
-        <div class="flex justify-center w-1/3">
-          <input bind:value={settingsJson.timezone} on:change={() => (paramsBeenChanged = true)} class="ipt-rnd text-center focus:border-indigo-500" type="number" />
-        </div>
-      </div>
+
       <!--<div class="grd-2col1">-->
       {#if paramsBeenChanged}
         <button class="btn-lg animate-pulse" on:click={() => (saveSett(), (paramsBeenChanged = false))}>{"Сохранить"}</button>

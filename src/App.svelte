@@ -42,7 +42,7 @@
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.88.228";
+  if (devMode) myip = "192.168.88.223";
 
   //Flags
   let firstDevListRequest = true;
@@ -601,6 +601,10 @@
     sendCurrentPageName();
   }
 
+  function cleanLogs() {
+    wsSendMsg(selectedWs, "/clean|");
+  }
+
   function saveMqtt() {
     var size = Object.keys(settingsJson).length;
     console.log("[i]", "settingsJson length: " + size);
@@ -1143,7 +1147,7 @@
             <ListPage show={listReady} deviceList={deviceList} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} />
           </Route>
           <Route path="/system">
-            <SystemPage show={systemReady} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion startUpdate={() => startUpdate()} coreMessages={coreMessages} />
+            <SystemPage show={systemReady} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion startUpdate={() => startUpdate()} coreMessages={coreMessages} />
           </Route>
         {/if}
       </div>
