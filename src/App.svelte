@@ -37,12 +37,12 @@
   let opened = false;
   let preventMove = false;
   let showWidjetJson = false;
-  let devMode = false;
+  let devMode = true;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.88.223";
+  if (devMode) myip = "192.168.88.221";
 
   //Flags
   let firstDevListRequest = true;
@@ -1138,7 +1138,7 @@
             {/if}
           </Route>
           <Route path="/config">
-            <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} rebootEsp={() => rebootEsp()} scenarioJson={scenarioJson} />
+            <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} cleanLogs={() => cleanLogs()} rebootEsp={() => rebootEsp()} scenarioJson={scenarioJson} />
           </Route>
           <Route path="/connection">
             <ConnectionPage show={connectionReady} rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />

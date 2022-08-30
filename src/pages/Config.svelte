@@ -17,6 +17,7 @@
 
   export let saveConfig = () => {};
   export let rebootEsp = () => {};
+  export let cleanLogs = () => {};
 
   let hideAllSubParams = true;
 
@@ -132,7 +133,7 @@
   <div class="grd-1col1">
     <Card>
       <div class="grd-2col1">
-        <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить"}</button>
+        <button class="btn-lg" on:click={() => (cleanLogs(), saveConfig())}>{"Сохранить"}</button>
         <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить"}</button>
       </div>
     </Card>
