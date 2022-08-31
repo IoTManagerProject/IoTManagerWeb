@@ -19,13 +19,12 @@
     lineOptions = { regionFill: 1, dotSize: 3, spline: 1 };
   }
 
-  let labels = ["", ""];
-  let values = ["", ""];
+  let collectingDataArray = [];
+  let prevSatus = [];
 
-  //let datachart = {
-  //  labels: [],
-  //  datasets: [],
-  //};
+  //необходимые по умолчанию значения из за тупости библиотеки
+  let labels = [0, 0];
+  let values = [0, 0];
 
   let datachart = {
     labels: labels,
@@ -37,15 +36,30 @@
     ],
   };
 
-  $: widget.status, calc();
+  $: widget.status, collectDataToArr();
 
-  function calc() {
-    if (widget.status) {
-      let dataArr = widget.status;
-      for (let i = 0; i < dataArr.length; i++) {
-        chartRef.addDataPoint(getHHMM(dataArr[i].x), [dataArr[i].y1]);
+  function collectDataToArr() {
+    //отсекаем лишние события изменения переменной widget
+    if (prevSatus !== widget.status) {
+      console.log("[i]", "collecting chart data");
+      let incomingDataArr = widget.status;
+      collectingDataArray = [...collectingDataArray, ...incomingDataArr];
+
+      for (let i = 0; i < collectingDataArray.length; i++) {
+        labels[i] = getHHMM(collectingDataArray[i].x);
+        values[i] = [collectingDataArray[i].y1];
       }
-      console.log("-------------------------calc-------------------------");
+
+      datachart = {
+        labels: labels,
+        datasets: [
+          {
+            name: widget.descr,
+            values: values,
+          },
+        ],
+      };
+      prevSatus = widget.status;
     }
   }
 
@@ -60,4 +74,4 @@
 <!--<label class="wgt-dscr-stl">{!widget.descr ? "" : widget.descr} </label>-->
 <!--</div>-->
 
-<Chart data={datachart} type="line" lineOptions={lineOptions} axisOptions={axisOptions} bind:this={chartRef} />
+<Chart data={datachart} type="line" lineOptions={lineOptions} axisOptions={axisOptions} />
