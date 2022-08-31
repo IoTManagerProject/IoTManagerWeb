@@ -468,7 +468,7 @@
             if (IsJsonParse(data)) {
               let statusJson = JSON.parse(data);
               udateStatusOfWidget(statusJson);
-              if (debug) console.log("[i]", statusJson);
+              if (debug) console.log("[i] status:", statusJson);
             }
           }
         }

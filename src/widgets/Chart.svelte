@@ -1,6 +1,5 @@
 <script>
   import Chart from "svelte-frappe-charts";
-  import Modal from "../components/Modal.svelte";
 
   export let widget;
 
@@ -33,27 +32,31 @@
   $: widget.status, collectDataToArr();
 
   function collectDataToArr() {
-    //отсекаем лишние события изменения переменной widget
-    if (prevSatus !== widget.status) {
-      console.log("[i]", "collecting chart data");
-      let incomingDataArr = widget.status;
-      collectingDataArray = [...collectingDataArray, ...incomingDataArr];
+    if (Array.isArray(widget.status)) {
+      //отсекаем лишние события изменения переменной widget
+      if (prevSatus !== widget.status) {
+        console.log("[i]", "collecting chart data, topic:", widget.topic);
+        let incomingDataArr = widget.status;
+        //console.log("[i]", incomingDataArr);
+        collectingDataArray = [...collectingDataArray, ...incomingDataArr];
 
-      for (let i = 0; i < collectingDataArray.length; i++) {
-        labels[i] = getHHMM(collectingDataArray[i].x);
-        values[i] = [collectingDataArray[i].y1];
+        for (let i = 0; i < collectingDataArray.length; i++) {
+          labels[i] = getHHMM(collectingDataArray[i].x);
+          values[i] = [collectingDataArray[i].y1];
+        }
+
+        datachart = {
+          labels: labels,
+          datasets: [
+            {
+              name: widget.descr,
+              values: values,
+            },
+          ],
+        };
+        prevSatus = widget.status;
+        datachart = datachart;
       }
-
-      datachart = {
-        labels: labels,
-        datasets: [
-          {
-            name: widget.descr,
-            values: values,
-          },
-        ],
-      };
-      prevSatus = widget.status;
     }
   }
 
