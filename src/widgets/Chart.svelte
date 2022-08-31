@@ -1,12 +1,6 @@
 <script>
-  import { onMount } from "svelte";
   import Chart from "svelte-frappe-charts";
-
-  onMount(async () => {
-    console.log("[i]", "------------chart mounted--------------");
-  });
-
-  let chartRef;
+  import Modal from "../components/Modal.svelte";
 
   export let widget;
 
@@ -68,10 +62,5 @@
     return ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2);
   }
 </script>
-
-<!--<div class="text-center">-->
-<!-- svelte-ignore a11y-label-has-associated-control -->
-<!--<label class="wgt-dscr-stl">{!widget.descr ? "" : widget.descr} </label>-->
-<!--</div>-->
 
 <Chart data={datachart} type="line" lineOptions={lineOptions} axisOptions={axisOptions} />
