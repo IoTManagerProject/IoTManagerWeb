@@ -16,7 +16,7 @@
 </script>
 
 {#if show}
-  <div class="grd-3col1">
+  <div class="grd-1col1">
     {#if layoutJson === []}
       <Card title={"Ваша панель управления пуста, вначале добавьте новые элементы в конфигураторе!"} />
     {/if}

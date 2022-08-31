@@ -26,6 +26,7 @@
   //import AboutPage from "./pages/About.svelte";
 
   import CloudIcon from "./svg/Cloud.svelte";
+  import BookIcon from "./svg/Book.svelte";
 
   //****************************************************constants section*********************************************************/
   //******************************************************************************************************************************/
@@ -42,7 +43,7 @@
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.88.221";
+  if (devMode) myip = "192.168.88.225";
 
   //Flags
   let firstDevListRequest = true;
@@ -1092,6 +1093,9 @@
           {/each}
         </select>
       </div>
+      <!--<div class="pl-4 pr-1 py-1">-->
+      <!--<BookIcon color={socketConnected === true ? "text-green-500" : "text-red-500"} />-->
+      <!--</div>-->
       <div class="pl-4 pr-4 py-1">
         <CloudIcon color={socketConnected === true ? "text-green-500" : "text-red-500"} />
       </div>

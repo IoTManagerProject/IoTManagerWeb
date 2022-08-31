@@ -1,15 +1,37 @@
 <script>
+  import { onMount } from "svelte";
   import Chart from "svelte-frappe-charts";
+
+  onMount(async () => {
+    console.log("[i]", "------------chart mounted--------------");
+  });
+
+  let chartRef;
 
   export let widget;
 
-  let labels = [0, 0];
-  let values = [0, 0];
+  let axisOptions = { xAxisMode: "tick", xIsSeries: true };
+  let lineOptions;
+
+  if (widget.pointRadius == "0") {
+    lineOptions = { regionFill: 1, hideDots: 1, spline: 1 };
+  } else {
+    lineOptions = { regionFill: 1, dotSize: 3, spline: 1 };
+  }
+
+  let labels = ["", ""];
+  let values = ["", ""];
+
+  //let datachart = {
+  //  labels: [],
+  //  datasets: [],
+  //};
 
   let datachart = {
     labels: labels,
     datasets: [
       {
+        name: widget.descr,
         values: values,
       },
     ],
@@ -21,49 +43,21 @@
     if (widget.status) {
       let dataArr = widget.status;
       for (let i = 0; i < dataArr.length; i++) {
-        var date = new Date(dataArr[i].x * 1000);
-        let hhmm = ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2);
-        labels[i] = hhmm;
-        values[i] = dataArr[i].y1;
+        chartRef.addDataPoint(getHHMM(dataArr[i].x), [dataArr[i].y1]);
       }
-
-      datachart = {
-        labels: labels,
-        datasets: [
-          {
-            values: values,
-          },
-        ],
-      };
-
-      //console.log("chart data: ", JSON.stringify(datachart));
+      console.log("-------------------------calc-------------------------");
     }
   }
 
-  function convert() {
-    // Months array
-    var months_arr = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    // Convert timestamp to milliseconds
-    var date = new Date(unixtimestamp * 1000);
-    // Year
-    var year = date.getFullYear();
-    // Month
-    var month = months_arr[date.getMonth()];
-    // Day
-    var day = date.getDate();
-    // Hours
-    var hours = date.getHours();
-    // Minutes
-    var minutes = "0" + date.getMinutes();
-    // Seconds
-    var seconds = "0" + date.getSeconds();
-    // Display date time in MM-dd-yyyy h:m:s format
-    var convdataTime = month + "-" + day + "-" + year + " " + hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
+  function getHHMM(timestamp) {
+    var date = new Date(timestamp * 1000);
+    return ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2);
   }
 </script>
 
-<div class="text-center">
-  <!-- svelte-ignore a11y-label-has-associated-control -->
-  <label class="wgt-dscr-stl">{!widget.descr ? "" : widget.descr} </label>
-</div>
-<Chart data={datachart} type="line" />
+<!--<div class="text-center">-->
+<!-- svelte-ignore a11y-label-has-associated-control -->
+<!--<label class="wgt-dscr-stl">{!widget.descr ? "" : widget.descr} </label>-->
+<!--</div>-->
+
+<Chart data={datachart} type="line" lineOptions={lineOptions} axisOptions={axisOptions} bind:this={chartRef} />
