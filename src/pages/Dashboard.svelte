@@ -2,6 +2,7 @@
   import Card from "../components/Card.svelte";
   import Input from "../widgets/Input.svelte";
   import Range from "../widgets/Range.svelte";
+  import Chart from "../widgets/Chart.svelte";
   import Toggle from "../widgets/Toggle.svelte";
   import Anydata from "../widgets/Anydata.svelte";
   import Alarm from "../components/Alarm.svelte";
@@ -34,6 +35,9 @@
             {/if}
             {#if widget.widget === "range"}
               <Range bind:value={widget.status} widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
+            {/if}
+            {#if widget.widget === "chart"}
+              <Chart bind:value={widget.status} widget={widget} />
             {/if}
           {/if}
         {/each}
