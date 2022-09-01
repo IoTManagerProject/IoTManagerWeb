@@ -32,30 +32,34 @@
   $: widget.status, collectDataToArr();
 
   function collectDataToArr() {
-    if (Array.isArray(widget.status)) {
-      //отсекаем лишние события изменения переменной widget
-      if (prevSatus !== widget.status) {
-        console.log("[i]", "collecting chart data, topic:", widget.topic);
-        let incomingDataArr = widget.status;
-        //console.log("[i]", incomingDataArr);
-        collectingDataArray = [...collectingDataArray, ...incomingDataArr];
+    if (widget.status) {
+      if (Array.isArray(widget.status)) {
+        //отсекаем лишние события изменения переменной widget
+        if (prevSatus !== widget.status) {
+          console.log("[i]", "collecting chart data to array, topic:", widget.topic);
+          let incomingDataArr = widget.status;
 
-        for (let i = 0; i < collectingDataArray.length; i++) {
-          labels[i] = getHHMM(collectingDataArray[i].x);
-          values[i] = [collectingDataArray[i].y1];
+          console.log("[i]", "array:", incomingDataArr);
+
+          collectingDataArray = [...collectingDataArray, ...incomingDataArr];
+
+          for (let i = 0; i < collectingDataArray.length; i++) {
+            labels[i] = getHHMM(collectingDataArray[i].x);
+            values[i] = [collectingDataArray[i].y1];
+          }
+
+          datachart = {
+            labels: labels,
+            datasets: [
+              {
+                name: widget.descr,
+                values: values,
+              },
+            ],
+          };
+          prevSatus = widget.status;
+          datachart = datachart;
         }
-
-        datachart = {
-          labels: labels,
-          datasets: [
-            {
-              name: widget.descr,
-              values: values,
-            },
-          ],
-        };
-        prevSatus = widget.status;
-        datachart = datachart;
       }
     }
   }

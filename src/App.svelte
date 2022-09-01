@@ -285,13 +285,14 @@
           }
         }
       });
+
+      //события веб сокетов
       socket[ws].addEventListener("message", function (event) {
+        //сообщения типа String-----------------------------------------------------------------------------------//
         if (typeof event.data === "string") {
           let data = event.data;
-          //if (debug) console.log("[i]", getIP(ws), "msg received", data);//
           if (ws === selectedWs) {
-            //STRING============================================================
-            //сборщик deviceList сообщений======================================
+            //сборщик deviceList сообщений
             if (data.includes('devicelist":"')) {
               if (IsJsonParse(data)) {
                 incDeviceList = JSON.parse(data);
@@ -304,16 +305,6 @@
                 }
                 firstDevListRequest = false;
 
-                // deviceList.sort(function (a, b) {
-                //   if (a.name < b.name) {
-                //     return -1;
-                //   }
-                //   if (a.name > b.name) {
-                //     return 1;
-                //   }
-                //   return 0;
-                // });
-
                 deviceList = deviceList;
                 deviceListParced = true;
                 if (debug) console.log("✔", "deviceList json parced");
@@ -323,7 +314,7 @@
               }
             }
 
-            //сборщик ssidJson сообщений======================================
+            //сборщик ssidJson сообщений
             if (data.includes('ssid":"')) {
               if (IsJsonParse(data)) {
                 ssidJson = JSON.parse(data);
@@ -333,7 +324,7 @@
                 onParced();
               }
             }
-            //сборщик errorsJson сообщений======================================
+            //сборщик errorsJson сообщений
             if (data.includes('errors":"')) {
               if (IsJsonParse(data)) {
                 errorsJson = JSON.parse(data);
@@ -343,7 +334,7 @@
                 onParced();
               }
             }
-            //сборщик settingsJson сообщений======================================
+            //сборщик settingsJson сообщений
             if (data.includes('settings":"')) {
               if (IsJsonParse(data)) {
                 settingsJson = JSON.parse(data);
@@ -355,7 +346,7 @@
               }
             }
 
-            //сборщик log сообщений======================================
+            //сборщик log сообщений
             if (data.includes("/log|")) {
               data = data.replace("/log|", "");
               //let msg = data.toString();
@@ -363,8 +354,8 @@
               addCoreMsg(data);
             }
 
-            //BLOB==============================================================
-            //сборщик scenarioJson пакетов======================================
+            //метки начала конца пакетов для Blob--------------------------------------------------------------------------//
+            //сборщик scenarioJson пакетов
             if (data === "/st/scenario.json") {
               scenarioJsonFlag = true;
             }
@@ -384,7 +375,7 @@
                 }
               };
             }
-            //сборщик configJson пакетов========================================
+            //сборщик configJson пакетов
             if (data === "/st/config.json") {
               configJsonFlag = true;
             }
@@ -404,7 +395,7 @@
                 }
               };
             }
-            //сборщик widgetsJson пакетов========================================
+            //сборщик widgetsJson пакетов
             if (data === "/st/widgets.json") {
               widgetsJsonFlag = true;
             }
@@ -424,7 +415,7 @@
                 }
               };
             }
-            //сборщик itemsJson пакетов========================================
+            //сборщик itemsJson пакетов
             if (data === "/st/items.json") {
               itemsJsonFlag = true;
             }
@@ -445,13 +436,13 @@
               };
             }
           }
-          //сборщик layoutJson пакетов========================================
+          //сборщик layoutJson пакетов
           if (data === "/st/layout.json") {
           }
           if (data === "/end/layout.json") {
             createLayoutUnderLoading(ws);
           }
-          //сборщик paramsJson сообщений======================================
+          //сборщик paramsJson сообщений
           if (data.includes('"params":"')) {
             if (IsJsonParse(data)) {
               //как добавить в объект json новый объект
@@ -463,8 +454,8 @@
               onParced();
             }
           }
-          //сборщик statusJson сообщений======================================
-          if (data.includes("status")) {
+          //сборщик statusJson сообщений
+          if (data.includes('"status":')) {
             if (IsJsonParse(data)) {
               let statusJson = JSON.parse(data);
               udateStatusOfWidget(statusJson);
@@ -472,6 +463,8 @@
             }
           }
         }
+
+        //сообщения типа Blob-------------------------------------------------------------------------------------//
         if (event.data instanceof Blob) {
           //принимаем данные только для выбранного устройства
           if (ws === selectedWs) {
@@ -498,6 +491,7 @@
     }
   }
 
+  //функция создающая общий json всех виджетов под загрузкой (не имеющая события завершения)
   async function createLayoutUnderLoading(ws) {
     var bb = layoutJsonArray[ws].getBlob();
     let reader = new FileReader();
@@ -510,6 +504,7 @@
     };
   }
 
+  //данная функция обновляет статусы виджетов одного устройства при загрузке страницы dashboard
   function udateStatusOfDevWidgets(devLayout, ws) {
     for (const [key, value] of Object.entries(paramsJson)) {
       for (let i = 0; i < devLayout.length; i++) {
@@ -539,6 +534,7 @@
     }
   }
 
+  //данная функция обновляет статусы всех виджетов хранящихся в layoutJson
   function udateStatusOfWidget(newStatusJson) {
     for (let i = 0; i < layoutJson.length; i++) {
       let topic = layoutJson[i].topic;
