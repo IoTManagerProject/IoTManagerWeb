@@ -32,35 +32,35 @@
   $: widget.status, collectDataToArr();
 
   function collectDataToArr() {
-    if (widget.status) {
-      if (Array.isArray(widget.status)) {
-        //отсекаем лишние события изменения переменной widget
-        if (prevSatus !== widget.status) {
-          console.log("[i]", "collecting chart data to array, topic:", widget.topic);
-          let incomingDataArr = widget.status;
+    if (widget.status && Array.isArray(widget.status)) {
+      //отсекаем лишние события изменения переменной widget
+      if (prevSatus !== widget.status) {
+        console.log("[i]", "collecting chart data to array, topic:", widget.topic);
+        let incomingDataArr = widget.status;
 
-          console.log("[i]", "array:", incomingDataArr);
+        console.log("[i]", "array:", incomingDataArr);
 
-          collectingDataArray = [...collectingDataArray, ...incomingDataArr];
+        collectingDataArray = [...collectingDataArray, ...incomingDataArr];
 
-          for (let i = 0; i < collectingDataArray.length; i++) {
-            labels[i] = getHHMM(collectingDataArray[i].x);
-            values[i] = [collectingDataArray[i].y1];
-          }
-
-          datachart = {
-            labels: labels,
-            datasets: [
-              {
-                name: widget.descr,
-                values: values,
-              },
-            ],
-          };
-          prevSatus = widget.status;
-          datachart = datachart;
+        for (let i = 0; i < collectingDataArray.length; i++) {
+          labels[i] = getHHMM(collectingDataArray[i].x);
+          values[i] = [collectingDataArray[i].y1];
         }
+
+        datachart = {
+          labels: labels,
+          datasets: [
+            {
+              name: widget.descr,
+              values: values,
+            },
+          ],
+        };
+        prevSatus = widget.status;
+        datachart = datachart;
       }
+    } else {
+      console.log("[i]", "skipping event, topic:", widget.topic);
     }
   }
 
@@ -70,4 +70,6 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-label-has-associated-control -->
+<label class="wgt-dscr-stl">{!widget.descr ? "" : widget.descr}</label>
 <Chart data={datachart} type="line" lineOptions={lineOptions} axisOptions={axisOptions} />

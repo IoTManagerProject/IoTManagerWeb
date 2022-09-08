@@ -38,12 +38,12 @@
   let opened = false;
   let preventMove = false;
   let showWidjetJson = false;
-  let devMode = true;
+  let devMode = false;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.88.225";
+  if (devMode) myip = "192.168.1.196";
 
   //Flags
   let firstDevListRequest = true;
@@ -1270,7 +1270,7 @@
     display: flex;
     align-items: center;
     position: fixed;
-    z-index: 1;
+    z-index: 2;
     top: 10px;
     left: 20px;
     width: 20px;
@@ -1301,6 +1301,7 @@
     display: block;
     position: fixed;
     visibility: hidden;
+    z-index: 1;
     top: 0;
     left: -100%;
     width: 150px; /* размер выхода бокового меню */
