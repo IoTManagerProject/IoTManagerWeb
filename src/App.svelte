@@ -20,6 +20,7 @@
   import ConnectionPage from "./pages/Connection.svelte";
   import ListPage from "./pages/List.svelte";
   import SystemPage from "./pages/System.svelte";
+  import DevPage from "./pages/Dev.svelte";
 
   //import UtilitiesPage from "./pages/Utilities.svelte";
   //import LogPage from "./pages/Log.svelte";
@@ -37,13 +38,12 @@
   let updatingTimeout = 80000;
   let opened = false;
   let preventMove = false;
-  let showWidjetJson = false;
-  let devMode = false;
+  let devMode = true;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.1.196";
+  if (devMode) myip = "192.168.1.107";
 
   //Flags
   let firstDevListRequest = true;
@@ -165,8 +165,13 @@
 
   function handleNavigation() {
     console.log("[i]", "handle navigation");
-    clearData();
+
     currentPageName = $router.path.toString();
+
+    //не нужно очищать переменные когда переходим на страницу разработчика
+    if (currentPageName != "/dev") {
+      clearData();
+    }
     currentPageName = currentPageName + "|";
     console.log("[i]", "user on page:", currentPageName);
 
@@ -509,12 +514,14 @@
     for (const [key, value] of Object.entries(paramsJson)) {
       for (let i = 0; i < devLayout.length; i++) {
         let topic = devLayout[i].topic;
-        devLayout[i].ws = ws;
-        topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
-        if (key === topic) {
-          console.log("[i]", "value " + topic + " updated");
-          devLayout[i].status = value;
-          break;
+        if (topic) {
+          devLayout[i].ws = ws;
+          topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
+          if (key === topic) {
+            console.log("[i]", "value " + topic + " updated");
+            devLayout[i].status = value;
+            break;
+          }
         }
       }
     }
@@ -614,6 +621,17 @@
     wsSendMsg(selectedWs, "/mqtt|");
   }
 
+  let input = {};
+
+  input = {
+    name: "inputDate",
+    descr: "Выберите дату",
+    widget: "input",
+    size: "small",
+    color: "orange",
+    type: "date",
+  };
+
   function generateLayout() {
     let layout = [];
     for (let i = 0; i < configJson.length; i++) {
@@ -629,6 +647,11 @@
           //widget.ws = selectedWs;
           widget.topic = settingsJson.root + "/" + config.id;
           layout.push(widget);
+          if (widget.widget === "chart") {
+            input.page = config.page;
+            input.topic = settingsJson.root + "/" + config.id + "-date";
+            layout.push(input);
+          }
           error = false;
           break;
         } else {
@@ -659,7 +682,7 @@
 
     settingsJson = {};
     errorsJson = {};
-    coreMessages = [];
+    //coreMessages = [];
 
     dashReady = false;
     configReady = false;
@@ -1121,6 +1144,11 @@
       <li>
         <a class="menu__item" href="/system">{"Системные"}</a>
       </li>
+      {#if devMode}
+        <li>
+          <a class="menu__item" href="/dev">{"Разработчик"}</a>
+        </li>
+      {/if}
     </ul>
   </nav>
 
@@ -1132,10 +1160,6 @@
         {:else}
           <Route path="/">
             <DashboardPage show={dashReady} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
-            <!--<button class="btn-lg" on:click={() => createFinalLayout()}>{"Test"}</button>-->
-            {#if showWidjetJson}
-              <textarea value={JSON.stringify(layoutJson)} class="ipt-big h-40 w-full" />
-            {/if}
           </Route>
           <Route path="/config">
             <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} cleanLogs={() => cleanLogs()} rebootEsp={() => rebootEsp()} scenarioJson={scenarioJson} />
@@ -1149,6 +1173,11 @@
           <Route path="/system">
             <SystemPage show={systemReady} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion startUpdate={() => startUpdate()} coreMessages={coreMessages} />
           </Route>
+          {#if devMode}
+            <Route path="/dev">
+              <DevPage show={systemReady} layoutJson={layoutJson} errorsJson={errorsJson} settingsJson={settingsJson} configJson={configJson} itemsJson={itemsJson} />
+            </Route>
+          {/if}
         {/if}
       </div>
     </ul>

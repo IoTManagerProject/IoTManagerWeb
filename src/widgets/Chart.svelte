@@ -70,6 +70,8 @@
   }
 </script>
 
-<!-- svelte-ignore a11y-label-has-associated-control -->
-<label class="wgt-dscr-stl">{!widget.descr ? "" : widget.descr}</label>
-<Chart data={datachart} type="line" lineOptions={lineOptions} axisOptions={axisOptions} />
+<div class="text-center">
+  <!-- svelte-ignore a11y-label-has-associated-control -->
+  <label class="inline-block italic align-top text-center text-gray-500 txt-sz">{!widget.descr ? "" : widget.descr}</label>
+</div>
+<Chart class="h-24" data={datachart} type="line" lineOptions={lineOptions} axisOptions={axisOptions} />
