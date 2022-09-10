@@ -1,19 +1,12 @@
 <script>
   import Chart from "svelte-frappe-charts";
+  import { onMount } from "svelte";
+
+  onMount(async () => {
+    console.log("[i]", "chart component mounted");
+  });
 
   export let widget;
-
-  let axisOptions = { xAxisMode: "tick", xIsSeries: true };
-  let lineOptions;
-
-  if (widget.pointRadius == "0") {
-    lineOptions = { regionFill: 1, hideDots: 1, spline: 1 };
-  } else {
-    lineOptions = { regionFill: 1, dotSize: 3, spline: 1 };
-  }
-
-  let collectingDataArray = [];
-  let prevSatus = [];
 
   //необходимые по умолчанию значения из за тупости библиотеки
   let labels = [0, 0];
@@ -29,6 +22,18 @@
     ],
   };
 
+  let axisOptions = { xAxisMode: "tick", xIsSeries: true };
+  let lineOptions;
+
+  let collectingDataArray = [];
+  let prevSatus = [];
+
+  if (widget.pointRadius == "0") {
+    lineOptions = { regionFill: 1, hideDots: 1, spline: 1 };
+  } else {
+    lineOptions = { regionFill: 1, dotSize: 3, spline: 1 };
+  }
+
   $: widget.status, collectDataToArr();
 
   function collectDataToArr() {
@@ -38,13 +43,19 @@
         console.log("[i]", "collecting chart data to array, topic:", widget.topic);
         let incomingDataArr = widget.status;
 
-        console.log("[i]", "array:", incomingDataArr);
+        //console.log("[i]", "array:", incomingDataArr);
 
         collectingDataArray = [...collectingDataArray, ...incomingDataArr];
 
         for (let i = 0; i < collectingDataArray.length; i++) {
           labels[i] = getHHMM(collectingDataArray[i].x);
           values[i] = [collectingDataArray[i].y1];
+        }
+
+        if (widget.maxCount == 0 || widget.maxCount == "0") {
+          clearCart();
+          console.log("[i]", "clear cart data");
+          return;
         }
 
         datachart = {
@@ -68,10 +79,22 @@
     var date = new Date(timestamp * 1000);
     return ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2);
   }
+
+  function clearCart() {
+    datachart = {
+      labels: [0],
+      datasets: [
+        {
+          name: widget.descr,
+          values: [0],
+        },
+      ],
+    };
+  }
 </script>
 
 <div class="text-center">
   <!-- svelte-ignore a11y-label-has-associated-control -->
   <label class="inline-block italic align-top text-center text-gray-500 txt-sz">{!widget.descr ? "" : widget.descr}</label>
 </div>
-<Chart class="h-24" data={datachart} type="line" lineOptions={lineOptions} axisOptions={axisOptions} />
+<Chart data={datachart} type="line" lineOptions={lineOptions} axisOptions={axisOptions} />

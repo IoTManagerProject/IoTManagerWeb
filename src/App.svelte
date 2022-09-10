@@ -38,12 +38,12 @@
   let updatingTimeout = 80000;
   let opened = false;
   let preventMove = false;
-  let devMode = true;
+  let devMode = false;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.1.107";
+  if (devMode) myip = "192.168.1.101";
 
   //Flags
   let firstDevListRequest = true;
@@ -527,31 +527,25 @@
     }
   }
 
-  function udateStatusOfAllWidgets() {
-    for (const [key, value] of Object.entries(paramsJson)) {
-      for (let i = 0; i < layoutJson.length; i++) {
-        let topic = layoutJson[i].topic;
-        topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
-        if (key === topic) {
-          console.log("[i]", "value " + topic + " updated");
-          layoutJson[i].status = value;
-          break;
-        }
-      }
-    }
-  }
-
   //данная функция обновляет статусы всех виджетов хранящихся в layoutJson
   function udateStatusOfWidget(newStatusJson) {
     for (let i = 0; i < layoutJson.length; i++) {
       let topic = layoutJson[i].topic;
       if (topic === newStatusJson.topic) {
-        layoutJson[i].status = newStatusJson.status;
+        layoutJson[i] = jsonConcat(layoutJson[i], newStatusJson);
+        //layoutJson[i].status = newStatusJson.status;
         //получен ответ - выключаем красный цвет
         layoutJson[i].sent = false;
         break;
       }
     }
+  }
+
+  function jsonConcat(o1, o2) {
+    for (var key in o2) {
+      o1[key] = o2[key];
+    }
+    return o1;
   }
 
   async function onParced() {
