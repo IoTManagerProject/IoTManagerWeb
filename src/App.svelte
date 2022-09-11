@@ -38,7 +38,7 @@
   let updatingTimeout = 80000;
   let opened = false;
   let preventMove = false;
-  let devMode = false;
+  let devMode = true;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
@@ -445,7 +445,7 @@
           if (data === "/st/layout.json") {
           }
           if (data === "/end/layout.json") {
-            createLayoutUnderLoading(ws);
+            //createLayoutUnderLoading(ws);
           }
           //сборщик paramsJson сообщений
           if (data.includes('"params":"')) {
@@ -456,6 +456,8 @@
                 ...JSON.parse(data),
               };
               paramsJson = paramsJson;
+              console.log("[i] paramsJson:", paramsJson);
+              createLayoutUnderLoading(ws);
               onParced();
             }
           }
@@ -518,7 +520,7 @@
           devLayout[i].ws = ws;
           topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
           if (key === topic) {
-            console.log("[i]", "value " + topic + " updated");
+            console.log("[i]", "updated " + topic, value);
             devLayout[i].status = value;
             break;
           }
@@ -615,16 +617,17 @@
     wsSendMsg(selectedWs, "/mqtt|");
   }
 
-  let input = {};
-
-  input = {
-    name: "inputDate",
-    descr: "Выберите дату",
-    widget: "input",
-    size: "small",
-    color: "orange",
-    type: "date",
-  };
+  function getInput() {
+    let input = {
+      name: "inputDate",
+      descr: "Выберите дату",
+      widget: "input",
+      size: "small",
+      color: "orange",
+      type: "date",
+    };
+    return input;
+  }
 
   function generateLayout() {
     let layout = [];
@@ -639,11 +642,15 @@
           widget.descr = config.descr;
           //widget.id = config.id;
           //widget.ws = selectedWs;
+
           widget.topic = settingsJson.root + "/" + config.id;
           layout.push(widget);
           if (widget.widget === "chart") {
+            let input = getInput();
             input.page = config.page;
-            input.topic = settingsJson.root + "/" + config.id + "-date";
+            let topic = settingsJson.root + "/" + config.id + "-date";
+            input.topic = topic;
+            console.log("[i]", "topic ", topic);
             layout.push(input);
           }
           error = false;

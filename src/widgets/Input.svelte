@@ -6,9 +6,9 @@
   //$: widget.status, calc();
 
   function selectFromMarkerToMarker(str, tofind, number) {
-    if (str.indexOf(tofind) == -1) {
-      return "not found";
-    }
+    //if (str.indexOf(tofind) == -1) {
+    //  return "not found";
+    //}
     str += tofind;
     let i = 0;
     do {
@@ -32,7 +32,7 @@
     return str.substring(p);
   }
 
-  let bindValue;
+  let bindValue = "";
 
   //данная функция вызывается когда в вебе поменяли значение и его нужно отправить в сокеты
   //а также периписать в переменной виджета

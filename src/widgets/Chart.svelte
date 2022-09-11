@@ -81,6 +81,7 @@
   }
 
   function clearCart() {
+    collectingDataArray = [];
     datachart = {
       labels: [0],
       datasets: [
