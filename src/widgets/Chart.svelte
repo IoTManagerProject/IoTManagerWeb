@@ -43,7 +43,7 @@
         console.log("[i]", "collecting chart data to array, topic:", widget.topic);
         let incomingDataArr = widget.status;
 
-        //console.log("[i]", "array:", incomingDataArr);
+        console.log("[i]", "array:", incomingDataArr);
 
         collectingDataArray = [...collectingDataArray, ...incomingDataArr];
 
@@ -82,6 +82,8 @@
 
   function clearCart() {
     collectingDataArray = [];
+    labels = [0, 0];
+    values = [0, 0];
     datachart = {
       labels: [0],
       datasets: [
