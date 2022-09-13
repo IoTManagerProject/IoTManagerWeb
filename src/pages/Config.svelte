@@ -19,8 +19,6 @@
   export let rebootEsp = () => {};
   export let cleanLogs = () => {};
 
-  let hideAllSubParams = true;
-
   function elementsDropdownChange() {
     for (let i = 0; i < itemsJson.length; i++) {
       let item = Object.assign({}, itemsJson[i]);
@@ -100,10 +98,10 @@
                 </select></td>
               <td class="tbl-bdy-lg"><input bind:value={element.page} class="ipt-lg w-full" type="text" /></td>
               <td class="tbl-bdy-lg"><input bind:value={element.descr} class="ipt-lg w-full" type="text" /></td>
-              <td class="tbl-bdy-lg"><OpenIcon click={() => (hideAllSubParams = !hideAllSubParams)} /></td>
+              <td class="tbl-bdy-lg"><OpenIcon click={() => (element.show = !element.show)} /></td>
               <td class="tbl-bdy-lg"><CrossIcon click={() => deleteLineFromConfig(i)} /></td>
             </tr>
-            {#if !hideAllSubParams}
+            {#if element.show}
               {#each Object.entries(element) as [key, param]}
                 {#if key != "type" && key != "subtype" && key != "id" && key != "widget" && key != "page" && key != "descr"}
                   <tr class="txt-sz txt-pad">
@@ -127,7 +125,7 @@
     </Card>
 
     <Card title="Сценарии">
-      <textarea bind:value={scenarioJson.scen} rows={height} cols="50" class="px-2 bg-gray-50 border-2 border-gray-200 rounded text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500 w-full" />
+      <textarea bind:value={scenarioJson.scen} rows={height} class="px-2 bg-gray-50 border-2 border-gray-200 rounded text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500 w-full" />
     </Card>
   </div>
   <div class="grd-1col1">

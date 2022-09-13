@@ -21,6 +21,7 @@
   import ListPage from "./pages/List.svelte";
   import SystemPage from "./pages/System.svelte";
   import DevPage from "./pages/Dev.svelte";
+  import FilesPage from "./pages/Files.svelte";
 
   //import UtilitiesPage from "./pages/Utilities.svelte";
   //import LogPage from "./pages/Log.svelte";
@@ -43,7 +44,7 @@
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.1.101";
+  if (devMode) myip = "192.168.1.197";
 
   //Flags
   let firstDevListRequest = true;
@@ -64,6 +65,7 @@
   let connectionReady = false;
   let listReady = false;
   let systemReady = false;
+  let devReady = false;
 
   //update esp
   let versionsList = {};
@@ -577,6 +579,12 @@
       if (debug) console.log("✔✔", "system data parced");
       systemReady = true;
     }
+    if (currentPageName === "/dev|" && errorsJsonParced && settingsJsonParced && configJsonParced && itemsJsonParced) {
+      clearParcedFlags();
+      getVersionsList();
+      if (debug) console.log("✔✔", "dev data parced");
+      devReady = true;
+    }
   }
 
   function saveConfig() {
@@ -620,7 +628,7 @@
   function getInput() {
     let input = {
       name: "inputDate",
-      descr: "Выберите дату",
+      //descr: "Выберите дату",
       widget: "input",
       size: "small",
       color: "orange",
@@ -648,9 +656,9 @@
           if (widget.widget === "chart") {
             let input = getInput();
             input.page = config.page;
-            let topic = settingsJson.root + "/" + config.id + "-date";
-            input.topic = topic;
-            console.log("[i]", "topic ", topic);
+            input.topic = settingsJson.root + "/" + config.id + "-date";
+            input.descr = config.descr;
+            console.log("[i]", "topic ", widget.topic);
             layout.push(input);
           }
           error = false;
@@ -1149,6 +1157,9 @@
         <li>
           <a class="menu__item" href="/dev">{"Разработчик"}</a>
         </li>
+        <li>
+          <a class="menu__item" href="/files">{"Файлы"}</a>
+        </li>
       {/if}
     </ul>
   </nav>
@@ -1176,7 +1187,10 @@
           </Route>
           {#if devMode}
             <Route path="/dev">
-              <DevPage show={systemReady} layoutJson={layoutJson} errorsJson={errorsJson} settingsJson={settingsJson} configJson={configJson} itemsJson={itemsJson} />
+              <DevPage show={devReady} layoutJson={layoutJson} errorsJson={errorsJson} settingsJson={settingsJson} configJson={configJson} itemsJson={itemsJson} />
+            </Route>
+            <Route path="/files">
+              <FilesPage show={systemReady} />
             </Route>
           {/if}
         {/if}

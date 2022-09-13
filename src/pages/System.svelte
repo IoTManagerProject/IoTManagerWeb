@@ -247,6 +247,14 @@
       </div>
       <div class="flex mb-2 h-6 items-center">
         <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Остаток flash</p>
+        </div>
+        <div class="flex justify-center w-1/3 text-sm text-center">
+          <p class="text-green-500 font-bold text-center truncate">{errorsJson.freeBytes}</p>
+        </div>
+      </div>
+      <div class="flex mb-2 h-6 items-center">
+        <div class="w-2/3">
           <p class="pr-4 text-gray-500 font-bold text-sm truncate">Кол-во записей на flash</p>
         </div>
         <div class="flex justify-center w-1/3 text-sm">
