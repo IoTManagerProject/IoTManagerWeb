@@ -103,7 +103,7 @@
             </tr>
             {#if element.show}
               {#each Object.entries(element) as [key, param]}
-                {#if key != "type" && key != "subtype" && key != "id" && key != "widget" && key != "page" && key != "descr"}
+                {#if key != "type" && key != "subtype" && key != "id" && key != "widget" && key != "page" && key != "descr" && key != "show"}
                   <tr class="txt-sz txt-pad">
                     <td />
                     <td />

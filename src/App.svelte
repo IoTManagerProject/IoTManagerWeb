@@ -39,12 +39,12 @@
   let updatingTimeout = 80000;
   let opened = false;
   let preventMove = false;
-  let devMode = false;
+  let devMode = true;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.1.197";
+  if (devMode) myip = "192.168.1.117";
 
   //Flags
   let firstDevListRequest = true;
@@ -468,7 +468,7 @@
             if (IsJsonParse(data)) {
               let statusJson = JSON.parse(data);
               udateStatusOfWidget(statusJson);
-              if (debug) console.log("[i] status:", statusJson);
+              if (debug) console.log("[i] status", ip, ws, statusJson);
             }
           }
         }
@@ -589,6 +589,7 @@
 
   function saveConfig() {
     wsSendMsg(selectedWs, "/tuoyal|" + JSON.stringify(generateLayout()));
+    del();
     wsSendMsg(selectedWs, "/gifnoc|" + JSON.stringify(configJson));
     wsSendMsg(selectedWs, "/oiranecs|" + JSON.stringify(scenarioJson));
     clearData();
@@ -610,7 +611,7 @@
   }
 
   function cleanLogs() {
-    wsSendMsg(selectedWs, "/clean|");
+    wsSendMsg(selectedWs, "/clean1|");
   }
 
   function saveMqtt() {
@@ -637,6 +638,14 @@
     return input;
   }
 
+  function del() {
+    for (let i = 0; i < configJson.length; i++) {
+      let config = configJson[i];
+      delete config["show"];
+    }
+  }
+
+  //по конфигу делаем виджеты
   function generateLayout() {
     let layout = [];
     for (let i = 0; i < configJson.length; i++) {
