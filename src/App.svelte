@@ -44,7 +44,7 @@
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.1.117";
+  if (devMode) myip = "192.168.1.116";
 
   //Flags
   let firstDevListRequest = true;
@@ -611,7 +611,7 @@
   }
 
   function cleanLogs() {
-    wsSendMsg(selectedWs, "/clean1|");
+    wsSendMsg(selectedWs, "/clean|");
   }
 
   function saveMqtt() {

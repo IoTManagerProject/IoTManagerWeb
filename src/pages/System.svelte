@@ -318,7 +318,7 @@
     <Card title="Лог" class="z-50">
       <div class="h-80 overflow-y-auto">
         {#each coreMessages as message, i}
-          <div class={message.msg.toString().includes("[E]") ? "text-xs text-red-500" : "text-xs text-black"}>{message.msg}</div>
+          <div class={message.msg.toString().includes("[E]") || message.msg.toString().includes("[!]") ? "text-xs text-red-500" : "text-xs text-black"}>{message.msg}</div>
         {/each}
       </div>
     </Card>

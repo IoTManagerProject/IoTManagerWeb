@@ -100,4 +100,6 @@
   <!-- svelte-ignore a11y-label-has-associated-control -->
   <label class="inline-block italic align-top text-center text-gray-500 txt-sz">{!widget.descr ? "" : widget.descr}</label>
 </div>
-<Chart data={datachart} type="line" lineOptions={lineOptions} axisOptions={axisOptions} />
+<div hight="200">
+  <Chart data={datachart} type="line" lineOptions={lineOptions} axisOptions={axisOptions} />
+</div>
