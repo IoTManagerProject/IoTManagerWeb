@@ -36,7 +36,7 @@
   let LOG_MAX_MESSAGES = 100;
   let reconnectTimeout = 20000;
   let rebootingTimeout = 18000;
-  let updatingTimeout = 80000;
+  let updatingTimeout = 120000;
   let opened = false;
   let preventMove = false;
   let devMode = false;

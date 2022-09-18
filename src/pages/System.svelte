@@ -167,12 +167,22 @@
           </select>
         </div>
       </div>
+
       <div class="flex mb-2 h-6 items-center">
         <div class="w-2/3">
           <p class="pr-4 text-gray-500 font-bold text-sm truncate">Версия прошивки</p>
         </div>
         <div class="flex justify-center w-1/3">
           <p class="text-gray-500 font-bold text-sm text-center truncate">{errorsJson.bver}</p>
+        </div>
+      </div>
+
+      <div class="flex mb-2 h-6 items-center">
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Версия веб интерфейса</p>
+        </div>
+        <div class="flex justify-center w-1/3">
+          <p class="text-gray-500 font-bold text-sm text-center truncate">{errorsJson.wver}</p>
         </div>
       </div>
 
