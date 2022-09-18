@@ -39,7 +39,7 @@
   let updatingTimeout = 80000;
   let opened = false;
   let preventMove = false;
-  let devMode = true;
+  let devMode = false;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
@@ -312,7 +312,7 @@
 
                 deviceList = deviceList;
                 deviceListParced = true;
-                if (debug) console.log("✔", "deviceList json parced");
+                if (debug) console.log("✔", "deviceList parced");
                 onParced();
                 whenDeviceListWasUpdated();
                 connectToAllDevices();
@@ -335,7 +335,7 @@
                 errorsJson = JSON.parse(data);
                 errorsJson = errorsJson;
                 errorsJsonParced = true;
-                if (debug) console.log("✔", "errorsJson json parced");
+                if (debug) console.log("✔", "errorsJson parced");
                 onParced();
               }
             }
@@ -346,7 +346,7 @@
                 settingsJson = settingsJson;
                 //sortingLayout();
                 settingsJsonParced = true;
-                if (debug) console.log("✔", "settingsJson json parced");
+                if (debug) console.log("✔", "settingsJson parced");
                 onParced();
               }
             }
@@ -448,7 +448,7 @@
             console.log("[1]", ws, "blob package received");
             //как только прилетел весь блоб мы начнем его читать ридером и заодно запросим json-ы всех параметров
             combineLayoutsInOne(ws);
-            wsSendMsg(ws, "/statuses|"); ///params|
+            wsSendMsg(ws, "/params|");
           }
           //сборщик paramsJson сообщений
           if (data.includes('"params":"')) {
@@ -470,7 +470,7 @@
               let statusJson = JSON.parse(data);
               if (Array.isArray(statusJson.status)) {
                 updateWidgetArr(statusJson);
-                if (debug) console.log("[i] status (arr)", ws, JSON.stringify(statusJson));
+                if (debug) console.log("[i] status (arr)", ws);
               } else {
                 updateWidget(statusJson);
                 if (debug) console.log("[i] status (dgt)", ws, JSON.stringify(statusJson));
@@ -643,7 +643,7 @@
   async function onParced() {
     if (currentPageName === "/|") {
       clearParcedFlags();
-      if (debug) console.log("✔", "dashboard packet received");
+      if (debug) console.log("✔", "dashboard data received");
       dashReady = true;
     }
     if (currentPageName === "/config|" && itemsJsonParced && widgetsJsonParced && configJsonParced && settingsJsonParced && scenarioJsonParced) {
@@ -677,7 +677,7 @@
 
   function saveConfig() {
     wsSendMsg(selectedWs, "/tuoyal|" + JSON.stringify(generateLayout()));
-    del();
+    modify();
     wsSendMsg(selectedWs, "/gifnoc|" + JSON.stringify(configJson));
     wsSendMsg(selectedWs, "/oiranecs|" + JSON.stringify(scenarioJson));
     clearData();
@@ -726,7 +726,7 @@
     return input;
   }
 
-  function del() {
+  function modify() {
     for (let i = 0; i < configJson.length; i++) {
       let config = configJson[i];
       delete config["show"];

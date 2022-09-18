@@ -38,7 +38,7 @@
   function collectDataToArr() {
     if (prevStatus !== widget.status && !firstTime) {
       if (Array.isArray(widget.status)) {
-        console.log("[i]", "=======================================================");
+        //console.log("[i]", "=======================================================");
         prevStatus = widget.status;
 
         for (let i = 0; i < widget.status.length; i++) {
@@ -54,7 +54,7 @@
 
         if (widget.maxCount == 0 || widget.maxCount == "0") {
           clearCart();
-          console.log("[i]", "clear cart data");
+          //console.log("[i]", "clear cart data");
           return;
         }
 
