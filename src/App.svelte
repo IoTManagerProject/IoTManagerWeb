@@ -92,6 +92,7 @@
 
   let layoutJson = [];
   let layoutJsonArrayParced = false;
+  let layoutReceivingCompleted = false;
 
   let settingsJson = {};
   let settingsJsonParced = false;
@@ -166,8 +167,6 @@
   router.subscribe(handleNavigation);
 
   function handleNavigation() {
-    console.log("[i]", "handle navigation");
-
     currentPageName = $router.path.toString();
 
     //не нужно очищать переменные когда переходим на страницу разработчика
@@ -276,7 +275,6 @@
   function wsEventAdd(ws) {
     if (socket[ws]) {
       let ip = getIP(ws);
-      if (debug) console.log("[i]", ip, ws, "web socket events added");
       socket[ws].addEventListener("open", function (event) {
         if (debug) console.log("[i]", ip, ws, "completed connecting");
         markDeviceStatus(ws, true);
@@ -357,7 +355,6 @@
             if (data.includes("/log|")) {
               data = data.replace("/log|", "");
               //let msg = data.toString();
-              if (debug) console.log("", data);
               addCoreMsg(data);
             }
 
@@ -377,7 +374,7 @@
                   scenarioJson = JSON.parse(scenarioJsonResult);
                   scenarioJson = scenarioJson;
                   scenarioJsonParced = true;
-                  if (debug) console.log("✔", "scenarioJson parced", scenarioJson);
+                  if (debug) console.log("✔", "scenarioJson parced");
                   onParced();
                 }
               };
@@ -445,9 +442,13 @@
           }
           //сборщик layoutJson пакетов
           if (data === "/st/layout.json") {
+            layoutReceivingCompleted = false;
           }
           if (data === "/end/layout.json") {
-            //createLayoutUnderLoading(ws);
+            console.log("[1]", ws, "blob package received");
+            //как только прилетел весь блоб мы начнем его читать ридером и заодно запросим json-ы всех параметров
+            combineLayoutsInOne(ws);
+            wsSendMsg(ws, "/statuses|"); ///params|
           }
           //сборщик paramsJson сообщений
           if (data.includes('"params":"')) {
@@ -458,18 +459,24 @@
                 ...JSON.parse(data),
               };
               paramsJson = paramsJson;
-              console.log("[i] paramsJson:", paramsJson);
-              createLayoutUnderLoading(ws);
+              console.log("[4]", ws, "collecting params");
+              updateAllStatuses(ws);
               onParced();
             }
           }
           //сборщик statusJson сообщений
-          if (data.includes('"status":')) {
+          if (data.includes('"status"')) {
             if (IsJsonParse(data)) {
               let statusJson = JSON.parse(data);
-              udateStatusOfWidget(statusJson);
-              if (debug) console.log("[i] status", ip, ws, statusJson);
+              if (Array.isArray(statusJson.status)) {
+                updateWidgetArr(statusJson);
+                if (debug) console.log("[i] status (arr)", ws, JSON.stringify(statusJson));
+              } else {
+                updateWidget(statusJson);
+                if (debug) console.log("[i] status (dgt)", ws, JSON.stringify(statusJson));
+              }
             }
+            //если сообщение является массивом
           }
         }
 
@@ -500,30 +507,71 @@
     }
   }
 
-  //функция создающая общий json всех виджетов под загрузкой (не имеющая события завершения)
-  async function createLayoutUnderLoading(ws) {
+  //***********************************************************dashboard***************************************************************/
+
+  //слияние layout-ов всех устройств в общий layout
+  async function combineLayoutsInOne(ws) {
     var bb = layoutJsonArray[ws].getBlob();
     let reader = new FileReader();
     reader.readAsText(bb);
+
     reader.onload = () => {
       let devLayout = JSON.parse(reader.result);
-      udateStatusOfDevWidgets(devLayout, ws);
       layoutJson = layoutJson.concat(devLayout);
+      console.log("[2]", ws, "blob package pushed to layout");
       sortingLayout();
     };
   }
 
-  //данная функция обновляет статусы виджетов одного устройства при загрузке страницы dashboard
-  function udateStatusOfDevWidgets(devLayout, ws) {
+  function sortingLayout() {
+    //сортируем весь layout по алфавиту
+    layoutJson.sort(function (a, b) {
+      if (a.descr < b.descr) {
+        return -1;
+      }
+      if (a.descr > b.descr) {
+        return 1;
+      }
+      return 0;
+    });
+    //формируем json всех карточек
+    pages = [];
+    const newPage = Array.from(new Set(Array.from(layoutJson, ({ page }) => page)));
+    newPage.forEach(function (item, i, arr) {
+      pages = [
+        ...pages,
+        JSON.parse(
+          JSON.stringify({
+            page: item,
+          })
+        ),
+      ];
+    });
+    //сортируем карточки по алфавиту
+    pages.sort(function (a, b) {
+      if (a.page < b.page) {
+        return -1;
+      }
+      if (a.page > b.page) {
+        return 1;
+      }
+      return 0;
+    });
+    layoutReceivingCompleted = true;
+    layoutJson = layoutJson;
+    console.log("[3]", "layout sort");
+  }
+
+  function updateAllStatuses(ws) {
     for (const [key, value] of Object.entries(paramsJson)) {
-      for (let i = 0; i < devLayout.length; i++) {
-        let topic = devLayout[i].topic;
+      for (let i = 0; i < layoutJson.length; i++) {
+        let topic = layoutJson[i].topic;
         if (topic) {
-          devLayout[i].ws = ws;
+          layoutJson[i].ws = ws;
           topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
           if (key === topic) {
-            console.log("[i]", "updated " + topic, value);
-            devLayout[i].status = value;
+            console.log("[i]", "updated =>" + topic, value);
+            layoutJson[i].status = value;
             break;
           }
         }
@@ -531,13 +579,12 @@
     }
   }
 
-  //данная функция обновляет статусы всех виджетов хранящихся в layoutJson
-  function udateStatusOfWidget(newStatusJson) {
+  //обработка интервально прилетающих статусов
+  function updateWidget(newStatusJson) {
     for (let i = 0; i < layoutJson.length; i++) {
       let topic = layoutJson[i].topic;
       if (topic === newStatusJson.topic) {
         layoutJson[i] = jsonConcat(layoutJson[i], newStatusJson);
-        //layoutJson[i].status = newStatusJson.status;
         //получен ответ - выключаем красный цвет
         layoutJson[i].sent = false;
         break;
@@ -545,9 +592,50 @@
     }
   }
 
+  //если статус виджета это массив и его нужно накопить
+  function updateWidgetArr(newStatusJson) {
+    console.log("[i]", "collecting arrays");
+    let error = true;
+    if (layoutJson.length > 0) {
+      for (let i = 0; i < layoutJson.length; i++) {
+        let topic = layoutJson[i].topic;
+        if (topic === newStatusJson.topic) {
+          error = false;
+          layoutJson[i] = jsonConcatEx(layoutJson[i], newStatusJson);
+          let prevArr = layoutJson[i].status; //который был в layout
+          let newArr = newStatusJson.status; //тот что получили
+          if (prevArr) {
+            //если что то было в layout то делаем слияние
+            prevArr = [...prevArr, ...newArr];
+            layoutJson[i].status = prevArr;
+          } else {
+            //если ничего не было то просто запишем новый
+            layoutJson[i].status = newArr;
+          }
+
+          //получен ответ - выключаем красный цвет
+          layoutJson[i].sent = false;
+        }
+      }
+    } else {
+      console.log("[E]", "layoutJson missing");
+    }
+    if (error) console.log("[E]", "topic not found ", newStatusJson.topic);
+  }
+
   function jsonConcat(o1, o2) {
     for (var key in o2) {
       o1[key] = o2[key];
+    }
+    return o1;
+  }
+
+  //объединяем исклчая статус так как статус в данном случае накопительная переменная
+  function jsonConcatEx(o1, o2) {
+    for (var key in o2) {
+      if (key !== "status") {
+        o1[key] = o2[key];
+      }
     }
     return o1;
   }
@@ -579,7 +667,7 @@
       if (debug) console.log("✔✔", "system data parced");
       systemReady = true;
     }
-    if (currentPageName === "/dev|" && errorsJsonParced && settingsJsonParced && configJsonParced && itemsJsonParced) {
+    if (currentPageName === "/dev|" && errorsJsonParced && settingsJsonParced && configJsonParced && itemsJsonParced && paramsJsonParced) {
       clearParcedFlags();
       getVersionsList();
       if (debug) console.log("✔✔", "dev data parced");
@@ -598,7 +686,7 @@
 
   function saveSett() {
     var size = Object.keys(settingsJson).length;
-    console.log("[i]", "settingsJson length: " + size);
+    //console.log("[i]", "settingsJson length: " + size);
     if (size > 5) {
       jsonArrWrite(deviceList, "ip", getIP(selectedWs), "name", settingsJson.name);
       deviceList = deviceList;
@@ -616,7 +704,7 @@
 
   function saveMqtt() {
     var size = Object.keys(settingsJson).length;
-    console.log("[i]", "settingsJson length: " + size);
+    //console.log("[i]", "settingsJson length: " + size);
     if (size > 5) {
       wsSendMsg(selectedWs, "/sgnittes|" + JSON.stringify(settingsJson));
     } else {
@@ -667,7 +755,7 @@
             input.page = config.page;
             input.topic = settingsJson.root + "/" + config.id + "-date";
             input.descr = config.descr;
-            console.log("[i]", "topic ", widget.topic);
+            //console.log("[i]", "topic ", widget.topic);
             layout.push(input);
           }
           error = false;
@@ -676,9 +764,9 @@
           error = true;
         }
       }
-      if (error) console.log("[e]", "error, widget not found: " + setWidget);
+      if (error) console.log("[E]", "error, widget not found: " + setWidget);
     }
-    if (debug) console.log("[i] layout:", JSON.stringify(layout));
+    //if (debug) console.log("[i] layout:", JSON.stringify(layout));
     return layout;
   }
 
@@ -710,7 +798,7 @@
 
     clearParcedFlags();
 
-    if (debug) console.log("[i]", "all app data cleared");
+    //if (debug) console.log("[i]", "all app data cleared");
   }
 
   function clearParcedFlags() {
@@ -718,6 +806,7 @@
     widgetsJsonParced = false;
     itemsJsonParced = false;
     layoutJsonArrayParced = false;
+    layoutReceivingCompleted = false;
     settingsJsonParced = false;
     errorsJsonParced = false;
     ssidJsonParced = false;
@@ -777,43 +866,6 @@
       if (device.status) {
         wsSendMsg(device.ws, msg);
       }
-    });
-  }
-
-  //***********************************************************dashboard***************************************************************/
-  function sortingLayout() {
-    //сортируем весь layout по алфавиту
-    layoutJson.sort(function (a, b) {
-      if (a.descr < b.descr) {
-        return -1;
-      }
-      if (a.descr > b.descr) {
-        return 1;
-      }
-      return 0;
-    });
-    //формируем json всех карточек
-    pages = [];
-    const newPage = Array.from(new Set(Array.from(layoutJson, ({ page }) => page)));
-    newPage.forEach(function (item, i, arr) {
-      pages = [
-        ...pages,
-        JSON.parse(
-          JSON.stringify({
-            page: item,
-          })
-        ),
-      ];
-    });
-    //сортируем карточки по алфавиту
-    pages.sort(function (a, b) {
-      if (a.page < b.page) {
-        return -1;
-      }
-      if (a.page > b.page) {
-        return 1;
-      }
-      return 0;
     });
   }
 
@@ -1032,7 +1084,7 @@
 
   function onCheck() {
     let width = screen.width;
-    console.log("width", width);
+    //console.log("width", width);
     if (width < 900) {
       preventMove = true;
     } else {
@@ -1196,7 +1248,7 @@
           </Route>
           {#if devMode}
             <Route path="/dev">
-              <DevPage show={devReady} layoutJson={layoutJson} errorsJson={errorsJson} settingsJson={settingsJson} configJson={configJson} itemsJson={itemsJson} />
+              <DevPage show={devReady} layoutJson={layoutJson} errorsJson={errorsJson} settingsJson={settingsJson} configJson={configJson} itemsJson={itemsJson} paramsJson={paramsJson} />
             </Route>
             <Route path="/files">
               <FilesPage show={systemReady} />

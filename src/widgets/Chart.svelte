@@ -8,49 +8,49 @@
 
   export let widget;
 
-  //необходимые по умолчанию значения из за тупости библиотеки
-  let labels = [0, 0];
-  let values = [0, 0];
-
   let datachart = {
-    labels: labels,
+    labels: [0, 0],
     datasets: [
       {
         name: widget.descr,
-        values: values,
+        values: [0, 0],
       },
     ],
   };
 
+  let prevStatus = {};
+
+  let firstTime = true;
+
+  let labels = [];
+  let values = [];
+
   let axisOptions = { xAxisMode: "tick", xIsSeries: true };
   let lineOptions;
-
-  let collectingDataArray = [];
-  let prevSatus = [];
-
   if (widget.pointRadius == "0") {
     lineOptions = { regionFill: 1, hideDots: 1, spline: 1 };
   } else {
     lineOptions = { regionFill: 1, dotSize: 3, spline: 1 };
   }
 
-  $: widget.status, collectDataToArr();
+  $: widget, collectDataToArr();
 
   function collectDataToArr() {
-    if (widget.status && Array.isArray(widget.status)) {
-      //отсекаем лишние события изменения переменной widget
-      if (prevSatus !== widget.status) {
-        console.log("[i]", "collecting chart data to array, topic:", widget.topic);
-        let incomingDataArr = widget.status;
+    if (prevStatus !== widget.status && !firstTime) {
+      if (Array.isArray(widget.status)) {
+        console.log("[i]", "=======================================================");
+        prevStatus = widget.status;
 
-        console.log("[i]", "array:", incomingDataArr);
-
-        collectingDataArray = [...collectingDataArray, ...incomingDataArr];
-
-        for (let i = 0; i < collectingDataArray.length; i++) {
-          labels[i] = getHHMM(collectingDataArray[i].x);
-          values[i] = [collectingDataArray[i].y1];
+        for (let i = 0; i < widget.status.length; i++) {
+          if (i === 0) {
+            labels[i] = getDDMM(widget.status[i].x);
+          } else {
+            labels[i] = getHHMM(widget.status[i].x);
+          }
+          values[i] = [widget.status[i].y1];
         }
+
+        //console.log("[i]", JSON.stringify(widget.status));
 
         if (widget.maxCount == 0 || widget.maxCount == "0") {
           clearCart();
@@ -67,12 +67,9 @@
             },
           ],
         };
-        prevSatus = widget.status;
-        datachart = datachart;
       }
-    } else {
-      console.log("[i]", "skipping event, topic:", widget.topic);
     }
+    firstTime = false;
   }
 
   function getHHMM(timestamp) {
@@ -80,16 +77,26 @@
     return ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2);
   }
 
+  function getDDMM(timestamp) {
+    var date = new Date(timestamp * 1000);
+    let day = date.getDate();
+    let month = date.getMonth() + 1;
+    let year = date.getFullYear();
+    return day + "." + month + "." + year;
+  }
+
   function clearCart() {
-    collectingDataArray = [];
-    labels = [0, 0];
-    values = [0, 0];
+    widget.status = [];
+
+    labels = [];
+    values = [];
+
     datachart = {
-      labels: [0],
+      labels: [0, 0],
       datasets: [
         {
           name: widget.descr,
-          values: [0],
+          values: [0, 0],
         },
       ],
     };
@@ -100,6 +107,5 @@
   <!-- svelte-ignore a11y-label-has-associated-control -->
   <label class="inline-block italic align-top text-center text-gray-500 txt-sz">{!widget.descr ? "" : widget.descr}</label>
 </div>
-<div hight="200">
-  <Chart data={datachart} type="line" lineOptions={lineOptions} axisOptions={axisOptions} />
-</div>
+
+<Chart data={datachart} type="line" lineOptions={lineOptions} axisOptions={axisOptions} height="200" padding="0px" />

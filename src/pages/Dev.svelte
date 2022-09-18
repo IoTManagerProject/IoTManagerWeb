@@ -19,6 +19,7 @@
   export let settingsJson;
   export let configJson;
   export let itemsJson;
+  export let paramsJson;
 </script>
 
 <div class="grd-3col1">
@@ -36,5 +37,8 @@
   </Card>
   <Card title="itemsJson">
     <textarea on:input={itemsJson} rows="23" class="w-full" id="4">{syntaxHighlight(JSON.stringify(itemsJson))}</textarea>
+  </Card>
+  <Card title="paramsJson">
+    <textarea on:input={paramsJson} rows="23" class="w-full" id="4">{syntaxHighlight(JSON.stringify(paramsJson))}</textarea>
   </Card>
 </div>
