@@ -39,12 +39,12 @@
   let updatingTimeout = 120000;
   let opened = false;
   let preventMove = false;
-  let devMode = false;
+  let devMode = true;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.1.116";
+  if (devMode) myip = "192.168.88.253";
 
   //Flags
   let firstDevListRequest = true;
@@ -517,6 +517,9 @@
 
     reader.onload = () => {
       let devLayout = JSON.parse(reader.result);
+      for (let i = 0; i < devLayout.length; i++) {
+        devLayout[i].ws = ws;
+      }
       layoutJson = layoutJson.concat(devLayout);
       console.log("[2]", ws, "blob package pushed to layout");
       sortingLayout();
@@ -567,7 +570,7 @@
       for (let i = 0; i < layoutJson.length; i++) {
         let topic = layoutJson[i].topic;
         if (topic) {
-          layoutJson[i].ws = ws;
+          //layoutJson[i].ws = ws;
           topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
           if (key === topic) {
             console.log("[i]", "updated =>" + topic, value);
@@ -827,7 +830,7 @@
   function wsPush(ws, topic, status) {
     let msg = topic + " " + status;
     if (debug) console.log("[i]", "ws: ", ws, msg);
-    layoutJson = layoutJson;
+    //layoutJson = layoutJson;
     let key = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
     wsSendMsg(ws, "/control|" + key + "/" + status);
   }
