@@ -203,6 +203,49 @@
     sortingLayout();
   });
 
+  class blobToJson {
+    constructor(data, st, end) {
+      this.data = data;
+      this.st = st;
+      this.end = end;
+      this.flag = true;
+      this.blob = new MyBlobBuilder();
+    }
+
+    stEvent() {
+      if (this.data === st) {
+        this.flag = true;
+      }
+    }
+
+    endEvent() {
+      if (this.data === end) {
+        this.flag = false;
+        var bb = blob.getBlob();
+        let reader = new FileReader();
+        reader.readAsText(bb);
+        reader.onload = () => {
+          let result = reader.result;
+          if (IsJsonParse(result)) {
+            let out = JSON.parse(result);
+            if (debug) console.log("✔", "chartJson parced", out);
+            //дергаем функцию из класса
+          }
+        };
+        this.blob.clear();
+      }
+    }
+
+    //сборщик данных
+    append(data) {
+      if (this.flag) this.blob.append(data);
+    }
+  }
+
+  // Использование:
+  //let chartJson = new blobToJson();
+  //user.sayHi();
+
   //****************************************************web sockets section******************************************************/
   function connectToAllDevices() {
     //closeAllConnection();
@@ -452,6 +495,7 @@
               itemsJsonBlob.clear();
             }
           }
+          //прием от всех учтройств
           //сборщик layoutJson пакетов
           if (data === "/st/layout.json") {
             layoutReceivingCompleted = false;
@@ -520,9 +564,9 @@
             if (widgetsJsonFlag) widgetsJsonBlob.append(event.data);
             if (itemsJsonFlag) itemsJsonBlob.append(event.data);
             if (scenarioJsonFlag) scenarioTxtBlob.append(event.data);
-            if (chartJsonFlag) chartJsonBlob.append(event.data);
           }
           //принимаем данные от всех устройств
+          if (chartJsonFlag) chartJsonBlob.append(event.data);
           if (!layoutJsonArray[ws]) layoutJsonArray[ws] = new MyBlobBuilder();
           layoutJsonArray[ws].append(event.data);
         }
