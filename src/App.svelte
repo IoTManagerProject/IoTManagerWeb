@@ -39,12 +39,12 @@
   let updatingTimeout = 120000;
   let opened = false;
   let preventMove = false;
-  let devMode = false;
+  let devMode = true;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.88.253";
+  if (devMode) myip = "192.168.88.248";
 
   //Flags
   let firstDevListRequest = true;
@@ -84,6 +84,11 @@
   let itemsJsonFlag = false;
   let itemsJsonParced = false;
 
+  let chartJson = {};
+  let chartJsonFlag = false;
+  let chartTopic;
+  let chartJsonParced = false;
+
   let scenarioJson = {};
   let scenarioJsonFlag = false;
   let scenarioJsonParced = false;
@@ -108,8 +113,6 @@
 
   let incDeviceList = [];
   let deviceListParced = false;
-
-  let statusJsonParced = false;
 
   let deviceList = [];
   deviceList = [
@@ -161,6 +164,7 @@
   var widgetsJsonBlob = new MyBlobBuilder();
   var itemsJsonBlob = new MyBlobBuilder();
   var scenarioTxtBlob = new MyBlobBuilder();
+  var chartJsonBlob = new MyBlobBuilder();
 
   var layoutJsonArray = [];
 
@@ -370,6 +374,7 @@
               scenarioJsonReader.readAsText(bb);
               scenarioJsonReader.onload = () => {
                 let scenarioJsonResult = scenarioJsonReader.result;
+
                 if (IsJsonParse(scenarioJsonResult)) {
                   scenarioJson = JSON.parse(scenarioJsonResult);
                   scenarioJson = scenarioJson;
@@ -378,6 +383,7 @@
                   onParced();
                 }
               };
+              scenarioTxtBlob.clear();
             }
             //сборщик configJson пакетов
             if (data === "/st/config.json") {
@@ -390,6 +396,7 @@
               configJsonReader.readAsText(bb);
               configJsonReader.onload = () => {
                 let configJsonResult = configJsonReader.result;
+
                 if (IsJsonParse(configJsonResult)) {
                   configJson = JSON.parse(configJsonResult);
                   configJson = configJson;
@@ -398,6 +405,7 @@
                   onParced();
                 }
               };
+              configJsonBlob.clear();
             }
             //сборщик widgetsJson пакетов
             if (data === "/st/widgets.json") {
@@ -410,6 +418,7 @@
               widgetsJsonReader.readAsText(bb);
               widgetsJsonReader.onload = () => {
                 let widgetsJsonResult = widgetsJsonReader.result;
+
                 if (IsJsonParse(widgetsJsonResult)) {
                   widgetsJson = JSON.parse(widgetsJsonResult);
                   widgetsJson = widgetsJson;
@@ -418,6 +427,7 @@
                   onParced();
                 }
               };
+              widgetsJsonBlob.clear();
             }
             //сборщик itemsJson пакетов
             if (data === "/st/items.json") {
@@ -430,6 +440,7 @@
               itemsJsonReader.readAsText(bb);
               itemsJsonReader.onload = () => {
                 let itemsJsonResult = itemsJsonReader.result;
+
                 if (IsJsonParse(itemsJsonResult)) {
                   itemsJson = JSON.parse(itemsJsonResult);
                   itemsJson = itemsJson;
@@ -438,6 +449,7 @@
                   onParced();
                 }
               };
+              itemsJsonBlob.clear();
             }
           }
           //сборщик layoutJson пакетов
@@ -464,13 +476,33 @@
               onParced();
             }
           }
+          //сборщик chartJson пакетов
+          if (data === "/st/chart.json") {
+            chartJsonFlag = true;
+          }
+          if (data === "/end/chart.json") {
+            chartJsonFlag = false;
+            var bb = chartJsonBlob.getBlob();
+            let chartJsonReader = new FileReader();
+            chartJsonReader.readAsText(bb);
+            chartJsonReader.onload = () => {
+              let chartJsonResult = chartJsonReader.result;
+              chartJsonResult = chartJsonResult.substring(0, chartJsonResult.length - 1) + "]}";
+              if (IsJsonParse(chartJsonResult)) {
+                let arr = JSON.parse(chartJsonResult);
+                if (debug) console.log("✔", "chartJson parced", arr.topic);
+                updateWidgetArr(arr);
+              }
+            };
+            chartJsonBlob.clear();
+          }
           //сборщик statusJson сообщений
           if (data.includes('"status"')) {
             if (IsJsonParse(data)) {
               let statusJson = JSON.parse(data);
               if (Array.isArray(statusJson.status)) {
-                updateWidgetArr(statusJson);
-                if (debug) console.log("[i] status (arr)", ws);
+                //updateWidgetArr(statusJson);
+                //if (debug) console.log("[i] status (arr)", ws);
               } else {
                 updateWidget(statusJson);
                 if (debug) console.log("[i] status (dgt)", ws, JSON.stringify(statusJson));
@@ -488,6 +520,7 @@
             if (widgetsJsonFlag) widgetsJsonBlob.append(event.data);
             if (itemsJsonFlag) itemsJsonBlob.append(event.data);
             if (scenarioJsonFlag) scenarioTxtBlob.append(event.data);
+            if (chartJsonFlag) chartJsonBlob.append(event.data);
           }
           //принимаем данные от всех устройств
           if (!layoutJsonArray[ws]) layoutJsonArray[ws] = new MyBlobBuilder();
@@ -783,6 +816,8 @@
     itemsJson = [];
     itemsJsonBlob.clear();
 
+    chartJsonBlob.clear();
+
     layoutJson = [];
     layoutJsonArray = [];
 
@@ -808,13 +843,13 @@
     configJsonParced = false;
     widgetsJsonParced = false;
     itemsJsonParced = false;
+    chartJsonParced = false;
     layoutJsonArrayParced = false;
     layoutReceivingCompleted = false;
     settingsJsonParced = false;
     errorsJsonParced = false;
     ssidJsonParced = false;
     paramsJsonParced = false;
-    statusJsonParced = false;
     deviceListParced = false;
     scenarioJsonParced = false;
     clearFlags();
