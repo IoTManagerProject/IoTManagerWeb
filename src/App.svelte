@@ -54,18 +54,29 @@
   let rebootingUpdatingInProgress = false;
   const myTimeout = undefined;
 
-  let additionalParams = false;
-
   //dashboard
   let pages = [];
 
-  //ready flags
-  let dashReady = false;
-  let configReady = false;
-  let connectionReady = false;
-  let listReady = false;
+  //ready
+  let pageReady = {
+    dash: false,
+    config: false,
+    connection: false,
+    list: false,
+    system: false,
+    dev: false,
+  };
+
+  let parcedFlags = {
+    deviceListJson: false,
+    ssidJson: false,
+    errorsJson: false,
+    settingsJson: false,
+    statusJson: false,
+    paramsJson: false,
+  };
+
   let systemReady = false;
-  let devReady = false;
 
   //update esp
   let versionsList = {};
@@ -73,47 +84,19 @@
 
   //JSON Files====================================
   let configJson = [];
-  let configJsonFlag = false;
-  let configJsonParced = false;
-
   let widgetsJson = [];
-  let widgetsJsonFlag = false;
-  let widgetsJsonParced = false;
-
   let itemsJson = [];
-  let itemsJsonFlag = false;
-  let itemsJsonParced = false;
-
-  let chartJson = {};
-  let chartJsonFlag = false;
-  let chartTopic;
-  let chartJsonParced = false;
-
   let scenarioJson = {};
-  let scenarioJsonFlag = false;
-  let scenarioJsonParced = false;
 
+  let chartJsonFlag = false;
   //===============================================
 
   let layoutJson = [];
-  let layoutJsonArrayParced = false;
-  let layoutReceivingCompleted = false;
-
   let settingsJson = {};
-  let settingsJsonParced = false;
-
   let errorsJson = {};
-  let errorsJsonParced = false;
-
   let ssidJson = {};
-  let ssidJsonParced = false;
-
   let paramsJson = {};
-  let paramsJsonParced = false;
-
   let incDeviceList = [];
-  let deviceListParced = false;
-
   let deviceList = [];
   deviceList = [
     {
@@ -160,13 +143,80 @@
 
   //***********************************************************navigation********************************************************/
   let currentPageName = undefined;
-  var configJsonBlob = new MyBlobBuilder();
-  var widgetsJsonBlob = new MyBlobBuilder();
-  var itemsJsonBlob = new MyBlobBuilder();
-  var scenarioTxtBlob = new MyBlobBuilder();
   var chartJsonBlob = new MyBlobBuilder();
 
-  var layoutJsonArray = [];
+  var layoutJsonBlobArray = [];
+
+  class blobToJson {
+    constructor(st, end, logMsg) {
+      this.st = st;
+      this.end = end;
+      this.logMsg = logMsg;
+      this.flag = false;
+      this.parced = false;
+      this.blob = new MyBlobBuilder();
+      this.out;
+      this.ws = 0;
+    }
+
+    handle(data) {
+      this.data = data;
+      this.stEvent();
+      this.endEvent();
+    }
+
+    stEvent() {
+      if (this.data === this.st) {
+        this.flag = true;
+      }
+    }
+
+    endEvent() {
+      if (this.data === this.end) {
+        this.flag = false;
+        var bb = this.blob.getBlob();
+        let reader = new FileReader();
+        reader.readAsText(bb);
+        reader.onload = () => {
+          let result = reader.result;
+          if (IsJsonParse(result)) {
+            this.out = JSON.parse(result);
+            if (debug) console.log("✔", this.logMsg + " blob parced");
+            this.parced = true;
+            onParced();
+          }
+        };
+        this.blob.clear();
+      }
+    }
+
+    setAsNotParced() {
+      this.parced = false;
+    }
+
+    get isParced() {
+      return this.parced;
+    }
+
+    //после того как забрали данные класс более считается как не parced
+    get getData() {
+      this.parced = false;
+      return this.out;
+    }
+
+    append(data) {
+      if (this.flag) this.blob.append(data);
+    }
+
+    //set setWs(ws) {
+    //  this.ws = ws;
+    //}
+  }
+
+  let configJsonPacket = new blobToJson("/st/config.json", "/end/config.json", "config.json");
+  let itemsJsonPacket = new blobToJson("/st/items.json", "/end/items.json", "items.json");
+  let widgetsJsonPacket = new blobToJson("/st/widgets.json", "/end/widgets.json", "widgets.json");
+  let scenarioJsonPacket = new blobToJson("/st/scenario.json", "/end/scenario.json", "scenario.json");
 
   router.subscribe(handleNavigation);
 
@@ -202,49 +252,6 @@
     wsTestMsgTask();
     sortingLayout();
   });
-
-  class blobToJson {
-    constructor(data, st, end) {
-      this.data = data;
-      this.st = st;
-      this.end = end;
-      this.flag = true;
-      this.blob = new MyBlobBuilder();
-    }
-
-    stEvent() {
-      if (this.data === st) {
-        this.flag = true;
-      }
-    }
-
-    endEvent() {
-      if (this.data === end) {
-        this.flag = false;
-        var bb = blob.getBlob();
-        let reader = new FileReader();
-        reader.readAsText(bb);
-        reader.onload = () => {
-          let result = reader.result;
-          if (IsJsonParse(result)) {
-            let out = JSON.parse(result);
-            if (debug) console.log("✔", "chartJson parced", out);
-            //дергаем функцию из класса
-          }
-        };
-        this.blob.clear();
-      }
-    }
-
-    //сборщик данных
-    append(data) {
-      if (this.flag) this.blob.append(data);
-    }
-  }
-
-  // Использование:
-  //let chartJson = new blobToJson();
-  //user.sayHi();
 
   //****************************************************web sockets section******************************************************/
   function connectToAllDevices() {
@@ -356,23 +363,22 @@
                   deviceList = combineArrays(deviceList, incDeviceList);
                 }
                 firstDevListRequest = false;
-
                 deviceList = deviceList;
-                deviceListParced = true;
+                parcedFlags.deviceListJson = true;
                 if (debug) console.log("✔", "deviceList parced");
                 onParced();
                 whenDeviceListWasUpdated();
                 connectToAllDevices();
               }
             }
-
             //сборщик ssidJson сообщений
             if (data.includes('ssid":"')) {
               if (IsJsonParse(data)) {
                 ssidJson = JSON.parse(data);
                 ssidJson = ssidJson;
                 if (debug) console.log("✔", "ssidJson parced");
-                ssidJsonParced = true;
+                parcedFlags.ssidJson = true;
+
                 onParced();
               }
             }
@@ -381,7 +387,7 @@
               if (IsJsonParse(data)) {
                 errorsJson = JSON.parse(data);
                 errorsJson = errorsJson;
-                errorsJsonParced = true;
+                parcedFlags.errorsJson = true;
                 if (debug) console.log("✔", "errorsJson parced");
                 onParced();
               }
@@ -392,120 +398,24 @@
                 settingsJson = JSON.parse(data);
                 settingsJson = settingsJson;
                 //sortingLayout();
-                settingsJsonParced = true;
+                parcedFlags.settingsJson = true;
                 if (debug) console.log("✔", "settingsJson parced");
                 onParced();
               }
             }
-
             //сборщик log сообщений
             if (data.includes("/log|")) {
               data = data.replace("/log|", "");
               //let msg = data.toString();
               addCoreMsg(data);
             }
-
             //метки начала конца пакетов для Blob--------------------------------------------------------------------------//
-            //сборщик scenarioJson пакетов
-            if (data === "/st/scenario.json") {
-              scenarioJsonFlag = true;
-            }
-            if (data === "/end/scenario.json") {
-              scenarioJsonFlag = false;
-              var bb = scenarioTxtBlob.getBlob();
-              let scenarioJsonReader = new FileReader();
-              scenarioJsonReader.readAsText(bb);
-              scenarioJsonReader.onload = () => {
-                let scenarioJsonResult = scenarioJsonReader.result;
-
-                if (IsJsonParse(scenarioJsonResult)) {
-                  scenarioJson = JSON.parse(scenarioJsonResult);
-                  scenarioJson = scenarioJson;
-                  scenarioJsonParced = true;
-                  if (debug) console.log("✔", "scenarioJson parced");
-                  onParced();
-                }
-              };
-              scenarioTxtBlob.clear();
-            }
-            //сборщик configJson пакетов
-            if (data === "/st/config.json") {
-              configJsonFlag = true;
-            }
-            if (data === "/end/config.json") {
-              configJsonFlag = false;
-              var bb = configJsonBlob.getBlob();
-              let configJsonReader = new FileReader();
-              configJsonReader.readAsText(bb);
-              configJsonReader.onload = () => {
-                let configJsonResult = configJsonReader.result;
-
-                if (IsJsonParse(configJsonResult)) {
-                  configJson = JSON.parse(configJsonResult);
-                  configJson = configJson;
-                  configJsonParced = true;
-                  if (debug) console.log("✔", "configJson parced");
-                  onParced();
-                }
-              };
-              configJsonBlob.clear();
-            }
-            //сборщик widgetsJson пакетов
-            if (data === "/st/widgets.json") {
-              widgetsJsonFlag = true;
-            }
-            if (data === "/end/widgets.json") {
-              widgetsJsonFlag = false;
-              var bb = widgetsJsonBlob.getBlob();
-              let widgetsJsonReader = new FileReader();
-              widgetsJsonReader.readAsText(bb);
-              widgetsJsonReader.onload = () => {
-                let widgetsJsonResult = widgetsJsonReader.result;
-
-                if (IsJsonParse(widgetsJsonResult)) {
-                  widgetsJson = JSON.parse(widgetsJsonResult);
-                  widgetsJson = widgetsJson;
-                  widgetsJsonParced = true;
-                  if (debug) console.log("✔", "widgetsJson parced");
-                  onParced();
-                }
-              };
-              widgetsJsonBlob.clear();
-            }
-            //сборщик itemsJson пакетов
-            if (data === "/st/items.json") {
-              itemsJsonFlag = true;
-            }
-            if (data === "/end/items.json") {
-              itemsJsonFlag = false;
-              var bb = itemsJsonBlob.getBlob();
-              let itemsJsonReader = new FileReader();
-              itemsJsonReader.readAsText(bb);
-              itemsJsonReader.onload = () => {
-                let itemsJsonResult = itemsJsonReader.result;
-
-                if (IsJsonParse(itemsJsonResult)) {
-                  itemsJson = JSON.parse(itemsJsonResult);
-                  itemsJson = itemsJson;
-                  itemsJsonParced = true;
-                  if (debug) console.log("✔", "itemsJson parced");
-                  onParced();
-                }
-              };
-              itemsJsonBlob.clear();
-            }
+            configJsonPacket.handle(data);
+            itemsJsonPacket.handle(data);
+            widgetsJsonPacket.handle(data);
+            scenarioJsonPacket.handle(data);
           }
           //прием от всех учтройств
-          //сборщик layoutJson пакетов
-          if (data === "/st/layout.json") {
-            layoutReceivingCompleted = false;
-          }
-          if (data === "/end/layout.json") {
-            console.log("[1]", ws, "blob package received");
-            //как только прилетел весь блоб мы начнем его читать ридером и заодно запросим json-ы всех параметров
-            combineLayoutsInOne(ws);
-            wsSendMsg(ws, "/params|");
-          }
           //сборщик paramsJson сообщений
           if (data.includes('"params":"')) {
             if (IsJsonParse(data)) {
@@ -519,6 +429,15 @@
               updateAllStatuses(ws);
               onParced();
             }
+          }
+          //сборщик layoutJson пакетов
+          if (data === "/st/layout.json") {
+          }
+          if (data === "/end/layout.json") {
+            console.log("[1]", ws, "blob package received");
+            //как только прилетел весь блоб мы начнем его читать ридером и заодно запросим json-ы всех параметров
+            combineLayoutsInOne(ws);
+            wsSendMsg(ws, "/params|");
           }
           //сборщик chartJson пакетов
           if (data === "/st/chart.json") {
@@ -552,23 +471,21 @@
                 if (debug) console.log("[i] status (dgt)", ws, JSON.stringify(statusJson));
               }
             }
-            //если сообщение является массивом
           }
         }
-
         //сообщения типа Blob-------------------------------------------------------------------------------------//
         if (event.data instanceof Blob) {
           //принимаем данные только для выбранного устройства
           if (ws === selectedWs) {
-            if (configJsonFlag) configJsonBlob.append(event.data);
-            if (widgetsJsonFlag) widgetsJsonBlob.append(event.data);
-            if (itemsJsonFlag) itemsJsonBlob.append(event.data);
-            if (scenarioJsonFlag) scenarioTxtBlob.append(event.data);
+            if (configJsonPacket) configJsonPacket.append(event.data);
+            if (itemsJsonPacket) itemsJsonPacket.append(event.data);
+            if (widgetsJsonPacket) widgetsJsonPacket.append(event.data);
+            if (scenarioJsonPacket) scenarioJsonPacket.append(event.data);
           }
           //принимаем данные от всех устройств
           if (chartJsonFlag) chartJsonBlob.append(event.data);
-          if (!layoutJsonArray[ws]) layoutJsonArray[ws] = new MyBlobBuilder();
-          layoutJsonArray[ws].append(event.data);
+          if (!layoutJsonBlobArray[ws]) layoutJsonBlobArray[ws] = new MyBlobBuilder();
+          layoutJsonBlobArray[ws].append(event.data);
         }
       });
       socket[ws].addEventListener("close", (event) => {
@@ -584,11 +501,61 @@
     }
   }
 
+  async function onParced() {
+    if (currentPageName === "/|") {
+      clearParcedFlags();
+      if (debug) console.log("✔", "dashboard data received");
+      pageReady.dash = true;
+    }
+    if (currentPageName === "/config|") {
+      if (configJsonPacket.isParced && itemsJsonPacket.isParced && widgetsJsonPacket.isParced && scenarioJsonPacket.isParced) {
+        clearParcedFlags();
+        configJson = configJsonPacket.getData;
+        itemsJson = itemsJsonPacket.getData;
+        widgetsJson = widgetsJsonPacket.getData;
+        scenarioJson = scenarioJsonPacket.getData;
+        if (debug) console.log("✔✔", "config data parced");
+        pageReady.config = true;
+      }
+    }
+    if (currentPageName === "/connection|") {
+      if (parcedFlags.ssidJson && parcedFlags.settingsJson && parcedFlags.errorsJson) {
+        clearParcedFlags();
+        if (debug) console.log("✔✔", "connection data parced");
+        pageReady.connection = true;
+      }
+    }
+    if (currentPageName === "/list|") {
+      if (parcedFlags.deviceListJson) {
+        clearParcedFlags();
+        if (debug) console.log("✔✔", "list data parced");
+        pageReady.list = true;
+      }
+    }
+    if (currentPageName === "/system|") {
+      if (parcedFlags.errorsJson && parcedFlags.settingsJson) {
+        clearParcedFlags();
+        getVersionsList();
+        if (debug) console.log("✔✔", "system data parced");
+        pageReady.system = true;
+      }
+    }
+    if (currentPageName === "/dev|") {
+      if (parcedFlags.errorsJson && parcedFlags.settingsJson && configJsonPacket.isParced && itemsJsonPacket.isParced && parcedFlags.paramsJson) {
+        clearParcedFlags();
+        configJson = configJsonPacket.getData;
+        itemsJson = itemsJsonPacket.getData;
+        if (debug) console.log("✔✔", "dev data parced");
+        pageReady.dev = true;
+      }
+    }
+  }
+
   //***********************************************************dashboard***************************************************************/
 
   //слияние layout-ов всех устройств в общий layout
   async function combineLayoutsInOne(ws) {
-    var bb = layoutJsonArray[ws].getBlob();
+    var bb = layoutJsonBlobArray[ws].getBlob();
     let reader = new FileReader();
     reader.readAsText(bb);
 
@@ -637,7 +604,7 @@
       }
       return 0;
     });
-    layoutReceivingCompleted = true;
+
     layoutJson = layoutJson;
     console.log("[3]", "layout sort");
   }
@@ -718,41 +685,6 @@
       }
     }
     return o1;
-  }
-
-  async function onParced() {
-    if (currentPageName === "/|") {
-      clearParcedFlags();
-      if (debug) console.log("✔", "dashboard data received");
-      dashReady = true;
-    }
-    if (currentPageName === "/config|" && itemsJsonParced && widgetsJsonParced && configJsonParced && settingsJsonParced && scenarioJsonParced) {
-      clearParcedFlags();
-      if (debug) console.log("✔✔", "config data parced");
-      configReady = true;
-    }
-    if (currentPageName === "/connection|" && ssidJsonParced && settingsJsonParced && errorsJsonParced) {
-      clearParcedFlags();
-      if (debug) console.log("✔✔", "connection data parced");
-      connectionReady = true;
-    }
-    if (currentPageName === "/list|" && deviceListParced) {
-      clearParcedFlags();
-      if (debug) console.log("✔✔", "list data parced");
-      listReady = true;
-    }
-    if (currentPageName === "/system|" && errorsJsonParced && settingsJsonParced) {
-      clearParcedFlags();
-      getVersionsList();
-      if (debug) console.log("✔✔", "system data parced");
-      systemReady = true;
-    }
-    if (currentPageName === "/dev|" && errorsJsonParced && settingsJsonParced && configJsonParced && itemsJsonParced && paramsJsonParced) {
-      clearParcedFlags();
-      getVersionsList();
-      if (debug) console.log("✔✔", "dev data parced");
-      devReady = true;
-    }
   }
 
   function saveConfig() {
@@ -852,50 +784,32 @@
 
   function clearData() {
     configJson = [];
-    configJsonBlob.clear();
-
     widgetsJson = [];
-    widgetsJsonBlob.clear();
-
     itemsJson = [];
-    itemsJsonBlob.clear();
-
-    chartJsonBlob.clear();
-
     layoutJson = [];
-    layoutJsonArray = [];
+    layoutJsonBlobArray = [];
 
-    scenarioJson = "";
-    scenarioTxtBlob.clear();
+    scenarioJson = {};
 
     settingsJson = {};
     errorsJson = {};
     //coreMessages = [];
 
-    dashReady = false;
-    configReady = false;
-    connectionReady = false;
-    listReady = false;
-    systemReady = false;
+    for (const [key, value] of Object.entries(pageReady)) {
+      pageReady[key] = false;
+    }
 
     clearParcedFlags();
 
-    //if (debug) console.log("[i]", "all app data cleared");
+    if (debug) console.log("[i]", "all app data cleared");
   }
 
   function clearParcedFlags() {
-    configJsonParced = false;
-    widgetsJsonParced = false;
-    itemsJsonParced = false;
-    chartJsonParced = false;
-    layoutJsonArrayParced = false;
-    layoutReceivingCompleted = false;
-    settingsJsonParced = false;
-    errorsJsonParced = false;
-    ssidJsonParced = false;
-    paramsJsonParced = false;
-    deviceListParced = false;
-    scenarioJsonParced = false;
+    //chartJsonParced = false;
+
+    for (const [key, value] of Object.entries(parcedFlags)) {
+      parcedFlags[key] = false;
+    }
     clearFlags();
   }
 
@@ -1154,11 +1068,6 @@
     }
   }
 
-  function showAdditionalParams(id) {
-    additionalParams = true;
-    if (debug) console.log("[i]", "user open add params ", id);
-  }
-
   //**********************************************************modal*************************************************************************/
   function showModal() {
     showModalFlag = !showModalFlag;
@@ -1203,26 +1112,31 @@
   //************************************************update esp firm************************************************************//
 
   async function getVersionsList() {
-    try {
-      let url = settingsJson.serverip + "/iotm/ver.json";
-      console.log("url", url);
-      let res = await fetch(url, {
-        mode: "cors",
-        method: "GET",
-      });
-      if (res.ok) {
-        versionsList = await res.json();
-        versionsList = versionsList[errorsJson.bn];
-        choosingVersion = errorsJson.bver;
-        console.log(JSON.stringify(versionsList));
-      } else {
+    versionsList = {};
+    if (settingsJson.serverip) {
+      try {
+        let url = settingsJson.serverip + "/iotm/ver.json";
+        console.log("url", url);
+        let res = await fetch(url, {
+          mode: "cors",
+          method: "GET",
+        });
+        if (res.ok) {
+          versionsList = await res.json();
+          versionsList = versionsList[errorsJson.bn];
+          choosingVersion = errorsJson.bver;
+          console.log(JSON.stringify(versionsList));
+        } else {
+          choosingVersion = undefined;
+          console.log("error, versions list not received", res.statusText);
+        }
+      } catch (e) {
         choosingVersion = undefined;
-        console.log("error, versions list not received", res.statusText);
+        console.log("error, versions list not received");
+        console.log(e);
       }
-    } catch (e) {
-      choosingVersion = undefined;
-      console.log("error, versions list not received");
-      console.log(e);
+    } else {
+      console.log("error, server missing");
     }
   }
 
@@ -1314,23 +1228,23 @@
           <Alarm title="Нет соединения" />
         {:else}
           <Route path="/">
-            <DashboardPage show={dashReady} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
+            <DashboardPage show={pageReady.dash} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
           </Route>
           <Route path="/config">
-            <ConfigPage show={configReady} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} cleanLogs={() => cleanLogs()} rebootEsp={() => rebootEsp()} scenarioJson={scenarioJson} />
+            <ConfigPage show={pageReady.config} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} cleanLogs={() => cleanLogs()} rebootEsp={() => rebootEsp()} scenarioJson={scenarioJson} />
           </Route>
           <Route path="/connection">
-            <ConnectionPage show={connectionReady} rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />
+            <ConnectionPage show={pageReady.connection} rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />
           </Route>
           <Route path="/list">
-            <ListPage show={listReady} deviceList={deviceList} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} />
+            <ListPage show={pageReady.list} deviceList={deviceList} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} />
           </Route>
           <Route path="/system">
-            <SystemPage show={systemReady} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion startUpdate={() => startUpdate()} coreMessages={coreMessages} />
+            <SystemPage show={pageReady.system} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion startUpdate={() => startUpdate()} coreMessages={coreMessages} />
           </Route>
           {#if devMode}
             <Route path="/dev">
-              <DevPage show={devReady} layoutJson={layoutJson} errorsJson={errorsJson} settingsJson={settingsJson} configJson={configJson} itemsJson={itemsJson} paramsJson={paramsJson} />
+              <DevPage show={pageReady.dev} layoutJson={layoutJson} errorsJson={errorsJson} settingsJson={settingsJson} configJson={configJson} itemsJson={itemsJson} paramsJson={paramsJson} />
             </Route>
             <Route path="/files">
               <FilesPage show={systemReady} />

@@ -7,10 +7,9 @@
   export let configJson;
   export let widgetsJson;
   export let itemsJson;
+  export let scenarioJson;
 
   export let show;
-
-  export let scenarioJson;
 
   let itemsJsonBind = 0;
   let debug = true;
