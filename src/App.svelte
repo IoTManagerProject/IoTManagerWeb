@@ -144,8 +144,8 @@
 
   //***********************************************************navigation********************************************************/
   let currentPageName = undefined;
-  var chartJsonBlob = new MyBlobBuilder();
 
+  var chartJsonBlob = new MyBlobBuilder();
   var layoutJsonBlobArray = [];
 
   class blobToJson {
@@ -418,7 +418,7 @@
             widgetsJsonPacket.handle(data);
             scenarioJsonPacket.handle(data);
           }
-          //прием от всех учтройств
+          //прием от всех устройств
           //сборщик paramsJson сообщений
           if (data.includes('"params":"')) {
             if (IsJsonParse(data)) {
@@ -445,21 +445,28 @@
             wsSendMsg(ws, "/params|");
           }
           //сборщик chartJson пакетов
-          if (data === "/st/chart.json") {
+          if (data.includes("/st/chart.json|")) {
+            //let topic = deleteBeforeDelimiter(data, "|");
+            //console.log("[i] chart", topic);
             chartJsonFlag = true;
           }
-          if (data === "/end/chart.json") {
+          if (data.includes("/end/chart.json|")) {
+            let topic = deleteBeforeDelimiter(data, "|");
+            console.log("[i] chart", topic);
             chartJsonFlag = false;
             var bb = chartJsonBlob.getBlob();
             let chartJsonReader = new FileReader();
             chartJsonReader.readAsText(bb);
             chartJsonReader.onload = () => {
               let chartJsonResult = chartJsonReader.result;
-              chartJsonResult = chartJsonResult.substring(0, chartJsonResult.length - 1) + "]}";
+              chartJsonResult = "[" + chartJsonResult.substring(0, chartJsonResult.length - 1) + "]";
               if (IsJsonParse(chartJsonResult)) {
                 let arr = JSON.parse(chartJsonResult);
-                if (debug) console.log("✔", "chartJson parced", arr.topic);
-                updateWidgetArr(arr);
+                let status = {};
+                status.status = arr;
+                status.topic = topic;
+                apdateWidgetByArray(status);
+                if (debug) console.log("✔", "chartJson parced", status);
               }
             };
             chartJsonBlob.clear();
@@ -489,6 +496,7 @@
           }
           //принимаем данные от всех устройств
           if (chartJsonFlag) chartJsonBlob.append(event.data);
+
           if (!layoutJsonBlobArray[ws]) layoutJsonBlobArray[ws] = new MyBlobBuilder();
           if (layoutJsonFlag) layoutJsonBlobArray[ws].append(event.data);
         }
@@ -629,6 +637,7 @@
         }
       }
     }
+    wsSendMsg(ws, "/charts|");
   }
 
   //обработка интервально прилетающих статусов
@@ -645,7 +654,7 @@
   }
 
   //если статус виджета это массив и его нужно накопить
-  function updateWidgetArr(newStatusJson) {
+  function apdateWidgetByArray(newStatusJson) {
     console.log("[i]", "collecting arrays");
     let error = true;
     if (layoutJson.length > 0) {
@@ -664,7 +673,6 @@
             //если ничего не было то просто запишем новый
             layoutJson[i].status = newArr;
           }
-
           //получен ответ - выключаем красный цвет
           layoutJson[i].sent = false;
         }
@@ -1165,6 +1173,16 @@
     } else {
       window.alert("Версия не выбрана или сервер недоступен");
     }
+  }
+
+  function selectToMarker(str, found) {
+    let p = str.indexOf(found);
+    return str.substring(0, p);
+  }
+
+  function deleteBeforeDelimiter(str, found) {
+    let p = str.indexOf(found) + found.length;
+    return str.substring(p);
   }
 </script>
 
