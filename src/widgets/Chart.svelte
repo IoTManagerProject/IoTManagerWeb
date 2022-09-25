@@ -42,20 +42,19 @@
         prevStatus = widget.status;
 
         for (let i = 0; i < widget.status.length; i++) {
+          //if (i === 0 && widget.status[i].x === 0 && widget.status[i].y1 === 0) {
+          //  clearCart();
+          //  widget.status = [];
+          //  console.log("[i]", "clear cart data");
+          //  return;
+          //}
+
           if (i === 0) {
             labels[i] = getDDMM(widget.status[i].x);
           } else {
             labels[i] = getHHMM(widget.status[i].x);
           }
           values[i] = [widget.status[i].y1];
-        }
-
-        //console.log("[i]", JSON.stringify(widget.status));
-
-        if (widget.maxCount == 0 || widget.maxCount == "0") {
-          clearCart();
-          //console.log("[i]", "clear cart data");
-          return;
         }
 
         datachart = {
