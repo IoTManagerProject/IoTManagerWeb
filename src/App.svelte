@@ -89,6 +89,7 @@
   let scenarioJson = {};
 
   let chartJsonFlag = false;
+  let layoutJsonFlag = false;
   //===============================================
 
   let layoutJson = [];
@@ -148,7 +149,7 @@
   var layoutJsonBlobArray = [];
 
   class blobToJson {
-    constructor(st, end, logMsg) {
+    constructor(st, end, logMsg, cb) {
       this.st = st;
       this.end = end;
       this.logMsg = logMsg;
@@ -157,6 +158,7 @@
       this.blob = new MyBlobBuilder();
       this.out;
       this.ws = 0;
+      this.cb = cb;
     }
 
     handle(data) {
@@ -183,7 +185,8 @@
             this.out = JSON.parse(result);
             if (debug) console.log("✔", this.logMsg + " blob parced");
             this.parced = true;
-            onParced();
+            //onParced();
+            this.cb;
           }
         };
         this.blob.clear();
@@ -213,10 +216,10 @@
     //}
   }
 
-  let configJsonPacket = new blobToJson("/st/config.json", "/end/config.json", "config.json");
-  let itemsJsonPacket = new blobToJson("/st/items.json", "/end/items.json", "items.json");
-  let widgetsJsonPacket = new blobToJson("/st/widgets.json", "/end/widgets.json", "widgets.json");
-  let scenarioJsonPacket = new blobToJson("/st/scenario.json", "/end/scenario.json", "scenario.json");
+  let configJsonPacket = new blobToJson("/st/config.json", "/end/config.json", "config.json", onParced());
+  let itemsJsonPacket = new blobToJson("/st/items.json", "/end/items.json", "items.json", onParced());
+  let widgetsJsonPacket = new blobToJson("/st/widgets.json", "/end/widgets.json", "widgets.json", onParced());
+  let scenarioJsonPacket = new blobToJson("/st/scenario.json", "/end/scenario.json", "scenario.json", onParced());
 
   router.subscribe(handleNavigation);
 
@@ -432,8 +435,10 @@
           }
           //сборщик layoutJson пакетов
           if (data === "/st/layout.json") {
+            layoutJsonFlag = true;
           }
           if (data === "/end/layout.json") {
+            layoutJsonFlag = false;
             console.log("[1]", ws, "blob package received");
             //как только прилетел весь блоб мы начнем его читать ридером и заодно запросим json-ы всех параметров
             combineLayoutsInOne(ws);
@@ -485,7 +490,7 @@
           //принимаем данные от всех устройств
           if (chartJsonFlag) chartJsonBlob.append(event.data);
           if (!layoutJsonBlobArray[ws]) layoutJsonBlobArray[ws] = new MyBlobBuilder();
-          layoutJsonBlobArray[ws].append(event.data);
+          if (layoutJsonFlag) layoutJsonBlobArray[ws].append(event.data);
         }
       });
       socket[ws].addEventListener("close", (event) => {
