@@ -41,14 +41,14 @@
         //console.log("[i]", "=======================================================");
         prevStatus = widget.status;
 
-        for (let i = 0; i < widget.status.length; i++) {
-          //if (i === 0 && widget.status[i].x === 0 && widget.status[i].y1 === 0) {
-          //  clearCart();
-          //  widget.status = [];
-          //  console.log("[i]", "clear cart data");
-          //  return;
-          //}
+        if (widget.maxCount === 0) {
+          clearCart();
+          widget.status = [];
+          console.log("[i]", "clear cart data");
+          return;
+        }
 
+        for (let i = 0; i < widget.status.length; i++) {
           if (i === 0) {
             labels[i] = getDDMM(widget.status[i].x);
           } else {

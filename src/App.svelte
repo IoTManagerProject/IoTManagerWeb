@@ -208,10 +208,6 @@
     append(data) {
       if (this.flag) this.blob.append(data);
     }
-
-    //set setWs(ws) {
-    //  this.ws = ws;
-    //}
   }
 
   let configJsonPacket = new blobToJson("/st/config.json", "/end/config.json", "config.json");
@@ -444,13 +440,11 @@
           }
           //сборщик chartJson пакетов
           if (data.includes("/st/chart.json|")) {
-            //let topic = deleteBeforeDelimiter(data, "|");
-            //console.log("[i] chart", topic);
             chartJsonFlag[ws] = true;
           }
           if (data.includes("/end/chart.json|")) {
-            let topic = deleteBeforeDelimiter(data, "|");
-            console.log("[i] chart", topic);
+            let json = JSON.parse(deleteBeforeDelimiter(data, "|"));
+            console.log("[i] chart blob", json.topic, json.maxCount);
             chartJsonFlag[ws] = false;
             var bb = chartJsonBlob.getBlob();
             let chartJsonReader = new FileReader();
@@ -462,15 +456,24 @@
                 let arr = JSON.parse(chartJsonResult);
                 let status = {};
                 status.status = arr;
-                status.topic = topic;
+                status.topic = json.topic;
+                status.maxCount = json.maxCount;
                 apdateWidgetByArray(status);
-                if (debug) console.log("✔", "chartJson parced", status);
+                if (debug) console.log("✔ B", "chartJson parced", status);
               }
             };
             chartJsonBlob.clear();
           }
+          if (data.includes("/string/chart.json|")) {
+            let tmp = deleteBeforeDelimiter(data, "|");
+            if (IsJsonParse(tmp)) {
+              let json = JSON.parse(tmp);
+              console.log("✔ S", "chartJson parced");
+              apdateWidgetByArray(json);
+            }
+          }
           //сборщик statusJson сообщений
-          if (data.includes('"status"')) {
+          if (data.includes('"status"') && !data.includes("/string/chart.json|")) {
             if (IsJsonParse(data)) {
               let statusJson = JSON.parse(data);
               if (Array.isArray(statusJson.status)) {
@@ -530,27 +533,21 @@
 
       if (debug) console.log("✔✔", "config page parced");
     }
-    if (currentPageName === "/connection|") {
-      if (parcedFlags.ssidJson && parcedFlags.settingsJson && parcedFlags.errorsJson) {
-        clearParcedFlags();
-        if (debug) console.log("✔✔", "connection page parced");
-        pageReady.connection = true;
-      }
+    if (currentPageName === "/connection|" && parcedFlags.ssidJson && parcedFlags.settingsJson && parcedFlags.errorsJson) {
+      clearParcedFlags();
+      if (debug) console.log("✔✔", "connection page parced");
+      pageReady.connection = true;
     }
-    if (currentPageName === "/list|") {
-      if (parcedFlags.deviceListJson) {
-        clearParcedFlags();
-        if (debug) console.log("✔✔", "list page parced");
-        pageReady.list = true;
-      }
+    if (currentPageName === "/list|" && parcedFlags.deviceListJson) {
+      clearParcedFlags();
+      if (debug) console.log("✔✔", "list page parced");
+      pageReady.list = true;
     }
-    if (currentPageName === "/system|") {
-      if (parcedFlags.errorsJson && parcedFlags.settingsJson) {
-        clearParcedFlags();
-        getVersionsList();
-        if (debug) console.log("✔✔", "system page parced");
-        pageReady.system = true;
-      }
+    if (currentPageName === "/system|" && parcedFlags.errorsJson && parcedFlags.settingsJson) {
+      clearParcedFlags();
+      getVersionsList();
+      if (debug) console.log("✔✔", "system page parced");
+      pageReady.system = true;
     }
     if (currentPageName === "/dev|" && parcedFlags.errorsJson && parcedFlags.settingsJson && configJsonPacket.isParced && itemsJsonPacket.isParced) {
       clearParcedFlags();
