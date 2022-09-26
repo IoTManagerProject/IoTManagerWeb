@@ -37,7 +37,7 @@
   let updatingTimeout = 120000;
   let opened = false;
   let preventMove = false;
-  let devMode = true;
+  let devMode = false;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
@@ -481,7 +481,7 @@
                 //if (debug) console.log("[i] status (arr)", ws);
               } else {
                 updateWidget(statusJson);
-                //if (debug) console.log("[i] status (dgt)", ws, JSON.stringify(statusJson));
+                if (debug) console.log("[i] status (dgt)", ws, JSON.stringify(statusJson));
               }
             }
           }
@@ -768,7 +768,7 @@
           //widget.ws = selectedWs;
 
           widget.topic = settingsJson.root + "/" + config.id;
-          layout.push(widget);
+          if (setWidget !== "nil") layout.push(widget);
           if (widget.widget === "chart") {
             let input = getInput();
             input.page = config.page;
