@@ -18,6 +18,8 @@
   export let rebootEsp = () => {};
   //export let cleanLogs = () => {};
 
+  let exportJson = {};
+
   function elementsDropdownChange() {
     for (let i = 0; i < itemsJson.length; i++) {
       let item = Object.assign({}, itemsJson[i]);
@@ -56,6 +58,80 @@
   function windowHeight() {
     let scenStr = JSON.stringify(scenarioJson);
     height = scenStr.split("\\n").length;
+  }
+
+  // Function to download data to a file
+  function download(data, filename, type) {
+    var file = new Blob([data], { type: type });
+    if (window.navigator.msSaveOrOpenBlob)
+      // IE10+
+      window.navigator.msSaveOrOpenBlob(file, filename);
+    else {
+      // Others
+      var a = document.createElement("a"),
+        url = URL.createObjectURL(file);
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }, 0);
+    }
+  }
+
+  const syntaxHighlight = (json) => {
+    try {
+      json = JSON.stringify(JSON.parse(json), null, 4);
+    } catch (e) {
+      return json;
+    }
+    json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+      return match;
+    });
+    return json;
+  };
+
+  function createExportFile() {
+    exportJson.config = configJson;
+    exportJson.scenario = scenarioJson;
+  }
+
+  //let files;
+
+  function previewFile() {
+    const [file] = document.querySelector("input[type=file]").files;
+    const reader = new FileReader();
+
+    if (file) {
+      reader.readAsText(file);
+    }
+
+    reader.onload = function () {
+      let result = reader.result;
+      if (IsJsonParse(result)) {
+        let json = JSON.parse(result);
+        configJson = [];
+        scenarioJson = {};
+        configJson = json.config;
+        scenarioJson = json.scenario;
+        configJson = configJson;
+        scenarioJson = scenarioJson;
+        console.log(JSON.stringify(configJson));
+      }
+    };
+  }
+
+  function IsJsonParse(str) {
+    try {
+      JSON.parse(str);
+    } catch (e) {
+      if (debug) console.log("[e]", "json parce error: ", str);
+      return false;
+    }
+    return true;
   }
 </script>
 
@@ -139,6 +215,11 @@
       <div class="grd-2col1">
         <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить"}</button>
         <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить"}</button>
+        <button class="btn-lg" on:click={() => (createExportFile(), download(syntaxHighlight(JSON.stringify(exportJson)), "export.json", "application/json"))}>{"Сохранить конфигурацию"}</button>
+        <label class="btn-lg">
+          <input on:change={() => previewFile()} accept="json" type="file" id="formFile" />
+          {"Загрузить конфигурацию"}
+        </label>
       </div>
     </Card>
   </div>

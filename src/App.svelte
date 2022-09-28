@@ -37,12 +37,12 @@
   let updatingTimeout = 120000;
   let opened = false;
   let preventMove = false;
-  let devMode = false;
+  let devMode = true;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.88.241";
+  if (devMode) myip = "192.168.88.242";
 
   //Flags
   let firstDevListRequest = true;
@@ -1479,5 +1479,9 @@
   input:checked ~ .dot {
     transform: translateX(100%);
     /* background-color: #48bb78;*/
+  }
+
+  input[type="file"] {
+    display: none;
   }
 </style>
