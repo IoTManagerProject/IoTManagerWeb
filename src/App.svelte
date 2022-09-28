@@ -42,7 +42,7 @@
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.88.248";
+  if (devMode) myip = "192.168.88.241";
 
   //Flags
   let firstDevListRequest = true;
@@ -769,7 +769,8 @@
 
           widget.topic = settingsJson.root + "/" + config.id;
           if (setWidget !== "nil") layout.push(widget);
-          if (widget.widget === "chart") {
+          //создаем графики с окнами ввода
+          if (widget.widget === "chart" && widget.type !== "bar") {
             let input = getInput();
             input.page = config.page;
             input.topic = settingsJson.root + "/" + config.id + "-date";

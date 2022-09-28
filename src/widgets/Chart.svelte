@@ -33,6 +33,11 @@
     lineOptions = { regionFill: 1, dotSize: 3, spline: 1 };
   }
 
+  let type = "line";
+  if (widget.type == "bar") {
+    type = widget.type;
+  }
+
   $: widget, collectDataToArr();
 
   function collectDataToArr() {
@@ -49,7 +54,9 @@
         }
 
         for (let i = 0; i < widget.status.length; i++) {
-          if (i === 0) {
+          if (type === "bar") {
+            labels[i] = getDDMM(widget.status[i].x);
+          } else if (i === 0) {
             labels[i] = getDDMM(widget.status[i].x);
           } else {
             labels[i] = getHHMM(widget.status[i].x);
@@ -107,4 +114,4 @@
   <label class="inline-block italic align-top text-center text-gray-500 txt-sz">{!widget.descr ? "" : widget.descr}</label>
 </div>
 
-<Chart data={datachart} type="line" lineOptions={lineOptions} axisOptions={axisOptions} height="200" padding="0px" />
+<Chart data={datachart} type={type} lineOptions={lineOptions} axisOptions={axisOptions} height="200" padding="0px" />

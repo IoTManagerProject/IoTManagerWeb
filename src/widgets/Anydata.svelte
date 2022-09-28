@@ -12,7 +12,7 @@
   function blink() {
     if (widget.status) {
       if (widget.status != prevStatus) {
-        setTimeout(stopBlink, 4000);
+        setTimeout(stopBlink, 500);
         green = true;
       }
       prevStatus = widget.status;
@@ -31,8 +31,8 @@
   </div>
   <div class="flex justify-end w-1/3">
     <!-- svelte-ignore a11y-label-has-associated-control -->
-    <label class="wgt-adt-stl {green ? 'text-green-500 animate-pulse' : ''}">{!widget.status ? "" : widget.status}</label>
+    <label class="wgt-adt-stl {green ? 'text-green-500' : ''}">{!widget.status ? "" : widget.status}</label>
     <!-- svelte-ignore a11y-label-has-associated-control -->
-    <label class="wgt-adt-stl {green ? 'text-green-500 animate-pulse' : ''}">&nbsp;{!widget.after ? "" : widget.after}</label>
+    <label class="wgt-adt-stl {green ? 'text-green-500' : ''}">&nbsp;{!widget.after ? "" : widget.after}</label>
   </div>
 </div>
