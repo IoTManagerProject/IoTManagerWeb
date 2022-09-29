@@ -7,7 +7,7 @@
   export let configJson;
   export let widgetsJson;
   export let itemsJson;
-  export let scenarioJson;
+  export let scenarioTxt;
 
   export let show;
 
@@ -53,11 +53,14 @@
     }
   }
 
-  $: scenarioJson, windowHeight();
+  $: scenarioTxt, windowHeight();
+
   let height;
+
   function windowHeight() {
-    let scenStr = JSON.stringify(scenarioJson);
-    height = scenStr.split("\\n").length;
+    console.log("test", scenarioTxt);
+    let scenStr = scenarioTxt;
+    height = scenStr.split("\n").length;
   }
 
   // Function to download data to a file
@@ -97,15 +100,14 @@
   function createExportFile() {
     exportJson.mark = "iotm";
     exportJson.config = configJson;
-    exportJson.scenario = scenarioJson;
-    //exportJson.settings = settingsJson;
+    exportJson.scenario = scenarioTxt;
   }
 
   let template = null;
   let files = null;
 
   const alertErr = "Файл не является файлом конфигурации";
-  const alertOk = "Применить конфигурацию?\nне забудьте нажать кнопку 'сохранить'";
+  const alertOk = "Применить конфигурацию?\nне забудьте нажать кнопку 'сохранить на устройстве'";
 
   $: if (files) {
     const fileText = files[0].text();
@@ -116,13 +118,12 @@
         if (json.mark === "iotm") {
           if (window.confirm(alertOk)) {
             configJson = [];
-            scenarioJson = {};
-            configJson = json.config;
-            scenarioJson = json.scenario;
-            configJson = configJson;
-            scenarioJson = scenarioJson;
+            scenarioTxt = "";
 
-            console.log(JSON.stringify(configJson));
+            configJson = json.config;
+            scenarioTxt = json.scenario;
+
+            console.log("config updated");
           }
         } else {
           window.alert(alertErr);
@@ -222,18 +223,18 @@
     </Card>
 
     <Card title="Сценарии">
-      <textarea bind:value={scenarioJson.scen} rows={height} class="px-2 bg-gray-50 border-2 border-gray-200 rounded text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500 w-full" />
+      <textarea bind:value={scenarioTxt} rows={height} class="px-2 bg-gray-50 border-2 border-gray-200 rounded text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500 w-full" />
     </Card>
   </div>
   <div class="grd-1col1">
     <Card>
       <div class="grd-2col1">
-        <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить"}</button>
-        <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить"}</button>
-        <button class="btn-lg" on:click={() => (createExportFile(), download(syntaxHighlight(JSON.stringify(exportJson)), "export.json", "application/json"))}>{"Сохранить конфигурацию"}</button>
+        <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить на устройстве"}</button>
+        <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить устройство"}</button>
+        <button class="btn-lg" on:click={() => (createExportFile(), download(syntaxHighlight(JSON.stringify(exportJson)), "export.json", "application/json"))}>{"Экспорт конфигурации"}</button>
         <label on:click={() => reset()} class="btn-lg cursor-pointer select-none">
           <input bind:files accept="application/JSON" type="file" id="formFile" />
-          {"Загрузить конфигурацию"}
+          {"Импорт конфигурации"}
         </label>
       </div>
     </Card>

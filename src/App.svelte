@@ -37,12 +37,12 @@
   let updatingTimeout = 120000;
   let opened = false;
   let preventMove = false;
-  let devMode = true;
+  let devMode = false;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.88.242";
+  if (devMode) myip = "192.168.88.238";
 
   //Flags
   let firstDevListRequest = true;
@@ -84,7 +84,7 @@
   let configJson = [];
   let widgetsJson = [];
   let itemsJson = [];
-  let scenarioJson = {};
+  let scenarioTxt = "";
 
   let chartJsonFlag = {};
   let layoutJsonFlag = {};
@@ -149,7 +149,7 @@
   var layoutJsonBlobArray = [];
 
   class blobToJson {
-    constructor(st, end, logMsg) {
+    constructor(st, end, logMsg, jsonMode) {
       this.st = st;
       this.end = end;
       this.logMsg = logMsg;
@@ -158,6 +158,7 @@
       this.blob = new MyBlobBuilder();
       this.out;
       this.ws = 0;
+      this.jsonMode = jsonMode;
     }
 
     handle(data) {
@@ -180,10 +181,17 @@
         reader.readAsText(bb);
         reader.onload = () => {
           let result = reader.result;
-          if (IsJsonParse(result)) {
+          if (this.jsonMode) {
+            if (IsJsonParse(result)) {
+              this.parced = true;
+              this.out = JSON.parse(result);
+              if (debug) console.log("✔ B", this.logMsg + " blob parced");
+              onParced();
+            }
+          } else {
             this.parced = true;
-            this.out = JSON.parse(result);
-            if (debug) console.log("✔ B", this.logMsg + " blob parced");
+            this.out = result;
+            if (debug) console.log("✔ S", this.logMsg + " text parced", this.out);
             onParced();
           }
         };
@@ -210,10 +218,10 @@
     }
   }
 
-  let configJsonPacket = new blobToJson("/st/config.json", "/end/config.json", "config.json");
-  let itemsJsonPacket = new blobToJson("/st/items.json", "/end/items.json", "items.json");
-  let widgetsJsonPacket = new blobToJson("/st/widgets.json", "/end/widgets.json", "widgets.json");
-  let scenarioJsonPacket = new blobToJson("/st/scenario.json", "/end/scenario.json", "scenario.json");
+  let configJsonPacket = new blobToJson("/st/config.json", "/end/config.json", "config.json", true);
+  let itemsJsonPacket = new blobToJson("/st/items.json", "/end/items.json", "items.json", true);
+  let widgetsJsonPacket = new blobToJson("/st/widgets.json", "/end/widgets.json", "widgets.json", true);
+  let scenarioJsonPacket = new blobToJson("/st/scenario.txt", "/end/scenario.txt", "scenario.json.txt", false);
 
   router.subscribe(handleNavigation);
 
@@ -527,7 +535,7 @@
       itemsJson = itemsJsonPacket.getData;
       widgetsJson = widgetsJsonPacket.getData;
       configJson = configJsonPacket.getData;
-      scenarioJson = scenarioJsonPacket.getData;
+      scenarioTxt = scenarioJsonPacket.getData;
 
       pageReady.config = true;
 
@@ -698,7 +706,8 @@
     wsSendMsg(selectedWs, "/tuoyal|" + JSON.stringify(generateLayout()));
     modify();
     wsSendMsg(selectedWs, "/gifnoc|" + JSON.stringify(configJson));
-    wsSendMsg(selectedWs, "/oiranecs|" + JSON.stringify(scenarioJson));
+
+    wsSendMsg(selectedWs, "/oiranecs|" + scenarioTxt);
     clearData();
     sendCurrentPageName();
   }
@@ -797,7 +806,7 @@
     layoutJson = [];
     layoutJsonBlobArray = [];
 
-    scenarioJson = {};
+    scenarioTxt = "";
 
     settingsJson = {};
     errorsJson = {};
@@ -1249,7 +1258,7 @@
             <DashboardPage show={pageReady.dash} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
           </Route>
           <Route path="/config">
-            <ConfigPage show={pageReady.config} configJson={configJson} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} cleanLogs={() => cleanLogs()} rebootEsp={() => rebootEsp()} scenarioJson={scenarioJson} />
+            <ConfigPage show={pageReady.config} bind:configJson bind:scenarioTxt widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} cleanLogs={() => cleanLogs()} rebootEsp={() => rebootEsp()} />
           </Route>
           <Route path="/connection">
             <ConnectionPage show={pageReady.connection} rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />
