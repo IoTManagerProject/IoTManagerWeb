@@ -95,12 +95,17 @@
   };
 
   function createExportFile() {
+    exportJson.mark = "iotm";
     exportJson.config = configJson;
     exportJson.scenario = scenarioJson;
+    //exportJson.settings = settingsJson;
   }
 
   let template = null;
   let files = null;
+
+  const alertErr = "Файл не является файлом конфигурации";
+  const alertOk = "Применить конфигурацию?\nне забудьте нажать кнопку 'сохранить'";
 
   $: if (files) {
     const fileText = files[0].text();
@@ -108,13 +113,22 @@
       template = text;
       if (IsJsonParse(template)) {
         let json = JSON.parse(template);
-        configJson = [];
-        scenarioJson = {};
-        configJson = json.config;
-        scenarioJson = json.scenario;
-        configJson = configJson;
-        scenarioJson = scenarioJson;
-        console.log(JSON.stringify(configJson));
+        if (json.mark === "iotm") {
+          if (window.confirm(alertOk)) {
+            configJson = [];
+            scenarioJson = {};
+            configJson = json.config;
+            scenarioJson = json.scenario;
+            configJson = configJson;
+            scenarioJson = scenarioJson;
+
+            console.log(JSON.stringify(configJson));
+          }
+        } else {
+          window.alert(alertErr);
+        }
+      } else {
+        window.alert(alertErr);
       }
     });
     files = null;
@@ -217,8 +231,8 @@
         <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить"}</button>
         <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить"}</button>
         <button class="btn-lg" on:click={() => (createExportFile(), download(syntaxHighlight(JSON.stringify(exportJson)), "export.json", "application/json"))}>{"Сохранить конфигурацию"}</button>
-        <label on:click={() => reset()} class="btn-lg">
-          <input bind:files accept="json" type="file" id="formFile" />
+        <label on:click={() => reset()} class="btn-lg cursor-pointer">
+          <input bind:files accept="application/JSON" type="file" id="formFile" />
           {"Загрузить конфигурацию"}
         </label>
       </div>
