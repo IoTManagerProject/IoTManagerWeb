@@ -231,7 +231,7 @@
         <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить"}</button>
         <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить"}</button>
         <button class="btn-lg" on:click={() => (createExportFile(), download(syntaxHighlight(JSON.stringify(exportJson)), "export.json", "application/json"))}>{"Сохранить конфигурацию"}</button>
-        <label on:click={() => reset()} class="btn-lg cursor-pointer">
+        <label on:click={() => reset()} class="btn-lg cursor-pointer select-none">
           <input bind:files accept="application/JSON" type="file" id="formFile" />
           {"Загрузить конфигурацию"}
         </label>
