@@ -99,20 +99,15 @@
     exportJson.scenario = scenarioJson;
   }
 
-  //let files;
+  let template = null;
+  let files = null;
 
-  function previewFile() {
-    const [file] = document.querySelector("input[type=file]").files;
-    const reader = new FileReader();
-
-    if (file) {
-      reader.readAsText(file);
-    }
-
-    reader.onload = function () {
-      let result = reader.result;
-      if (IsJsonParse(result)) {
-        let json = JSON.parse(result);
+  $: if (files) {
+    const fileText = files[0].text();
+    fileText.then((text) => {
+      template = text;
+      if (IsJsonParse(template)) {
+        let json = JSON.parse(template);
         configJson = [];
         scenarioJson = {};
         configJson = json.config;
@@ -121,7 +116,13 @@
         scenarioJson = scenarioJson;
         console.log(JSON.stringify(configJson));
       }
-    };
+    });
+    files = null;
+  }
+
+  function reset() {
+    files = null;
+    document.getElementById("formFile").value = "";
   }
 
   function IsJsonParse(str) {
@@ -216,8 +217,8 @@
         <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить"}</button>
         <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить"}</button>
         <button class="btn-lg" on:click={() => (createExportFile(), download(syntaxHighlight(JSON.stringify(exportJson)), "export.json", "application/json"))}>{"Сохранить конфигурацию"}</button>
-        <label class="btn-lg">
-          <input on:change={() => previewFile()} accept="json" type="file" id="formFile" />
+        <label on:click={() => reset()} class="btn-lg">
+          <input bind:files accept="json" type="file" id="formFile" />
           {"Загрузить конфигурацию"}
         </label>
       </div>
