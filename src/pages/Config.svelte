@@ -60,11 +60,11 @@
   function windowHeight() {
     console.log("test", scenarioTxt);
     let scenStr = scenarioTxt;
-    height = scenStr.split("\n").length;
+    height = scenStr.split("\n").length + 1;
   }
 
   // Function to download data to a file
-  function download(data, filename, type) {
+  function saveFile2(data, filename, type) {
     var file = new Blob([data], { type: type });
     if (window.navigator.msSaveOrOpenBlob)
       // IE10+
@@ -77,9 +77,28 @@
       a.download = filename;
       document.body.appendChild(a);
       a.click();
+
       setTimeout(function () {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
+      }, 0);
+    }
+  }
+
+  function saveFile(data, filename, type) {
+    var file = new Blob([data], { type: type });
+    if (window.navigator.msSaveOrOpenBlob) {
+      window.navigator.msSaveOrOpenBlob(file, filename);
+    } else {
+      const a = document.createElement("a");
+      document.body.appendChild(a);
+      const url = window.URL.createObjectURL(file);
+      a.href = url;
+      a.download = filename;
+      a.click();
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
       }, 0);
     }
   }
@@ -100,7 +119,11 @@
   function createExportFile() {
     exportJson.mark = "iotm";
     exportJson.config = configJson;
-    exportJson.scenario = scenarioTxt;
+
+    let exportAsText = syntaxHighlight(JSON.stringify(exportJson));
+
+    exportAsText = exportAsText + "\n\nscenario=>" + scenarioTxt;
+    saveFile(exportAsText, "export.json", "application/json");
   }
 
   let template = null;
@@ -113,23 +136,33 @@
     const fileText = files[0].text();
     fileText.then((text) => {
       template = text;
-      if (IsJsonParse(template)) {
-        let json = JSON.parse(template);
-        if (json.mark === "iotm") {
-          if (window.confirm(alertOk)) {
-            configJson = [];
-            scenarioTxt = "";
 
-            configJson = json.config;
-            scenarioTxt = json.scenario;
-
-            console.log("config updated");
-          }
-        } else {
-          window.alert(alertErr);
-        }
-      } else {
+      if (!template.includes("scenario=>")) {
         window.alert(alertErr);
+        return;
+      }
+
+      let jsonPart = selectToMarker(template, "scenario=>");
+      let txtPart = deleteBeforeDelimiter(template, "scenario=>");
+
+      if (!IsJsonParse(jsonPart)) {
+        window.alert(alertErr);
+        return;
+      }
+
+      let json = JSON.parse(jsonPart);
+
+      if (json.mark !== "iotm") {
+        window.alert(alertErr);
+        return;
+      }
+
+      if (window.confirm(alertOk)) {
+        configJson = [];
+        scenarioTxt = "";
+        configJson = json.config;
+        scenarioTxt = txtPart;
+        console.log("config updated");
       }
     });
     files = null;
@@ -148,6 +181,16 @@
       return false;
     }
     return true;
+  }
+
+  function selectToMarker(str, found) {
+    let p = str.indexOf(found);
+    return str.substring(0, p);
+  }
+
+  function deleteBeforeDelimiter(str, found) {
+    let p = str.indexOf(found) + found.length;
+    return str.substring(p);
   }
 </script>
 
@@ -231,7 +274,7 @@
       <div class="grd-2col1">
         <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить на устройстве"}</button>
         <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить устройство"}</button>
-        <button class="btn-lg" on:click={() => (createExportFile(), download(syntaxHighlight(JSON.stringify(exportJson)), "export.json", "application/json"))}>{"Экспорт конфигурации"}</button>
+        <button class="btn-lg" on:click={() => (createExportFile(), createExportFile())}>{"Экспорт конфигурации"}</button>
         <label on:click={() => reset()} class="btn-lg cursor-pointer select-none">
           <input bind:files accept="application/JSON" type="file" id="formFile" />
           {"Импорт конфигурации"}
