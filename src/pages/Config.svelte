@@ -274,7 +274,7 @@
       <div class="grd-2col1">
         <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить на устройстве"}</button>
         <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить устройство"}</button>
-        <button class="btn-lg" on:click={() => (createExportFile(), createExportFile())}>{"Экспорт конфигурации"}</button>
+        <button class="btn-lg" on:click={() => createExportFile()}>{"Экспорт конфигурации"}</button>
         <label on:click={() => reset()} class="btn-lg cursor-pointer select-none">
           <input bind:files accept="application/JSON" type="file" id="formFile" />
           {"Импорт конфигурации"}
