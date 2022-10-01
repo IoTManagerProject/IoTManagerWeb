@@ -145,6 +145,8 @@
   //***********************************************************navigation********************************************************/
   let currentPageName = undefined;
 
+  var chartJsonBlobArray = [];
+  let chartTopic;
   var chartJsonBlob = new MyBlobBuilder();
   var layoutJsonBlobArray = [];
 
@@ -448,13 +450,17 @@
           }
           //сборщик chartJson пакетов
           if (data.includes("/st/chart.json|")) {
-            chartJsonFlag[ws] = true;
+            let json = JSON.parse(deleteBeforeDelimiter(data, "|"));
+            chartTopic = json.topic;
+            chartJsonFlag[chartTopic] = true;
           }
           if (data.includes("/end/chart.json|")) {
             let json = JSON.parse(deleteBeforeDelimiter(data, "|"));
+            chartTopic = json.topic;
+            chartJsonFlag[chartTopic] = false;
+
             console.log("[i] chart blob", json.topic, json.maxCount);
-            chartJsonFlag[ws] = false;
-            var bb = chartJsonBlob.getBlob();
+            var bb = chartJsonBlobArray[chartTopic].getBlob();
             let chartJsonReader = new FileReader();
             chartJsonReader.readAsText(bb);
             chartJsonReader.onload = () => {
@@ -504,7 +510,10 @@
             if (scenarioJsonPacket) scenarioJsonPacket.append(event.data);
           }
           //принимаем данные от всех устройств
-          if (chartJsonFlag[ws]) chartJsonBlob.append(event.data);
+          //if (chartJsonFlag[ws]) chartJsonBlob.append(event.data);
+
+          if (!chartJsonBlobArray[chartTopic]) chartJsonBlobArray[chartTopic] = new MyBlobBuilder();
+          if (chartJsonFlag[chartTopic]) chartJsonBlobArray[chartTopic].append(event.data);
 
           if (!layoutJsonBlobArray[ws]) layoutJsonBlobArray[ws] = new MyBlobBuilder();
           if (layoutJsonFlag[ws]) layoutJsonBlobArray[ws].append(event.data);
@@ -805,6 +814,7 @@
     itemsJson = [];
     layoutJson = [];
     layoutJsonBlobArray = [];
+    chartJsonBlobArray = [];
 
     scenarioTxt = "";
 
