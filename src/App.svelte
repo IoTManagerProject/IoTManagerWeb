@@ -13,6 +13,7 @@
 
   import Alarm from "./components/Alarm.svelte";
   import Progress from "./components/Progress.svelte";
+  import Card from "./components/Card.svelte";
 
   //import Modal from "./components/Modal.svelte";
   import DashboardPage from "./pages/Dashboard.svelte";
@@ -42,7 +43,7 @@
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.88.238";
+  if (devMode) myip = "192.168.88.234";
 
   //Flags
   let firstDevListRequest = true;
@@ -146,7 +147,7 @@
   let currentPageName = undefined;
 
   var chartJsonBlobArray = [];
-  let chartTopic;
+  let chartTopic = "";
   var chartJsonBlob = new MyBlobBuilder();
   var layoutJsonBlobArray = [];
 
@@ -257,7 +258,7 @@
     firstDevListRequest = true;
     connectToAllDevices();
     wsTestMsgTask();
-    sortingLayout();
+    //sortingLayout();
   });
 
   //****************************************************web sockets section******************************************************/
@@ -426,13 +427,14 @@
           //сборщик paramsJson сообщений
           if (data.includes('"params_":"')) {
             if (IsJsonParse(data)) {
+              console.log("[4.1]", ws, "dev params", data);
               //как добавить в объект json новый объект
               paramsJson = {
                 ...paramsJson,
                 ...JSON.parse(data),
               };
               paramsJson = paramsJson;
-              console.log("[4]", ws, "collecting params");
+              console.log("[4.2]", ws, "global params", paramsJson);
               updateAllStatuses(ws);
               onParced();
             }
@@ -440,26 +442,28 @@
           //сборщик layoutJson пакетов
           if (data === "/st/layout.json") {
             layoutJsonFlag[ws] = true;
+            console.log("[1]", ws, "layout package start", layoutJsonFlag);
           }
           if (data === "/end/layout.json") {
             layoutJsonFlag[ws] = false;
-            console.log("[1]", ws, "blob package received");
+            console.log("[1]", ws, "layout package received", layoutJsonFlag);
             //как только прилетел весь блоб мы начнем его читать ридером и заодно запросим json-ы всех параметров
             combineLayoutsInOne(ws);
-            wsSendMsg(ws, "/params|");
           }
           //сборщик chartJson пакетов
           if (data.includes("/st/chart.json|")) {
             let json = JSON.parse(deleteBeforeDelimiter(data, "|"));
-            chartTopic = json.topic;
+            chartTopic = ws.toString() + json.topic.toString();
             chartJsonFlag[chartTopic] = true;
+            console.log("[i]", ws, "chart package start", JSON.stringify(chartJsonFlag));
           }
           if (data.includes("/end/chart.json|")) {
             let json = JSON.parse(deleteBeforeDelimiter(data, "|"));
-            chartTopic = json.topic;
+            chartTopic = ws.toString() + json.topic.toString();
             chartJsonFlag[chartTopic] = false;
 
-            console.log("[i] chart blob", json.topic, json.maxCount);
+            console.log("[i]", ws, "chart package received", JSON.stringify(chartJsonFlag));
+
             var bb = chartJsonBlobArray[chartTopic].getBlob();
             let chartJsonReader = new FileReader();
             chartJsonReader.readAsText(bb);
@@ -508,9 +512,18 @@
             if (itemsJsonPacket) itemsJsonPacket.append(event.data);
             if (widgetsJsonPacket) widgetsJsonPacket.append(event.data);
             if (scenarioJsonPacket) scenarioJsonPacket.append(event.data);
+
+            var bb = event.data;
+            handleBlob(bb);
+
+            //bb = bb.slice(0, 10);
+            //let testBlobReader = new FileReader();
+            //testBlobReader.readAsText(bb);
+            //testBlobReader.onload = () => {
+            //  let testBlobResult = testBlobReader.result;
+            //  console.log("[iiiiiiiiii]", testBlobResult);
+            //};
           }
-          //принимаем данные от всех устройств
-          //if (chartJsonFlag[ws]) chartJsonBlob.append(event.data);
 
           if (!chartJsonBlobArray[chartTopic]) chartJsonBlobArray[chartTopic] = new MyBlobBuilder();
           if (chartJsonFlag[chartTopic]) chartJsonBlobArray[chartTopic].append(event.data);
@@ -530,6 +543,19 @@
     } else {
       if (debug) console.log("[e]", "socket not exist");
     }
+  }
+
+  async function handleBlob(blob) {
+    let txt = await blob.text();
+    console.log("txt: ", txt);
+    ////получаем заголовок
+    //var blobHeader = blob.slice(0, 6);
+    //let header = await blobHeader.text();
+    //console.log("header: ", header);
+    ////получаем размер
+    //var blobSize = blob.slice(7, 11);
+    //let size = await blobSize.text();
+    //console.log("size: ", size);
   }
 
   async function onParced() {
@@ -584,17 +610,21 @@
     reader.readAsText(bb);
 
     reader.onload = () => {
-      let devLayout = JSON.parse(reader.result);
-      for (let i = 0; i < devLayout.length; i++) {
-        devLayout[i].ws = ws;
+      if (IsJsonParse(reader.result)) {
+        let devLayout = JSON.parse(reader.result);
+        for (let i = 0; i < devLayout.length; i++) {
+          devLayout[i].ws = ws;
+        }
+        layoutJson = layoutJson.concat(devLayout);
+        console.log("[2]", ws, "blob package pushed to layout");
+        sortingLayout(ws);
+      } else {
+        console.log("[E]", "ERROR OF LAYOUT!!!");
       }
-      layoutJson = layoutJson.concat(devLayout);
-      console.log("[2]", ws, "blob package pushed to layout");
-      sortingLayout();
     };
   }
 
-  function sortingLayout() {
+  function sortingLayout(ws) {
     //сортируем весь layout по алфавиту
     layoutJson.sort(function (a, b) {
       if (a.descr < b.descr) {
@@ -630,7 +660,9 @@
     });
 
     layoutJson = layoutJson;
-    console.log("[3]", "layout sort");
+    console.log("[3]", ws, "layout sort, requested params...");
+    wsSendMsg(ws, "/params|");
+    //onParced(); //удалить
   }
 
   function updateAllStatuses(ws) {
@@ -665,7 +697,8 @@
   }
 
   //если статус виджета это массив и его нужно накопить
-  function apdateWidgetByArray(newStatusJson) {
+  //должна вызываться когда весь layout в сборе
+  async function apdateWidgetByArray(newStatusJson) {
     console.log("[i]", "collecting arrays");
     let error = true;
     if (layoutJson.length > 0) {
@@ -804,9 +837,26 @@
       }
       if (error) console.log("[E]", "error, widget not found: " + setWidget);
     }
-    //if (debug) console.log("[i] layout:", JSON.stringify(layout));
+
+    //сортируем весь layout по алфавиту
+    layout.sort(function (a, b) {
+      if (a.descr < b.descr) {
+        return -1;
+      }
+      if (a.descr > b.descr) {
+        return 1;
+      }
+      return 0;
+    });
+
+    for (let i = 0; i < layout.length; i++) {
+      layout[i].order = i;
+    }
+
     return layout;
   }
+
+  function layoutOrderForMobileApp() {}
 
   function clearData() {
     configJson = [];
@@ -832,10 +882,11 @@
   }
 
   function clearParcedFlags() {
-    //chartJsonParced = false;
-
+    //не сбрасывай эти флаги они живут сами по себе
     //chartJsonFlag = {};
     //layoutJsonFlag = {};
+
+    console.log("[i]", "parced flags cleared");
 
     for (const [key, value] of Object.entries(parcedFlags)) {
       parcedFlags[key] = false;
@@ -1172,21 +1223,21 @@
 
   function startUpdate() {
     if (choosingVersion !== undefined) {
-      if (choosingVersion === errorsJson.bver) {
-        window.alert("Эта версия уже установленна");
+      //if (choosingVersion === errorsJson.bver) {
+      //  window.alert("Эта версия уже установленна");
+      //} else {
+      if (confirm("Запустить обновление?")) {
+        console.log("start update...");
+        //запишем выбранную версию в файл на esp
+        wsSendMsg(selectedWs, '/rorre|{"chver":' + choosingVersion + "}");
+        //начнем обновление
+        wsSendMsg(selectedWs, "/update|");
+        rebootingUpdatingInProgress = true;
+        myTimeout = setTimeout(rebootingTask, updatingTimeout);
       } else {
-        if (confirm("Запустить обновление?")) {
-          console.log("start update...");
-          //запишем выбранную версию в файл на esp
-          wsSendMsg(selectedWs, '/rorre|{"chver":' + choosingVersion + "}");
-          //начнем обновление
-          wsSendMsg(selectedWs, "/update|");
-          rebootingUpdatingInProgress = true;
-          myTimeout = setTimeout(rebootingTask, updatingTimeout);
-        } else {
-          console.log("update canceled");
-        }
+        console.log("update canceled");
       }
+      //}
     } else {
       window.alert("Версия не выбрана или сервер недоступен");
     }
@@ -1200,6 +1251,11 @@
   function deleteBeforeDelimiter(str, found) {
     let p = str.indexOf(found) + found.length;
     return str.substring(p);
+  }
+
+  function test() {
+    wsSendMsg(selectedWs, "/test|");
+    console.log("[i]", "test");
   }
 </script>
 
@@ -1281,6 +1337,9 @@
           </Route>
           {#if devMode}
             <Route path="/dev">
+              <Card title="Кнопка">
+                <button class="btn-lg" on:click={() => test()}>{"Тест"}</button>
+              </Card>
               <DevPage show={pageReady.dev} layoutJson={layoutJson} errorsJson={errorsJson} settingsJson={settingsJson} configJson={configJson} itemsJson={itemsJson} paramsJson={paramsJson} />
             </Route>
           {/if}
