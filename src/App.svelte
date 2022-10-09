@@ -66,15 +66,6 @@
     dev: false,
   };
 
-  let parcedFlags = {
-    deviceListJson: false,
-    ssidJson: false,
-    errorsJson: false,
-    settingsJson: false,
-    statusJson: false,
-    paramsJson: false,
-  };
-
   let systemReady = false;
 
   //update esp
@@ -82,21 +73,13 @@
   let choosingVersion = undefined;
 
   //JSON Files====================================
-  let configJson = [];
-  let widgetsJson = [];
   let itemsJson = [];
+  let widgetsJson = [];
+  let configJson = [];
   let scenarioTxt = "";
-
-  let chartJsonFlag = {};
-  let layoutJsonFlag = {};
-  //===============================================
-
-  let layoutJson = [];
   let settingsJson = {};
-  let errorsJson = {};
   let ssidJson = {};
-  let paramsJson = {};
-  let incDeviceList = [];
+  let errorsJson = {};
   let deviceList = [];
   deviceList = [
     {
@@ -107,6 +90,30 @@
       status: false,
     },
   ];
+  let incDeviceList = [];
+
+  //////////////////////////////////
+  let layoutJson = [];
+
+  let paramsJson = {};
+
+  let parsed = {
+    itemsJson: false,
+    widgetsJson: false,
+    configJson: false,
+    scenarioTxt: false,
+    settingsJson: false,
+    ssidJson: false,
+    incDeviceList: false,
+    deviceListJson: false,
+    errorsJson: false,
+    statusJson: false,
+    paramsJson: false,
+  };
+
+  let chartJsonFlag = {};
+  let layoutJsonFlag = {};
+  //===============================================
 
   //web sockets
   let socket = [];
@@ -360,68 +367,67 @@
           let data = event.data;
           if (ws === selectedWs) {
             //сборщик deviceList сообщений
-            if (data.includes('devicelist_":"')) {
-              if (IsJsonParse(data)) {
-                incDeviceList = JSON.parse(data);
-                incDeviceList = incDeviceList;
-                if (firstDevListRequest) {
-                  deviceList = incDeviceList;
-                  deviceList[0].status = true;
-                } else {
-                  deviceList = combineArrays(deviceList, incDeviceList);
-                }
-                firstDevListRequest = false;
-                deviceList = deviceList;
-                parcedFlags.deviceListJson = true;
-                if (debug) console.log("✔ S", "deviceList parced");
-                onParced();
-                whenDeviceListWasUpdated();
-                connectToAllDevices();
-              }
-            }
+            //if (data.includes('devicelist_":"')) {
+            //  if (IsJsonParse(data)) {
+            //    incDeviceList = JSON.parse(data);
+            //    incDeviceList = incDeviceList;
+            //    if (firstDevListRequest) {
+            //      deviceList = incDeviceList;
+            //      deviceList[0].status = true;
+            //    } else {
+            //      deviceList = combineArrays(deviceList, incDeviceList);
+            //    }
+            //    firstDevListRequest = false;
+            //    deviceList = deviceList;
+            //    parsed.deviceListJson = true;
+            //    if (debug) console.log("✔ S", "deviceList parced");
+            //    onParced();
+            //    whenDeviceListWasUpdated();
+            //    connectToAllDevices();
+            //  }
+            //}
             //сборщик ssidJson сообщений
-            if (data.includes('ssids_":"')) {
-              if (IsJsonParse(data)) {
-                ssidJson = JSON.parse(data);
-                ssidJson = ssidJson;
-                if (debug) console.log("✔ S", "ssidJson parced");
-                parcedFlags.ssidJson = true;
-
-                onParced();
-              }
-            }
+            //if (data.includes('ssids_":"')) {
+            //  if (IsJsonParse(data)) {
+            //    ssidJson = JSON.parse(data);
+            //    ssidJson = ssidJson;
+            //    if (debug) console.log("✔ S", "ssidJson parced");
+            //    parsed.ssidJson = true;
+            //
+            //    onParced();
+            //  }
+            //}
             //сборщик errorsJson сообщений
-            if (data.includes('errors_":"')) {
-              if (IsJsonParse(data)) {
-                errorsJson = JSON.parse(data);
-                errorsJson = errorsJson;
-                parcedFlags.errorsJson = true;
-                if (debug) console.log("✔ S", "errorsJson parced");
-                onParced();
-              }
-            }
+            //if (data.includes('errors_":"')) {
+            //  if (IsJsonParse(data)) {
+            //    errorsJson = JSON.parse(data);
+            //    errorsJson = errorsJson;
+            //    parsed.errorsJson = true;
+            //    if (debug) console.log("✔ S", "errorsJson parced");
+            //    onParced();
+            //  }
+            //}
             //сборщик settingsJson сообщений
-            if (data.includes('settings_":"')) {
-              if (IsJsonParse(data)) {
-                settingsJson = JSON.parse(data);
-                settingsJson = settingsJson;
-                //sortingLayout();
-                parcedFlags.settingsJson = true;
-                if (debug) console.log("✔ S", "settingsJson parced");
-                onParced();
-              }
-            }
+            //if (data.includes('settings_":"')) {
+            //  if (IsJsonParse(data)) {
+            //    settingsJson = JSON.parse(data);
+            //    settingsJson = settingsJson;
+            //    //sortingLayout();
+            //    parsed.settingsJson = true;
+            //    if (debug) console.log("✔ S", "settingsJson parced");
+            //    onParced();
+            //  }
+            //}
             //сборщик log сообщений
             if (data.includes("/log|")) {
               data = data.replace("/log|", "");
-              //let msg = data.toString();
               addCoreMsg(data);
             }
             //метки начала конца пакетов для Blob--------------------------------------------------------------------------//
-            configJsonPacket.handle(data);
-            itemsJsonPacket.handle(data);
-            widgetsJsonPacket.handle(data);
-            scenarioJsonPacket.handle(data);
+            //configJsonPacket.handle(data);
+            //itemsJsonPacket.handle(data);
+            //widgetsJsonPacket.handle(data);
+            //scenarioJsonPacket.handle(data);
           }
           //прием от всех устройств
           //сборщик paramsJson сообщений
@@ -508,21 +514,7 @@
         if (event.data instanceof Blob) {
           //принимаем данные только для выбранного устройства
           if (ws === selectedWs) {
-            if (configJsonPacket) configJsonPacket.append(event.data);
-            if (itemsJsonPacket) itemsJsonPacket.append(event.data);
-            if (widgetsJsonPacket) widgetsJsonPacket.append(event.data);
-            if (scenarioJsonPacket) scenarioJsonPacket.append(event.data);
-
-            var bb = event.data;
-            handleBlob(bb);
-
-            //bb = bb.slice(0, 10);
-            //let testBlobReader = new FileReader();
-            //testBlobReader.readAsText(bb);
-            //testBlobReader.onload = () => {
-            //  let testBlobResult = testBlobReader.result;
-            //  console.log("[iiiiiiiiii]", testBlobResult);
-            //};
+            parseBlob(event.data);
           }
 
           if (!chartJsonBlobArray[chartTopic]) chartJsonBlobArray[chartTopic] = new MyBlobBuilder();
@@ -545,60 +537,188 @@
     }
   }
 
-  async function handleBlob(blob) {
-    let txt = await blob.text();
-    console.log("txt: ", txt);
-    ////получаем заголовок
-    //var blobHeader = blob.slice(0, 6);
-    //let header = await blobHeader.text();
+  async function parseBlob(blob) {
+    //получаем заголовок
+    var blobHeader = blob.slice(0, 6);
+    let header = await blobHeader.text();
     //console.log("header: ", header);
-    ////получаем размер
-    //var blobSize = blob.slice(7, 11);
-    //let size = await blobSize.text();
+    //получаем размер
+    var blobSize = blob.slice(7, 11);
+    let size = await blobSize.text();
     //console.log("size: ", size);
+
+    if (header === "itemsj") {
+      let out = {};
+      if (await getPayloadAsJson(blob, size, out)) {
+        itemsJson = out.json;
+        parsed.itemsJson = true;
+        console.log("[✔]", "itemsJson: ", itemsJson);
+      } else {
+        parsed.itemsJson = false;
+        console.log("[e]", "itemsJson parse error");
+      }
+    }
+    if (header === "widget") {
+      let out = {};
+      if (await getPayloadAsJson(blob, size, out)) {
+        widgetsJson = out.json;
+        parsed.widgetsJson = true;
+        console.log("[✔]", "widgetsJson: ", widgetsJson);
+      } else {
+        parsed.widgetsJson = false;
+        console.log("[e]", "widgetsJson parse error");
+      }
+    }
+    if (header === "config") {
+      let out = {};
+      if (await getPayloadAsJson(blob, size, out)) {
+        configJson = out.json;
+        parsed.configJson = true;
+        console.log("[✔]", "configJson: ", configJson);
+      } else {
+        parsed.configJson = false;
+        console.log("[e]", "configJson parse error");
+      }
+    }
+    if (header === "scenar") {
+      scenarioTxt = await getPayloadAsTxt(blob, size);
+      console.log("[i]", "scenarioTxt: ", scenarioTxt);
+    }
+    if (header === "settin") {
+      let out = {};
+      if (await getPayloadAsJson(blob, size, out)) {
+        settingsJson = out.json;
+        parsed.settingsJson = true;
+        console.log("[✔]", "settingsJson: ", settingsJson);
+      } else {
+        parsed.settingsJson = false;
+        console.log("[e]", "settingsJson parse error");
+      }
+    }
+    if (header === "ssidli") {
+      let out = {};
+      if (await getPayloadAsJson(blob, size, out)) {
+        ssidJson = out.json;
+        parsed.ssidJson = true;
+        console.log("[✔]", "ssidJson: ", ssidJson);
+      } else {
+        parsed.ssidJson = false;
+        console.log("[e]", "ssidJson parse error");
+      }
+    }
+    if (header === "errors") {
+      let out = {};
+      if (await getPayloadAsJson(blob, size, out)) {
+        errorsJson = out.json;
+        parsed.errorsJson = true;
+        console.log("[✔]", "errorsJson: ", errorsJson);
+      } else {
+        parsed.errorsJson = false;
+        console.log("[e]", "errorsJson parse error");
+      }
+    }
+    if (header === "devlis") {
+      let out = {};
+      if (await getPayloadAsJson(blob, size, out)) {
+        incDeviceList = out.json;
+        parsed.incDeviceList = true;
+        console.log("[✔]", "incDeviceList: ", incDeviceList);
+        handleDeviseList();
+      } else {
+        parsed.incDeviceList = false;
+        console.log("[e]", "incDeviceList parse error");
+      }
+    }
+
+    onParced();
+  }
+
+  async function getJsonAsJson(blob, size, out) {
+    let partBlob = blob.slice(12, size);
+    let txt = await partBlob.text();
+    try {
+      out.json = JSON.parse(txt);
+      out.parse = true;
+    } catch (e) {
+      if (debug) console.log("[e]", "json parce error: ", txt);
+      out.parse = false;
+    }
+    return out.parse;
+  }
+
+  async function getPayloadAsJson(blob, size, out) {
+    let partBlob = blob.slice(size, blob.length);
+    let txt = await partBlob.text();
+    try {
+      out.json = JSON.parse(txt);
+      out.parse = true;
+    } catch (e) {
+      if (debug) console.log("[e]", "json parse error: ", txt);
+      out.parse = false;
+    }
+    return out.parse;
+  }
+
+  async function getPayloadAsTxt(blob, size) {
+    let payloadBlob = blob.slice(size, blob.length);
+    let payload = await payloadBlob.text();
+    return payload;
   }
 
   async function onParced() {
-    if (currentPageName === "/|") {
-      clearParcedFlags();
-      if (debug) console.log("✔", "dashboard data received");
-      pageReady.dash = true;
-    }
-    if (currentPageName === "/config|" && itemsJsonPacket.isParced && widgetsJsonPacket.isParced && configJsonPacket.isParced && scenarioJsonPacket.isParced && parcedFlags.settingsJson) {
-      clearParcedFlags();
+    //if (currentPageName === "/|") {
+    //  clearParcedFlags();
+    //  if (debug) console.log("✔", "dashboard data received");
+    //  pageReady.dash = true;
+    //}
 
-      itemsJson = itemsJsonPacket.getData;
-      widgetsJson = widgetsJsonPacket.getData;
-      configJson = configJsonPacket.getData;
-      scenarioTxt = scenarioJsonPacket.getData;
-
+    if (currentPageName === "/config|" && parsed.itemsJson && parsed.widgetsJson && parsed.configJson && parsed.settingsJson) {
+      clearParcedFlags();
       pageReady.config = true;
-
       if (debug) console.log("✔✔", "config page parced");
     }
-    if (currentPageName === "/connection|" && parcedFlags.ssidJson && parcedFlags.settingsJson && parcedFlags.errorsJson) {
+    if (currentPageName === "/connection|" && parsed.ssidJson && parsed.settingsJson && parsed.errorsJson) {
       clearParcedFlags();
       if (debug) console.log("✔✔", "connection page parced");
       pageReady.connection = true;
     }
-    if (currentPageName === "/list|" && parcedFlags.deviceListJson) {
+
+    if (currentPageName === "/list|" && parsed.deviceListJson) {
       clearParcedFlags();
       if (debug) console.log("✔✔", "list page parced");
       pageReady.list = true;
     }
-    if (currentPageName === "/system|" && parcedFlags.errorsJson && parcedFlags.settingsJson) {
+
+    if (currentPageName === "/system|" && parsed.errorsJson && parsed.settingsJson) {
       clearParcedFlags();
       getVersionsList();
       if (debug) console.log("✔✔", "system page parced");
       pageReady.system = true;
     }
-    if (currentPageName === "/dev|" && parcedFlags.errorsJson && parcedFlags.settingsJson && configJsonPacket.isParced && itemsJsonPacket.isParced) {
-      clearParcedFlags();
-      configJson = configJsonPacket.getData;
-      itemsJson = itemsJsonPacket.getData;
-      if (debug) console.log("✔✔", "dev page parced");
-      pageReady.dev = true;
+
+    //  if (currentPageName === "/dev|" && parsed.errorsJson && parsed.settingsJson && configJsonPacket.isParced && itemsJsonPacket.isParced) {
+    //    clearParcedFlags();
+    //    configJson = configJsonPacket.getData;
+    //    itemsJson = itemsJsonPacket.getData;
+    //    if (debug) console.log("✔✔", "dev page parced");
+    //    pageReady.dev = true;
+    //  }
+  }
+
+  function handleDeviseList() {
+    if (firstDevListRequest) {
+      deviceList = incDeviceList;
+      deviceList[0].status = true;
+    } else {
+      deviceList = combineArrays(deviceList, incDeviceList);
     }
+    firstDevListRequest = false;
+    deviceList = deviceList;
+    parsed.deviceListJson = true;
+    if (debug) console.log("[✔]", "deviceList parced");
+    onParced();
+    whenDeviceListWasUpdated();
+    connectToAllDevices();
   }
 
   //***********************************************************dashboard***************************************************************/
@@ -888,8 +1008,8 @@
 
     console.log("[i]", "parced flags cleared");
 
-    for (const [key, value] of Object.entries(parcedFlags)) {
-      parcedFlags[key] = false;
+    for (const [key, value] of Object.entries(parsed)) {
+      parsed[key] = false;
     }
     clearFlags();
   }
@@ -1254,8 +1374,8 @@
   }
 
   function test() {
-    wsSendMsg(selectedWs, "/test|");
-    console.log("[i]", "test");
+    //wsSendMsg(selectedWs, "/test|");
+    //console.log("[i]", "test");
   }
 </script>
 
