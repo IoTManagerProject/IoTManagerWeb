@@ -91,9 +91,8 @@
       status: false,
     },
   ];
-  let incDeviceList = [];
 
-  //////////////////////////////////
+  let incDeviceList = [];
   let layoutJson = [];
   let paramsJson = {};
 
@@ -127,36 +126,13 @@
 
   let parcedEvent = 0;
 
-  //***********************************************************blob**************************************************************/
-  var MyBlobBuilder = function () {
-    this.parts = [];
-  };
-
-  MyBlobBuilder.prototype.append = function (part) {
-    this.parts.push(part);
-    this.blob = undefined; // Invalidate the blob
-  };
-
-  MyBlobBuilder.prototype.getBlob = function () {
-    if (!this.blob) {
-      this.blob = new Blob(this.parts, {
-        type: "binary",
-      });
-    }
-    return this.blob;
-  };
-
-  MyBlobBuilder.prototype.clear = function () {
-    this.parts = [];
-  };
-
   //***********************************************************navigation********************************************************/
   let currentPageName = undefined;
 
-  var chartJsonBlobArray = [];
-  let chartTopic = "";
-  var chartJsonBlob = new MyBlobBuilder();
-  var layoutJsonBlobArray = [];
+  //var chartJsonBlobArray = [];
+  //let chartTopic = "";
+  //var chartJsonBlob = new MyBlobBuilder();
+  //var layoutJsonBlobArray = [];
 
   router.subscribe(handleNavigation);
 
@@ -287,109 +263,18 @@
 
       //события веб сокетов
       socket[ws].addEventListener("message", function (event) {
-        //сообщения типа String-----------------------------------------------------------------------------------//
         if (typeof event.data === "string") {
           let data = event.data;
-          if (ws === selectedWs) {
-            //сборщик log сообщений
-            //if (data.includes("/log|")) {
-            //  data = data.replace("/log|", "");
-            //  addCoreMsg(data);
-            //}
-          }
-          //прием от всех устройств
-          //сборщик paramsJson сообщений
-          if (data.includes('"params_":"')) {
-            if (IsJsonParse(data)) {
-              console.log("[4.1]", ws, "dev params", data);
-              //как добавить в объект json новый объект
-              paramsJson = {
-                ...paramsJson,
-                ...JSON.parse(data),
-              };
-              paramsJson = paramsJson;
-              console.log("[4.2]", ws, "global params", paramsJson);
-              updateAllStatuses(ws);
-              onParced();
-            }
-          }
-          //сборщик layoutJson пакетов
-          if (data === "/st/layout.json") {
-            layoutJsonFlag[ws] = true;
-            console.log("[1]", ws, "layout package start", layoutJsonFlag);
-          }
-          if (data === "/end/layout.json") {
-            layoutJsonFlag[ws] = false;
-            console.log("[1]", ws, "layout package received", layoutJsonFlag);
-            //как только прилетел весь блоб мы начнем его читать ридером и заодно запросим json-ы всех параметров
-            combineLayoutsInOne(ws);
-          }
-          //сборщик chartJson пакетов
-          if (data.includes("/st/chart.json|")) {
-            let json = JSON.parse(deleteBeforeDelimiter(data, "|"));
-            chartTopic = ws.toString() + json.topic.toString();
-            chartJsonFlag[chartTopic] = true;
-            console.log("[i]", ws, "chart package start", JSON.stringify(chartJsonFlag));
-          }
-          if (data.includes("/end/chart.json|")) {
-            let json = JSON.parse(deleteBeforeDelimiter(data, "|"));
-            chartTopic = ws.toString() + json.topic.toString();
-            chartJsonFlag[chartTopic] = false;
-
-            console.log("[i]", ws, "chart package received", JSON.stringify(chartJsonFlag));
-
-            var bb = chartJsonBlobArray[chartTopic].getBlob();
-            let chartJsonReader = new FileReader();
-            chartJsonReader.readAsText(bb);
-            chartJsonReader.onload = () => {
-              let chartJsonResult = chartJsonReader.result;
-              chartJsonResult = "[" + chartJsonResult.substring(0, chartJsonResult.length - 1) + "]";
-              if (IsJsonParse(chartJsonResult)) {
-                let arr = JSON.parse(chartJsonResult);
-                let status = {};
-                status.status = arr;
-                status.topic = json.topic;
-                status.maxCount = json.maxCount;
-                apdateWidgetByArray(status);
-                if (debug) console.log("✔ B", "chartJson parced", status);
-              }
-            };
-            chartJsonBlob.clear();
-          }
-          if (data.includes("/string/chart.json|")) {
-            let tmp = deleteBeforeDelimiter(data, "|");
-            if (IsJsonParse(tmp)) {
-              let json = JSON.parse(tmp);
-              console.log("✔ S", "chartJson parced");
-              apdateWidgetByArray(json);
-            }
-          }
-          //сборщик statusJson сообщений
-          if (data.includes('"status"') && !data.includes("/string/chart.json|")) {
-            if (IsJsonParse(data)) {
-              let statusJson = JSON.parse(data);
-              if (Array.isArray(statusJson.status)) {
-                //updateWidgetArr(statusJson);
-                //if (debug) console.log("[i] status (arr)", ws);
-              } else {
-                updateWidget(statusJson);
-                if (debug) console.log("[i] status (dgt)", ws, JSON.stringify(statusJson));
-              }
-            }
-          }
         }
-        //сообщения типа Blob-------------------------------------------------------------------------------------//
         if (event.data instanceof Blob) {
           //принимаем данные только для выбранного устройства
           if (ws === selectedWs) {
             parseBlob(event.data);
           }
-
-          if (!chartJsonBlobArray[chartTopic]) chartJsonBlobArray[chartTopic] = new MyBlobBuilder();
-          if (chartJsonFlag[chartTopic]) chartJsonBlobArray[chartTopic].append(event.data);
-
-          if (!layoutJsonBlobArray[ws]) layoutJsonBlobArray[ws] = new MyBlobBuilder();
-          if (layoutJsonFlag[ws]) layoutJsonBlobArray[ws].append(event.data);
+          //собираем данные со всех устройств только в случае если пользователь на dashboard
+          if (currentPageName === "/|") {
+            parseAllBlob(event.data, ws);
+          }
         }
       });
       socket[ws].addEventListener("close", (event) => {
@@ -505,6 +390,85 @@
     onParced();
   }
 
+  async function parseAllBlob(blob, ws) {
+    //получаем заголовок
+    var blobHeader = blob.slice(0, 6);
+    let header = await blobHeader.text();
+    //console.log("header: ", header);
+    //получаем размер
+    var blobSize = blob.slice(7, 11);
+    let size = await blobSize.text();
+    //console.log("size: ", size);
+
+    if (header === "status") {
+      let out = {};
+      if (await getPayloadAsJson(blob, size, out)) {
+        let statusJson = out.json;
+        updateWidget(statusJson);
+        //if (blobDebug)
+        console.log("[✔]", "statusJson: ", statusJson);
+      } else {
+        if (blobDebug) console.log("[e]", "statusJson parse error");
+      }
+    }
+    if (header === "layout") {
+      let out = {};
+      if (await getPayloadAsJson(blob, size, out)) {
+        let devLayout = out.json;
+        combineLayoutsInOne(ws, devLayout);
+        if (blobDebug) console.log("[✔]", "devLayout: ", devLayout);
+      } else {
+        if (blobDebug) console.log("[e]", "devLayout parse error");
+      }
+    }
+    if (header === "params") {
+      let out = {};
+      if (await getPayloadAsJson(blob, size, out)) {
+        let devParams = out.json;
+        paramsJson = {
+          ...paramsJson,
+          ...devParams,
+        };
+        paramsJson = paramsJson;
+        updateAllStatuses(ws);
+        onParced();
+        if (blobDebug) console.log("[✔]", "devParams: ", devParams);
+      } else {
+        if (blobDebug) console.log("[e]", "devParams parse error");
+      }
+    }
+    if (header === "charta") {
+      let txt = await getPayloadAsTxt(blob, size);
+      txt = "[" + txt.substring(0, txt.length - 1) + "]";
+      let chartJson;
+      try {
+        chartJson = JSON.parse(txt);
+        if (blobDebug) console.log("[i]", "chart data json: ", chartJson);
+      } catch (e) {
+        if (blobDebug) console.log("[e]", "chart json parce error, return");
+        return;
+      }
+      let out = {};
+      let addJson = {};
+      if (await getJsonAsJson(blob, size, out)) {
+        addJson = out.json;
+        if (blobDebug) console.log("[i]", "chart add json: ", addJson);
+      } else {
+        if (blobDebug) console.log("[e]", "chart json parce error, return");
+        return;
+      }
+      let finalDataJson = {};
+      finalDataJson.status = chartJson;
+
+      finalDataJson = {
+        ...finalDataJson,
+        ...addJson,
+      };
+      console.log("[✔]", "chartJson: ", finalDataJson);
+      apdateWidgetByArray(finalDataJson);
+    }
+  }
+
   async function getJsonAsJson(blob, size, out) {
     let partBlob = blob.slice(12, size);
     let txt = await partBlob.text();
@@ -538,11 +502,11 @@
   }
 
   async function onParced() {
-    //if (currentPageName === "/|") {
-    //  clearParcedFlags();
-    //  if (debug) console.log("✔", "dashboard data received");
-    //  pageReady.dash = true;
-    //}
+    if (currentPageName === "/|") {
+      clearParcedFlags();
+      if (debug) console.log("✔", "dashboard data received");
+      pageReady.dash = true;
+    }
 
     if (currentPageName === "/config|" && parsed.itemsJson && parsed.widgetsJson && parsed.configJson && parsed.settingsJson) {
       clearParcedFlags();
@@ -596,24 +560,13 @@
   //***********************************************************dashboard***************************************************************/
 
   //слияние layout-ов всех устройств в общий layout
-  async function combineLayoutsInOne(ws) {
-    var bb = layoutJsonBlobArray[ws].getBlob();
-    let reader = new FileReader();
-    reader.readAsText(bb);
-
-    reader.onload = () => {
-      if (IsJsonParse(reader.result)) {
-        let devLayout = JSON.parse(reader.result);
-        for (let i = 0; i < devLayout.length; i++) {
-          devLayout[i].ws = ws;
-        }
-        layoutJson = layoutJson.concat(devLayout);
-        console.log("[2]", ws, "blob package pushed to layout");
-        sortingLayout(ws);
-      } else {
-        console.log("[E]", "ERROR OF LAYOUT!!!");
-      }
-    };
+  async function combineLayoutsInOne(ws, devLayout) {
+    for (let i = 0; i < devLayout.length; i++) {
+      devLayout[i].ws = ws;
+    }
+    layoutJson = layoutJson.concat(devLayout);
+    console.log("[2]", ws, "devLayout pushed to layout");
+    sortingLayout(ws);
   }
 
   function sortingLayout(ws) {
@@ -654,7 +607,6 @@
     layoutJson = layoutJson;
     console.log("[3]", ws, "layout sort, requested params...");
     wsSendMsg(ws, "/params|");
-    //onParced(); //удалить
   }
 
   function updateAllStatuses(ws) {
@@ -855,8 +807,8 @@
     widgetsJson = [];
     itemsJson = [];
     layoutJson = [];
-    layoutJsonBlobArray = [];
-    chartJsonBlobArray = [];
+    //layoutJsonBlobArray = [];
+    //chartJsonBlobArray = [];
 
     scenarioTxt = "";
 
