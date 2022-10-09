@@ -31,14 +31,15 @@
 
   //****************************************************constants section*********************************************************/
   //******************************************************************************************************************************/
-  let debug = true;
-  let LOG_MAX_MESSAGES = 100;
-  let reconnectTimeout = 20000;
-  let rebootingTimeout = 18000;
-  let updatingTimeout = 120000;
+  const debug = true;
+  const LOG_MAX_MESSAGES = 100;
+  const reconnectTimeout = 20000;
+  const rebootingTimeout = 18000;
+  const updatingTimeout = 120000;
   let opened = false;
   let preventMove = false;
-  let devMode = true;
+  const blobDebug = false;
+  const devMode = true;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
@@ -94,7 +95,6 @@
 
   //////////////////////////////////
   let layoutJson = [];
-
   let paramsJson = {};
 
   let parsed = {
@@ -157,81 +157,6 @@
   let chartTopic = "";
   var chartJsonBlob = new MyBlobBuilder();
   var layoutJsonBlobArray = [];
-
-  class blobToJson {
-    constructor(st, end, logMsg, jsonMode) {
-      this.st = st;
-      this.end = end;
-      this.logMsg = logMsg;
-      this.flag = false;
-      this.parced = false;
-      this.blob = new MyBlobBuilder();
-      this.out;
-      this.ws = 0;
-      this.jsonMode = jsonMode;
-    }
-
-    handle(data) {
-      this.data = data;
-      this.stEvent();
-      this.endEvent();
-    }
-
-    stEvent() {
-      if (this.data === this.st) {
-        this.flag = true;
-      }
-    }
-
-    endEvent() {
-      if (this.data === this.end) {
-        this.flag = false;
-        var bb = this.blob.getBlob();
-        let reader = new FileReader();
-        reader.readAsText(bb);
-        reader.onload = () => {
-          let result = reader.result;
-          if (this.jsonMode) {
-            if (IsJsonParse(result)) {
-              this.parced = true;
-              this.out = JSON.parse(result);
-              if (debug) console.log("✔ B", this.logMsg + " blob parced");
-              onParced();
-            }
-          } else {
-            this.parced = true;
-            this.out = result;
-            if (debug) console.log("✔ S", this.logMsg + " text parced", this.out);
-            onParced();
-          }
-        };
-        this.blob.clear();
-      }
-    }
-
-    setAsNotParced() {
-      this.parced = false;
-    }
-
-    get isParced() {
-      return this.parced;
-    }
-
-    //после того как забрали данные класс более считается как не parced
-    get getData() {
-      this.parced = false;
-      return this.out;
-    }
-
-    append(data) {
-      if (this.flag) this.blob.append(data);
-    }
-  }
-
-  let configJsonPacket = new blobToJson("/st/config.json", "/end/config.json", "config.json", true);
-  let itemsJsonPacket = new blobToJson("/st/items.json", "/end/items.json", "items.json", true);
-  let widgetsJsonPacket = new blobToJson("/st/widgets.json", "/end/widgets.json", "widgets.json", true);
-  let scenarioJsonPacket = new blobToJson("/st/scenario.txt", "/end/scenario.txt", "scenario.json.txt", false);
 
   router.subscribe(handleNavigation);
 
@@ -366,68 +291,11 @@
         if (typeof event.data === "string") {
           let data = event.data;
           if (ws === selectedWs) {
-            //сборщик deviceList сообщений
-            //if (data.includes('devicelist_":"')) {
-            //  if (IsJsonParse(data)) {
-            //    incDeviceList = JSON.parse(data);
-            //    incDeviceList = incDeviceList;
-            //    if (firstDevListRequest) {
-            //      deviceList = incDeviceList;
-            //      deviceList[0].status = true;
-            //    } else {
-            //      deviceList = combineArrays(deviceList, incDeviceList);
-            //    }
-            //    firstDevListRequest = false;
-            //    deviceList = deviceList;
-            //    parsed.deviceListJson = true;
-            //    if (debug) console.log("✔ S", "deviceList parced");
-            //    onParced();
-            //    whenDeviceListWasUpdated();
-            //    connectToAllDevices();
-            //  }
-            //}
-            //сборщик ssidJson сообщений
-            //if (data.includes('ssids_":"')) {
-            //  if (IsJsonParse(data)) {
-            //    ssidJson = JSON.parse(data);
-            //    ssidJson = ssidJson;
-            //    if (debug) console.log("✔ S", "ssidJson parced");
-            //    parsed.ssidJson = true;
-            //
-            //    onParced();
-            //  }
-            //}
-            //сборщик errorsJson сообщений
-            //if (data.includes('errors_":"')) {
-            //  if (IsJsonParse(data)) {
-            //    errorsJson = JSON.parse(data);
-            //    errorsJson = errorsJson;
-            //    parsed.errorsJson = true;
-            //    if (debug) console.log("✔ S", "errorsJson parced");
-            //    onParced();
-            //  }
-            //}
-            //сборщик settingsJson сообщений
-            //if (data.includes('settings_":"')) {
-            //  if (IsJsonParse(data)) {
-            //    settingsJson = JSON.parse(data);
-            //    settingsJson = settingsJson;
-            //    //sortingLayout();
-            //    parsed.settingsJson = true;
-            //    if (debug) console.log("✔ S", "settingsJson parced");
-            //    onParced();
-            //  }
-            //}
             //сборщик log сообщений
-            if (data.includes("/log|")) {
-              data = data.replace("/log|", "");
-              addCoreMsg(data);
-            }
-            //метки начала конца пакетов для Blob--------------------------------------------------------------------------//
-            //configJsonPacket.handle(data);
-            //itemsJsonPacket.handle(data);
-            //widgetsJsonPacket.handle(data);
-            //scenarioJsonPacket.handle(data);
+            //if (data.includes("/log|")) {
+            //  data = data.replace("/log|", "");
+            //  addCoreMsg(data);
+            //}
           }
           //прием от всех устройств
           //сборщик paramsJson сообщений
@@ -552,10 +420,10 @@
       if (await getPayloadAsJson(blob, size, out)) {
         itemsJson = out.json;
         parsed.itemsJson = true;
-        console.log("[✔]", "itemsJson: ", itemsJson);
+        if (blobDebug) console.log("[✔]", "itemsJson: ", itemsJson);
       } else {
         parsed.itemsJson = false;
-        console.log("[e]", "itemsJson parse error");
+        if (blobDebug) console.log("[e]", "itemsJson parse error");
       }
     }
     if (header === "widget") {
@@ -563,10 +431,10 @@
       if (await getPayloadAsJson(blob, size, out)) {
         widgetsJson = out.json;
         parsed.widgetsJson = true;
-        console.log("[✔]", "widgetsJson: ", widgetsJson);
+        if (blobDebug) console.log("[✔]", "widgetsJson: ", widgetsJson);
       } else {
         parsed.widgetsJson = false;
-        console.log("[e]", "widgetsJson parse error");
+        if (blobDebug) console.log("[e]", "widgetsJson parse error");
       }
     }
     if (header === "config") {
@@ -574,25 +442,25 @@
       if (await getPayloadAsJson(blob, size, out)) {
         configJson = out.json;
         parsed.configJson = true;
-        console.log("[✔]", "configJson: ", configJson);
+        if (blobDebug) console.log("[✔]", "configJson: ", configJson);
       } else {
         parsed.configJson = false;
-        console.log("[e]", "configJson parse error");
+        if (blobDebug) console.log("[e]", "configJson parse error");
       }
     }
     if (header === "scenar") {
       scenarioTxt = await getPayloadAsTxt(blob, size);
-      console.log("[i]", "scenarioTxt: ", scenarioTxt);
+      if (blobDebug) console.log("[i]", "scenarioTxt: ", scenarioTxt);
     }
     if (header === "settin") {
       let out = {};
       if (await getPayloadAsJson(blob, size, out)) {
         settingsJson = out.json;
         parsed.settingsJson = true;
-        console.log("[✔]", "settingsJson: ", settingsJson);
+        if (blobDebug) console.log("[✔]", "settingsJson: ", settingsJson);
       } else {
         parsed.settingsJson = false;
-        console.log("[e]", "settingsJson parse error");
+        if (blobDebug) console.log("[e]", "settingsJson parse error");
       }
     }
     if (header === "ssidli") {
@@ -600,10 +468,10 @@
       if (await getPayloadAsJson(blob, size, out)) {
         ssidJson = out.json;
         parsed.ssidJson = true;
-        console.log("[✔]", "ssidJson: ", ssidJson);
+        if (blobDebug) console.log("[✔]", "ssidJson: ", ssidJson);
       } else {
         parsed.ssidJson = false;
-        console.log("[e]", "ssidJson parse error");
+        if (blobDebug) console.log("[e]", "ssidJson parse error");
       }
     }
     if (header === "errors") {
@@ -611,10 +479,10 @@
       if (await getPayloadAsJson(blob, size, out)) {
         errorsJson = out.json;
         parsed.errorsJson = true;
-        console.log("[✔]", "errorsJson: ", errorsJson);
+        if (blobDebug) console.log("[✔]", "errorsJson: ", errorsJson);
       } else {
         parsed.errorsJson = false;
-        console.log("[e]", "errorsJson parse error");
+        if (blobDebug) console.log("[e]", "errorsJson parse error");
       }
     }
     if (header === "devlis") {
@@ -622,12 +490,16 @@
       if (await getPayloadAsJson(blob, size, out)) {
         incDeviceList = out.json;
         parsed.incDeviceList = true;
-        console.log("[✔]", "incDeviceList: ", incDeviceList);
+        if (blobDebug) console.log("[✔]", "incDeviceList: ", incDeviceList);
         handleDeviseList();
       } else {
         parsed.incDeviceList = false;
-        console.log("[e]", "incDeviceList parse error");
+        if (blobDebug) console.log("[e]", "incDeviceList parse error");
       }
+    }
+    if (header === "corelg") {
+      let txt = await getPayloadAsTxt(blob, size);
+      addCoreMsg(txt);
     }
 
     onParced();
@@ -660,9 +532,9 @@
   }
 
   async function getPayloadAsTxt(blob, size) {
-    let payloadBlob = blob.slice(size, blob.length);
-    let payload = await payloadBlob.text();
-    return payload;
+    let txtBlob = blob.slice(size, blob.length);
+    let txt = await txtBlob.text();
+    return txt;
   }
 
   async function onParced() {
@@ -715,7 +587,7 @@
     firstDevListRequest = false;
     deviceList = deviceList;
     parsed.deviceListJson = true;
-    if (debug) console.log("[✔]", "deviceList parced");
+    if (blobDebug) console.log("[✔]", "deviceList parced");
     onParced();
     whenDeviceListWasUpdated();
     connectToAllDevices();
@@ -998,7 +870,7 @@
 
     clearParcedFlags();
 
-    if (debug) console.log("[i]", "all app data cleared");
+    if (debug) console.log("[i]", "all json files cleared");
   }
 
   function clearParcedFlags() {

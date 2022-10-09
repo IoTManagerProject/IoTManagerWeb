@@ -58,7 +58,6 @@
   let height;
 
   function windowHeight() {
-    console.log("test", scenarioTxt);
     let scenStr = scenarioTxt;
     height = scenStr.split("\n").length + 1;
   }
