@@ -335,7 +335,8 @@
     }
     if (header === "scenar") {
       scenarioTxt = await getPayloadAsTxt(blob, size);
-      if (blobDebug) console.log("[i]", "scenarioTxt: ", scenarioTxt);
+      //if (blobDebug)
+      console.log("[i]", "scenarioTxt: ", scenarioTxt);
     }
     if (header === "settin") {
       let out = {};
@@ -437,6 +438,7 @@
         if (blobDebug) console.log("[e]", "devParams parse error");
       }
     }
+
     if (header === "charta") {
       let txt = await getPayloadAsTxt(blob, size);
       txt = "[" + txt.substring(0, txt.length - 1) + "]";
@@ -445,7 +447,7 @@
         chartJson = JSON.parse(txt);
         if (blobDebug) console.log("[i]", "chart data json: ", chartJson);
       } catch (e) {
-        if (blobDebug) console.log("[e]", "chart json parce error, return");
+        if (blobDebug) console.log("[e]", "chart json data parce error, return");
         return;
       }
       let out = {};
@@ -454,7 +456,7 @@
         addJson = out.json;
         if (blobDebug) console.log("[i]", "chart add json: ", addJson);
       } else {
-        if (blobDebug) console.log("[e]", "chart json parce error, return");
+        if (blobDebug) console.log("[e]", "chart json add-ns parce error, return");
         return;
       }
       let finalDataJson = {};
@@ -464,8 +466,19 @@
         ...finalDataJson,
         ...addJson,
       };
-      console.log("[✔]", "chartJson: ", finalDataJson);
+      if (blobDebug) console.log("[✔]", "chartJson: ", finalDataJson);
       apdateWidgetByArray(finalDataJson);
+    }
+
+    if (header === "chartb") {
+      let out = {};
+      if (await getPayloadAsJson(blob, size, out)) {
+        let status = out.json;
+        apdateWidgetByArray(status);
+        if (blobDebug) console.log("[✔]", "chart status: ", status);
+      } else {
+        if (blobDebug) console.log("[e]", "status parse error");
+      }
     }
   }
 
@@ -503,8 +516,8 @@
 
   async function onParced() {
     if (currentPageName === "/|") {
-      clearParcedFlags();
-      if (debug) console.log("✔", "dashboard data received");
+      //clearParcedFlags();
+      //if (debug) console.log("✔", "dashboard data received");
       pageReady.dash = true;
     }
 
@@ -803,18 +816,15 @@
   function layoutOrderForMobileApp() {}
 
   function clearData() {
-    configJson = [];
-    widgetsJson = [];
     itemsJson = [];
-    layoutJson = [];
-    //layoutJsonBlobArray = [];
-    //chartJsonBlobArray = [];
-
-    scenarioTxt = "";
-
+    widgetsJson = [];
+    configJson = [];
+    scenarioTxt = "-";
     settingsJson = {};
+    //ssidJson = {};
     errorsJson = {};
-    //coreMessages = [];
+    layoutJson = [];
+    paramsJson = {}; //?
 
     for (const [key, value] of Object.entries(pageReady)) {
       pageReady[key] = false;
@@ -826,12 +836,7 @@
   }
 
   function clearParcedFlags() {
-    //не сбрасывай эти флаги они живут сами по себе
-    //chartJsonFlag = {};
-    //layoutJsonFlag = {};
-
     console.log("[i]", "parced flags cleared");
-
     for (const [key, value] of Object.entries(parsed)) {
       parsed[key] = false;
     }
@@ -876,9 +881,9 @@
   function wsSendMsg(ws, msg) {
     if (socket[ws] && socket[ws].readyState === 1) {
       socket[ws].send(msg);
-      if (debug) console.log("[i]", getIP(ws), ws, "msg send success", msg);
+      if (debug) console.log("[i]", getIP(ws), ws, "msg send success");
     } else {
-      if (debug) console.log("[e]", getIP(ws), ws, "msg not send", msg);
+      if (debug) console.log("[e]", getIP(ws), ws, "msg not send");
     }
   }
 
