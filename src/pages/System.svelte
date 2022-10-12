@@ -112,8 +112,16 @@
       1: {
         descr: "Ошибка json",
         color: "text-red-500",
-        txt: "Ошибка чтения json файла с виджетами",
+        txt: "Ошибка чтения json файла с виджетами при отправки в mqtt",
         cancel: true,
+      },
+    },
+    tme1: {
+      1: {
+        descr: "Ошибка времени",
+        color: "text-red-500",
+        txt: "Ошибка синхронизации времени с NTP сервером",
+        cancel: false,
       },
     },
   };
@@ -123,8 +131,6 @@
 
   export let errorsJson;
 
-  //export let rebootEsp = () => {};
-
   export let versionsList;
   export let choosingVersion;
   export let coreMessages;
@@ -133,10 +139,13 @@
   export let startUpdate = () => {};
   export let saveSett = () => {};
   export let cleanLogs = () => {};
+  export let rebootEsp = () => {};
 
   export let show;
 
   export let paramsBeenChanged = false;
+
+  let reboot = false;
 
   export let cancelAlarm = (alarmKey) => {};
 </script>
@@ -317,9 +326,47 @@
         </div>
       </div>
 
+      <!--I2C-->
+      <div class="flex mb-2 h-6 items-center">
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">i2c SCL gpio</p>
+        </div>
+        <div class="flex justify-center w-1/3">
+          <input bind:value={settingsJson.pinSCL} on:change={() => (reboot = true)} class="ipt-rnd h-7 text-center focus:border-indigo-500" type="number" />
+        </div>
+      </div>
+      <div class="flex mb-2 h-6 items-center">
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">i2c SDA gpio</p>
+        </div>
+        <div class="flex justify-center w-1/3">
+          <input bind:value={settingsJson.pinSDA} on:change={() => (reboot = true)} class="ipt-rnd h-7 text-center focus:border-indigo-500" type="number" />
+        </div>
+      </div>
+      <div class="flex mb-2 h-6 items-center">
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">i2c частота</p>
+        </div>
+        <div class="flex justify-center w-1/3">
+          <input bind:value={settingsJson.i2cFreq} on:change={() => (reboot = true)} class="ipt-rnd h-7 text-center focus:border-indigo-500" type="number" />
+        </div>
+      </div>
+      <!--WORKING GROUP-->
+      <div class="flex mb-2 h-6 items-center">
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Группа устройств</p>
+        </div>
+        <div class="flex justify-center w-1/3">
+          <input bind:value={settingsJson.wg} on:change={() => (reboot = true)} class="ipt-rnd h-7 text-center focus:border-indigo-500" />
+        </div>
+      </div>
+
       <!--<div class="grd-2col1">-->
       {#if paramsBeenChanged}
         <button class="btn-lg animate-pulse" on:click={() => (saveSett(), (paramsBeenChanged = false))}>{"Сохранить"}</button>
+      {/if}
+      {#if reboot}
+        <button class="btn-lg animate-pulse" on:click={() => (saveSett(), rebootEsp(), (reboot = false))}>{"Сохранить и перезагрузить"}</button>
       {/if}
       <!--<button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить"}</button>-->
       <!--</div>-->

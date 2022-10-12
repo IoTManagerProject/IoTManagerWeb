@@ -39,12 +39,12 @@
   let opened = false;
   let preventMove = false;
   const blobDebug = false;
-  const devMode = true;
+  const devMode = false;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.88.234";
+  if (devMode) myip = "192.168.88.248";
 
   //Flags
   let firstDevListRequest = true;
@@ -77,7 +77,7 @@
   let itemsJson = [];
   let widgetsJson = [];
   let configJson = [];
-  let scenarioTxt = "";
+  let scenarioTxt = " ";
   let settingsJson = {};
   let ssidJson = {};
   let errorsJson = {};
@@ -438,7 +438,6 @@
         if (blobDebug) console.log("[e]", "devParams parse error");
       }
     }
-
     if (header === "charta") {
       let txt = await getPayloadAsTxt(blob, size);
       txt = "[" + txt.substring(0, txt.length - 1) + "]";
@@ -469,7 +468,6 @@
       if (blobDebug) console.log("[✔]", "chartJson: ", finalDataJson);
       apdateWidgetByArray(finalDataJson);
     }
-
     if (header === "chartb") {
       let out = {};
       if (await getPayloadAsJson(blob, size, out)) {
@@ -545,13 +543,11 @@
       pageReady.system = true;
     }
 
-    //  if (currentPageName === "/dev|" && parsed.errorsJson && parsed.settingsJson && configJsonPacket.isParced && itemsJsonPacket.isParced) {
-    //    clearParcedFlags();
-    //    configJson = configJsonPacket.getData;
-    //    itemsJson = itemsJsonPacket.getData;
-    //    if (debug) console.log("✔✔", "dev page parced");
-    //    pageReady.dev = true;
-    //  }
+    if (currentPageName === "/dev|" && parsed.errorsJson && parsed.settingsJson && parsed.configJson && parsed.itemsJson) {
+      clearParcedFlags();
+      if (debug) console.log("✔✔", "dev page parced");
+      pageReady.dev = true;
+    }
   }
 
   function handleDeviseList() {
@@ -819,7 +815,7 @@
     itemsJson = [];
     widgetsJson = [];
     configJson = [];
-    scenarioTxt = "-";
+    scenarioTxt = " ";
     settingsJson = {};
     //ssidJson = {};
     errorsJson = {};
@@ -1282,7 +1278,7 @@
             <ListPage show={pageReady.list} deviceList={deviceList} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} />
           </Route>
           <Route path="/system">
-            <SystemPage show={pageReady.system} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion startUpdate={() => startUpdate()} coreMessages={coreMessages} />
+            <SystemPage show={pageReady.system} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion startUpdate={() => startUpdate()} coreMessages={coreMessages} />
           </Route>
           {#if devMode}
             <Route path="/dev">
