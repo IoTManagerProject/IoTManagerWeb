@@ -34,17 +34,18 @@
   const debug = true;
   const LOG_MAX_MESSAGES = 100;
   const reconnectTimeout = 20000;
+  const waitingAckTimeout = 5000;
   const rebootingTimeout = 18000;
   const updatingTimeout = 120000;
   let opened = false;
   let preventMove = false;
   const blobDebug = false;
-  const devMode = false;
+  const devMode = true;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.88.248";
+  if (devMode) myip = "192.168.88.251";
 
   //Flags
   let firstDevListRequest = true;
@@ -193,22 +194,59 @@
     }
   }
 
+  var ackTimeoutsArr = [];
+  var startMillis = [];
+  var ping = [];
+
+  function ack(ws, st) {
+    if (!st) {
+      startMillis[ws] = Date.now(); //+new Date();
+      ackTimeoutsArr[ws] = setTimeout(function () {
+        markDeviceStatus(ws, false);
+      }, waitingAckTimeout);
+    } else {
+      if (ackTimeoutsArr[ws]) clearTimeout(ackTimeoutsArr[ws]);
+      if (startMillis[ws]) {
+        ping[ws] = Date.now() - startMillis[ws]; //+new Date();
+      }
+
+      for (let i = 0; i < deviceList.length; i++) {
+        if (deviceList[i].ws === ws) {
+          deviceList[i].ping = ping[ws];
+        }
+      }
+
+      deviceList = deviceList;
+    }
+  }
+
   function markDeviceStatus(ws, status) {
     deviceList.forEach((device) => {
       if (device.ws === ws) {
         device.status = status;
+        device.ping = 0;
         if (debug) {
           if (device.status) {
-            console.log("[i]", device.ip, "status online");
+            console.log("[i]", device.ip, ws, "status online");
           } else {
-            console.log("[i]", device.ip, "status offline");
+            //socket[ws].close();
+            console.log("[i]", device.ip, ws, "status offline");
           }
         }
       }
     });
     deviceList = deviceList;
-    getSelectedDeviceData(selectedWs);
-    socketConnected = selectedDeviceData.status;
+    //getSelectedDeviceData(selectedWs);
+    //socketConnected = selectedDeviceData.status;
+  }
+
+  function remooveWidgets(ws) {
+    for (let i = 0; i < layoutJson.length; i++) {
+      if (ws === layoutJson[i].ws) {
+        delete layoutJson[i];
+      }
+    }
+    layoutJson = layoutJson;
   }
 
   function getDeviceStatus(ws) {
@@ -265,6 +303,9 @@
       socket[ws].addEventListener("message", function (event) {
         if (typeof event.data === "string") {
           let data = event.data;
+          if (data === "/tstr|") {
+            ack(ws, true);
+          }
         }
         if (event.data instanceof Blob) {
           //принимаем данные только для выбранного устройства
@@ -279,10 +320,12 @@
       });
       socket[ws].addEventListener("close", (event) => {
         if (debug) console.log("[e]", ip, "connection closed");
+        //socket[ws].close();
         markDeviceStatus(ws, false);
       });
       socket[ws].addEventListener("error", function (event) {
         if (debug) console.log("[e]", ip, "connection error");
+        //socket[ws].close();
         markDeviceStatus(ws, false);
       });
     } else {
@@ -865,6 +908,7 @@
             wsEventAdd(device.ws);
           } else {
             wsSendMsg(device.ws, "/tst|");
+            ack(device.ws, false);
           }
         });
       }
@@ -1196,6 +1240,11 @@
   function deleteBeforeDelimiter(str, found) {
     let p = str.indexOf(found) + found.length;
     return str.substring(p);
+  }
+
+  function getMillis() {
+    const d = new Date();
+    return d.getMilliseconds();
   }
 
   function test() {

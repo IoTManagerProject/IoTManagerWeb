@@ -39,6 +39,7 @@
             <th class="tbl-hd">IP адрес</th>
             <th class="tbl-hd">Идентификатор</th>
             <th class="tbl-hd">Состояние</th>
+            <th class="tbl-hd">Пинг</th>
             <th class="tbl-hd w-7" />
           </tr>
         </thead>
@@ -49,6 +50,7 @@
               <td class="tbl-bdy-lg ipt-lg w-full"><a href={"http://" + device.ip}>{device.ip}</a></td>
               <td class="tbl-bdy-lg ipt-lg w-full">{device.id}</td>
               <td class="tbl-bdy-lg ipt-lg w-full {device.status ? 'bg-green-50' : 'bg-red-50'}">{device.status ? "online" : "offline"}</td>
+              <td class="tbl-bdy-lg ipt-lg w-full">{device.ping ? device.ping : "-"}</td>
               <td class="tbl-bdy-lg"><CrossIcon click={() => deleteLineFromDevlist(i)} /></td>
             </tr>
           {/each}
