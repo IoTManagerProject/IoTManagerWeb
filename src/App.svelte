@@ -45,7 +45,7 @@
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.88.251";
+  if (devMode) myip = "192.168.88.237";
 
   //Flags
   let firstDevListRequest = true;
@@ -200,14 +200,14 @@
 
   function ack(ws, st) {
     if (!st) {
-      startMillis[ws] = Date.now(); //+new Date();
+      startMillis[ws] = Date.now();
       ackTimeoutsArr[ws] = setTimeout(function () {
         markDeviceStatus(ws, false);
       }, waitingAckTimeout);
     } else {
       if (ackTimeoutsArr[ws]) clearTimeout(ackTimeoutsArr[ws]);
       if (startMillis[ws]) {
-        ping[ws] = Date.now() - startMillis[ws]; //+new Date();
+        ping[ws] = Date.now() - startMillis[ws];
       }
 
       for (let i = 0; i < deviceList.length; i++) {
@@ -225,28 +225,21 @@
       if (device.ws === ws) {
         device.status = status;
         device.ping = 0;
-        if (debug) {
-          if (device.status) {
-            console.log("[i]", device.ip, ws, "status online");
-          } else {
-            //socket[ws].close();
-            console.log("[i]", device.ip, ws, "status offline");
-          }
+        if (device.status) {
+          console.log("[i]", device.ip, ws, "status online");
+        } else {
+          console.log("[i]", device.ip, ws, "status offline");
+          deleteWidget(ws);
+          sortingLayout(ws);
         }
       }
     });
+    whenDeviceListWasUpdated();
     deviceList = deviceList;
-    //getSelectedDeviceData(selectedWs);
-    //socketConnected = selectedDeviceData.status;
   }
 
-  function remooveWidgets(ws) {
-    for (let i = 0; i < layoutJson.length; i++) {
-      if (ws === layoutJson[i].ws) {
-        delete layoutJson[i];
-      }
-    }
-    layoutJson = layoutJson;
+  function deleteWidget(ws) {
+    layoutJson = layoutJson.filter((item) => item.ws !== ws);
   }
 
   function getDeviceStatus(ws) {
@@ -304,6 +297,7 @@
         if (typeof event.data === "string") {
           let data = event.data;
           if (data === "/tstr|") {
+            //прилетело подтверждение значит устройство онлайн
             ack(ws, true);
           }
         }
@@ -1311,7 +1305,7 @@
   <main class="flex-1 overflow-y-auto p-0 {opened === true && !preventMove ? 'ml-36' : 'ml-0'}">
     <ul class="menu__main">
       <div class="bg-cover pt-0 px-4">
-        {#if !socketConnected}
+        {#if !socketConnected && currentPageName != "/|"}
           <Alarm title="Нет соединения" />
         {:else}
           <Route path="/">

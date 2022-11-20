@@ -16,10 +16,12 @@
 </script>
 
 {#if show}
-  <div class="grd-3col1">
-    {#if layoutJson === []}
+  <div class="grd-1col1">
+    {#if layoutJson.length === 0}
       <Card title={"Ваша панель управления пуста, вначале добавьте новые элементы в конфигураторе!"} />
     {/if}
+  </div>
+  <div class="grd-3col1">
     {#each pages as pagesName, p}
       <Card title={pagesName.page}>
         {#each layoutJson as widget, l}

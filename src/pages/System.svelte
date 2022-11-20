@@ -310,6 +310,17 @@
           <button class="btn-lg h-7" on:click={() => cleanLogs()}>{"Очистить"}</button>
         </div>
       </div>
+
+      <!--WORKING GROUP-->
+      <div class="flex mb-2 h-6 items-center">
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Группа устройств</p>
+        </div>
+        <div class="flex justify-center w-1/3">
+          <input bind:value={settingsJson.wg} on:change={() => (reboot = true)} class="ipt-rnd h-7 text-center focus:border-indigo-500" />
+        </div>
+      </div>
+
       <!--LOG-->
       <div class="flex mb-2 h-6 items-center">
         <div class="w-2/3">
@@ -326,7 +337,23 @@
         </div>
       </div>
 
-      <!--I2C-->
+      <!--i2c-->
+      <div class="flex mb-2 h-6 items-center">
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Расширение i2c</p>
+        </div>
+
+        <div class="flex justify-center w-1/3">
+          <label for="i2c" class="items-center cursor-pointer">
+            <div class="relative">
+              <input bind:checked={settingsJson.i2c} on:change={() => (reboot = true)} id="i2c" type="checkbox" class="sr-only" />
+              <div class="block {settingsJson.i2c ? 'bg-blue-600' : 'bg-gray-600'} w-10 h-6 rounded-full shadow-lg" />
+              <div class="dot bg-gray-100 absolute left-1 top-1  w-4 h-4 rounded-full transition shadow-lg" />
+            </div>
+          </label>
+        </div>
+      </div>
+
       <div class="flex mb-2 h-6 items-center">
         <div class="w-2/3">
           <p class="pr-4 text-gray-500 font-bold text-sm truncate">i2c SCL gpio</p>
@@ -351,16 +378,8 @@
           <input bind:value={settingsJson.i2cFreq} on:change={() => (reboot = true)} class="ipt-rnd h-7 text-center focus:border-indigo-500" type="number" />
         </div>
       </div>
-      <!--WORKING GROUP-->
-      <div class="flex mb-2 h-6 items-center">
-        <div class="w-2/3">
-          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Группа устройств</p>
-        </div>
-        <div class="flex justify-center w-1/3">
-          <input bind:value={settingsJson.wg} on:change={() => (reboot = true)} class="ipt-rnd h-7 text-center focus:border-indigo-500" />
-        </div>
-      </div>
 
+      <!--control-->
       <!--<div class="grd-2col1">-->
       {#if paramsBeenChanged}
         <button class="btn-lg animate-pulse" on:click={() => (saveSett(), (paramsBeenChanged = false))}>{"Сохранить"}</button>
