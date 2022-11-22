@@ -337,10 +337,26 @@
         </div>
       </div>
 
+      <!--MQTT-->
+      <div class="flex mb-2 h-6 items-center">
+        <div class="w-2/3">
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Прием событий с других устройств</p>
+        </div>
+        <div class="flex justify-center w-1/3">
+          <label for="mqtt" class="items-center cursor-pointer">
+            <div class="relative">
+              <input bind:checked={settingsJson.mqttin} on:change={() => (reboot = true)} id="mqtt" type="checkbox" class="sr-only" />
+              <div class="block {settingsJson.mqttin ? 'bg-blue-600' : 'bg-gray-600'} w-10 h-6 rounded-full shadow-lg" />
+              <div class="dot bg-gray-100 absolute left-1 top-1  w-4 h-4 rounded-full transition shadow-lg" />
+            </div>
+          </label>
+        </div>
+      </div>
+
       <!--i2c-->
       <div class="flex mb-2 h-6 items-center">
         <div class="w-2/3">
-          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Расширение i2c</p>
+          <p class="pr-4 text-gray-500 font-bold text-sm truncate">Перенаправление i2c</p>
         </div>
 
         <div class="flex justify-center w-1/3">
@@ -353,31 +369,32 @@
           </label>
         </div>
       </div>
-
-      <div class="flex mb-2 h-6 items-center">
-        <div class="w-2/3">
-          <p class="pr-4 text-gray-500 font-bold text-sm truncate">i2c SCL gpio</p>
+      {#if settingsJson.i2c === true}
+        <div class="flex mb-2 h-6 items-center">
+          <div class="w-2/3">
+            <p class="pr-4 text-gray-500 font-bold text-sm truncate">i2c SCL gpio</p>
+          </div>
+          <div class="flex justify-center w-1/3">
+            <input bind:value={settingsJson.pinSCL} on:change={() => (reboot = true)} class="ipt-rnd h-7 text-center focus:border-indigo-500" type="number" />
+          </div>
         </div>
-        <div class="flex justify-center w-1/3">
-          <input bind:value={settingsJson.pinSCL} on:change={() => (reboot = true)} class="ipt-rnd h-7 text-center focus:border-indigo-500" type="number" />
+        <div class="flex mb-2 h-6 items-center">
+          <div class="w-2/3">
+            <p class="pr-4 text-gray-500 font-bold text-sm truncate">i2c SDA gpio</p>
+          </div>
+          <div class="flex justify-center w-1/3">
+            <input bind:value={settingsJson.pinSDA} on:change={() => (reboot = true)} class="ipt-rnd h-7 text-center focus:border-indigo-500" type="number" />
+          </div>
         </div>
-      </div>
-      <div class="flex mb-2 h-6 items-center">
-        <div class="w-2/3">
-          <p class="pr-4 text-gray-500 font-bold text-sm truncate">i2c SDA gpio</p>
+        <div class="flex mb-2 h-6 items-center">
+          <div class="w-2/3">
+            <p class="pr-4 text-gray-500 font-bold text-sm truncate">i2c частота</p>
+          </div>
+          <div class="flex justify-center w-1/3">
+            <input bind:value={settingsJson.i2cFreq} on:change={() => (reboot = true)} class="ipt-rnd h-7 text-center focus:border-indigo-500" type="number" />
+          </div>
         </div>
-        <div class="flex justify-center w-1/3">
-          <input bind:value={settingsJson.pinSDA} on:change={() => (reboot = true)} class="ipt-rnd h-7 text-center focus:border-indigo-500" type="number" />
-        </div>
-      </div>
-      <div class="flex mb-2 h-6 items-center">
-        <div class="w-2/3">
-          <p class="pr-4 text-gray-500 font-bold text-sm truncate">i2c частота</p>
-        </div>
-        <div class="flex justify-center w-1/3">
-          <input bind:value={settingsJson.i2cFreq} on:change={() => (reboot = true)} class="ipt-rnd h-7 text-center focus:border-indigo-500" type="number" />
-        </div>
-      </div>
+      {/if}
 
       <!--control-->
       <!--<div class="grd-2col1">-->
@@ -390,6 +407,7 @@
       <!--<button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить"}</button>-->
       <!--</div>-->
     </Card>
+
     <!--LOG-->
     <Card title="Лог" class="z-50">
       <div class="h-80 overflow-y-auto">

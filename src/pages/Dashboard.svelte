@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from "svelte";
   import Card from "../components/Card.svelte";
   import Input from "../widgets/Input.svelte";
   import Range from "../widgets/Range.svelte";
@@ -7,17 +8,29 @@
   import Anydata from "../widgets/Anydata.svelte";
   import Alarm from "../components/Alarm.svelte";
 
+  onMount(async () => {
+    setTimeout(timeIsOut, 1000);
+  });
+
   export let layoutJson;
   export let pages;
 
   export let show;
 
   export let wsPush = (ws, topic, status) => {};
+
+  let empty = false;
+
+  function timeIsOut() {
+    if (layoutJson.length === 0) {
+      empty = true;
+    }
+  }
 </script>
 
 {#if show}
-  <div class="grd-1col1">
-    {#if layoutJson.length === 0}
+  <div class="grd-1col1 animate-pulse">
+    {#if empty}
       <Card title={"Ваша панель управления пуста, вначале добавьте новые элементы в конфигураторе!"} />
     {/if}
   </div>

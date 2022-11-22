@@ -33,14 +33,14 @@
   //******************************************************************************************************************************/
   const debug = true;
   const LOG_MAX_MESSAGES = 100;
-  const reconnectTimeout = 20000;
+  const reconnectTimeout = 30000;
   const waitingAckTimeout = 5000;
-  const rebootingTimeout = 18000;
-  const updatingTimeout = 120000;
+  const rebootingTimeout = 20000;
+  const updatingTimeout = 130000;
   let opened = false;
   let preventMove = false;
   const blobDebug = false;
-  const devMode = true;
+  const devMode = false;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
@@ -1156,6 +1156,7 @@
   function rebootEsp() {
     if (debug) console.log("[i]", "reboot...");
     wsSendMsg(selectedWs, "/reboot|");
+    markDeviceStatus(selectedWs, false);
     rebootingUpdatingInProgress = true;
     myTimeout = setTimeout(rebootingTask, rebootingTimeout);
   }
@@ -1306,7 +1307,7 @@
     <ul class="menu__main">
       <div class="bg-cover pt-0 px-4">
         {#if !socketConnected && currentPageName != "/|"}
-          <Alarm title="Нет соединения" />
+          <Alarm title="Подключение..." />
         {:else}
           <Route path="/">
             <DashboardPage show={pageReady.dash} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
@@ -1379,10 +1380,10 @@
       @apply table-fixed w-full select-none my-2;
     }
     .tbl-hd {
-      @apply text-center px-1 break-words text-gray-500 font-bold;
+      @apply text-center px-1 break-words text-gray-500 font-bold truncate;
     }
     .tbl-bdy-lg {
-      @apply text-center px-1 break-words;
+      @apply text-center px-1 break-words truncate;
     }
     .tbl-bdy-sm {
       @apply px-1 break-words;
@@ -1412,7 +1413,7 @@
     }
     /*====================================================buttons=====================================================*/
     .btn-lg {
-      @apply flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold text-sm sm:text-base md:text-base lg:text-base xl:text-base 2xl:text-base h-6 sm:h-8 md:h-8 lg:h-8 xl:h-8 2xl:h-8 w-full mt-0 border border-gray-300 rounded;
+      @apply flex justify-center break-words content-center bg-blue-100 hover:bg-blue-200 text-gray-500 font-bold text-sm sm:text-base md:text-base lg:text-base xl:text-base 2xl:text-base h-6 sm:h-8 md:h-8 lg:h-8 xl:h-8 2xl:h-8 w-full mt-0 border border-gray-300 rounded truncate;
     }
     .btn-tbl {
       @apply flex justify-center content-center text-gray-500 font-bold w-6 h-auto border border-gray-300;

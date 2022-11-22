@@ -19,7 +19,7 @@
     <Card title="Подключение к WiFi">
       <div class="crd-itm-psn">
         <div class="w-4/6">
-          <p class="wgt-dscr-stl">Название устройства</p>
+          <p class="wgt-dscr-stl truncate">Название устройства</p>
         </div>
         <div class="flex justify-end w-3/6">
           <input bind:value={settingsJson.name} class="ipt-rnd text-left focus:border-indigo-500" type="text" />
@@ -27,7 +27,7 @@
       </div>
       <div class="crd-itm-psn">
         <div class="w-4/6">
-          <p class="wgt-dscr-stl">Точка доступа</p>
+          <p class="wgt-dscr-stl truncate">Точка доступа</p>
         </div>
         <div class="flex justify-end w-3/6">
           <input bind:value={settingsJson.apssid} class="ipt-rnd text-left focus:border-indigo-500" type="text" />
@@ -35,7 +35,7 @@
       </div>
       <div class="crd-itm-psn">
         <div class="w-4/6">
-          <p class="wgt-dscr-stl">Пароль точки доступа</p>
+          <p class="wgt-dscr-stl truncate">Пароль точки доступа</p>
         </div>
         <div class="flex justify-end w-3/6">
           <input bind:value={settingsJson.appass} class="ipt-rnd text-left focus:border-indigo-500" type="text" />
@@ -43,7 +43,7 @@
       </div>
       <div class="crd-itm-psn">
         <div class="w-4/6">
-          <p class="wgt-dscr-stl">Название wifi сети</p>
+          <p class="wgt-dscr-stl truncate">Название wifi сети</p>
         </div>
         <div class="flex justify-end w-3/6">
           <select class="ipt-rnd text-left focus:border-indigo-500" bind:value={settingsJson.routerssid} on:click={() => ssidClick()}>
@@ -57,7 +57,7 @@
       </div>
       <div class="crd-itm-psn">
         <div class="w-4/6">
-          <p class="wgt-dscr-stl">Пароль</p>
+          <p class="wgt-dscr-stl truncate">Пароль</p>
         </div>
         <div class="flex justify-end w-3/6">
           <input bind:value={settingsJson.routerpass} class="ipt-rnd text-left focus:border-indigo-500" type="text" />
@@ -65,7 +65,7 @@
       </div>
       <div class="crd-itm-psn">
         <div class="w-4/6">
-          <p class="wgt-dscr-stl">Сервер обновления</p>
+          <p class="wgt-dscr-stl truncate">Сервер обновления</p>
         </div>
         <div class="flex justify-end w-3/6">
           <input bind:value={settingsJson.serverip} class="ipt-rnd text-left focus:border-indigo-500" type="text" />
@@ -83,7 +83,7 @@
     <Card title="Подключение к MQTT">
       <div class="crd-itm-psn">
         <div class="w-4/6">
-          <p class="wgt-dscr-stl">Состояние подключения</p>
+          <p class="wgt-dscr-stl truncate">Состояние подключения</p>
         </div>
         <div class="flex justify-center w-3/6 align-baseline text-sm sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base break-words">
           {#if errorsJson.mqtt === "e5"}
@@ -99,7 +99,7 @@
       </div>
       <div class="crd-itm-psn">
         <div class="w-4/6">
-          <p class="wgt-dscr-stl">Название сервера</p>
+          <p class="wgt-dscr-stl truncate">Название сервера</p>
         </div>
         <div class="flex justify-end w-3/6">
           <input bind:value={settingsJson.mqttServer} class="ipt-rnd text-left focus:border-indigo-500" type="text" />
@@ -107,7 +107,7 @@
       </div>
       <div class="crd-itm-psn">
         <div class="w-4/6">
-          <p class="wgt-dscr-stl">Порт</p>
+          <p class="wgt-dscr-stl truncate">Порт</p>
         </div>
         <div class="flex justify-end w-3/6">
           <input bind:value={settingsJson.mqttPort} class="ipt-rnd text-left focus:border-indigo-500" type="text" />
@@ -115,7 +115,7 @@
       </div>
       <div class="crd-itm-psn">
         <div class="w-4/6">
-          <p class="wgt-dscr-stl">Префикс</p>
+          <p class="wgt-dscr-stl truncate">Префикс</p>
         </div>
         <div class="flex justify-end w-3/6">
           <input bind:value={settingsJson.mqttPrefix} class="ipt-rnd text-left focus:border-indigo-500" type="text" />
@@ -123,7 +123,7 @@
       </div>
       <div class="crd-itm-psn">
         <div class="w-4/6">
-          <p class="wgt-dscr-stl">Имя пользователя</p>
+          <p class="wgt-dscr-stl truncate">Имя пользователя</p>
         </div>
         <div class="flex justify-end w-3/6">
           <input bind:value={settingsJson.mqttUser} class="ipt-rnd text-left focus:border-indigo-500" type="text" />
@@ -131,7 +131,7 @@
       </div>
       <div class="crd-itm-psn">
         <div class="w-4/6">
-          <p class="wgt-dscr-stl">Пароль</p>
+          <p class="wgt-dscr-stl truncate">Пароль</p>
         </div>
         <div class="flex justify-end w-3/6">
           <input bind:value={settingsJson.mqttPass} class="ipt-rnd text-left focus:border-indigo-500" type="text" />
