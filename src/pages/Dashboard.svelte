@@ -8,18 +8,24 @@
   import Anydata from "../widgets/Anydata.svelte";
   import Alarm from "../components/Alarm.svelte";
 
-  onMount(async () => {
-    setTimeout(timeIsOut, 1000);
-  });
+  onMount(async () => {});
 
   export let layoutJson;
+
+  $: layoutJson.length, timeOut();
+
+  let empty = false;
+
+  function timeOut() {
+    empty = false;
+    setTimeout(timeIsOut, 1000);
+  }
+
   export let pages;
 
   export let show;
 
   export let wsPush = (ws, topic, status) => {};
-
-  let empty = false;
 
   function timeIsOut() {
     if (layoutJson.length === 0) {
