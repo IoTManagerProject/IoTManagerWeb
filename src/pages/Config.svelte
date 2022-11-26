@@ -12,7 +12,7 @@
   export let show;
 
   let itemsJsonBind = 0;
-  let debug = true;
+  let debug = false;
 
   export let saveConfig = () => {};
   export let rebootEsp = () => {};
