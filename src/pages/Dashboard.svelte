@@ -18,7 +18,7 @@
 
   function timeOut() {
     empty = false;
-    setTimeout(timeIsOut, 1000);
+    setTimeout(timeIsOut, 3000);
   }
 
   export let pages;

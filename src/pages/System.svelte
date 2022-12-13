@@ -168,11 +168,13 @@
         </div>
         <div class="flex justify-center w-1/3">
           <select class="border border-indigo-500 border-4 text-center" bind:value={choosingVersion}>
-            {#each Object.entries(versionsList) as [key, param]}
-              <option value={param}>
-                {param}
-              </option>
-            {/each}
+            {#if versionsList}
+              {#each Object.entries(versionsList) as [key, param]}
+                <option value={param}>
+                  {param}
+                </option>
+              {/each}
+            {/if}
           </select>
         </div>
       </div>

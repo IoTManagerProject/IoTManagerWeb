@@ -34,18 +34,18 @@
   const debug = true;
   const LOG_MAX_MESSAGES = 100;
   const reconnectTimeout = 30000;
-  const waitingAckTimeout = 5000;
+  const waitingAckTimeout = 6000;
   const rebootingTimeout = 20000;
   const updatingTimeout = 130000;
   let opened = false;
   let preventMove = false;
   const blobDebug = false;
-  const devMode = false;
+  const devMode = true;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.88.237";
+  if (devMode) myip = "192.168.88.229";
 
   //Flags
   let firstDevListRequest = true;
@@ -1242,6 +1242,17 @@
     return d.getMilliseconds();
   }
 
+  function moduleOrder(id, key, value) {
+    console.log("order: ", id, key, value);
+    let json = {
+      id: id,
+      key: key,
+      value: value,
+    };
+    console.log(json);
+    wsSendMsg(selectedWs, "/order|" + JSON.stringify(json));
+  }
+
   function test() {
     //wsSendMsg(selectedWs, "/test|");
     //console.log("[i]", "test");
@@ -1313,7 +1324,7 @@
             <DashboardPage show={pageReady.dash} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
           </Route>
           <Route path="/config">
-            <ConfigPage show={pageReady.config} bind:configJson bind:scenarioTxt widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} cleanLogs={() => cleanLogs()} rebootEsp={() => rebootEsp()} />
+            <ConfigPage show={pageReady.config} bind:configJson bind:scenarioTxt widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} cleanLogs={() => cleanLogs()} rebootEsp={() => rebootEsp()} moduleOrder={(id, key, value) => moduleOrder(id, key, value)} />
           </Route>
           <Route path="/connection">
             <ConnectionPage show={pageReady.connection} rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />

@@ -191,6 +191,8 @@
     let p = str.indexOf(found) + found.length;
     return str.substring(p);
   }
+
+  export let moduleOrder = (id, key, value) => {};
 </script>
 
 {#if show}
@@ -248,12 +250,23 @@
                     <td />
                     <td />
                     <td />
-                    <td class="tbl-bdy-sm text-right">
-                      <p class="txt-ita">{key}</p>
-                    </td>
-                    <td class="tbl-bdy-sm text-center">
-                      <input bind:value={element[key]} class="ipt-sm w-full" type="text" />
-                    </td>
+                    {#if key.startsWith("btn")}
+                      <td class="tbl-bdy-sm text-right">
+                        <button on:click={() => moduleOrder(element.id, key.substring(4), element[key])} class="h-3 sm:h-6 md:h-6 lg:h-6 xl:h-6 2xl:h-6 w-auto bg-blue-100 inline-flex items-center border border-gray-300 hover:bg-blue-200">{key.substring(4)}</button>
+                      </td>
+                      {#if element[key] != "nil"}
+                        <td class="tbl-bdy-sm text-center">
+                          <input bind:value={element[key]} class="ipt-sm w-full" type="text" />
+                        </td>
+                      {/if}
+                    {:else}
+                      <td class="tbl-bdy-sm text-right">
+                        <p class="txt-ita">{key}</p>
+                      </td>
+                      <td class="tbl-bdy-sm text-center">
+                        <input bind:value={element[key]} class="ipt-sm w-full" type="text" />
+                      </td>
+                    {/if}
                   </tr>
                 {/if}
               {/each}
