@@ -40,6 +40,7 @@
       <Card title={"Ваша панель управления пуста, вначале добавьте новые элементы в конфигураторе!"} />
     {/if}
   </div>
+  <div class="my-4">
   <div class="grd-3col1">
     {#each pages as pagesName, p}
       <Card title={pagesName.page}>
@@ -65,6 +66,7 @@
       </Card>
     {/each}
   </div>
+</div>
 {:else}
   <Alarm title="Загрузка..." />
 {/if}

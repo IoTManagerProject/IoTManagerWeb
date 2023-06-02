@@ -33,19 +33,19 @@
   //******************************************************************************************************************************/
   const debug = true;
   const LOG_MAX_MESSAGES = 100;
-  const reconnectTimeout = 30000;
-  const waitingAckTimeout = 6000;
+  const reconnectTimeout = 120000; //период проверки соединения с устройством
+  const waitingAckTimeout = 18000; //время ожидания ответа от устройства
   const rebootingTimeout = 20000;
   const updatingTimeout = 130000;
   let opened = false;
   let preventMove = false;
   const blobDebug = false;
-  const devMode = false;
+  const devMode = true;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.88.229";
+  if (devMode) myip = "192.168.88.238";
 
   //Flags
   let firstDevListRequest = true;
@@ -53,7 +53,7 @@
   let showModalFlag = false;
 
   let rebootingUpdatingInProgress = false;
-  const myTimeout = undefined;
+  let myTimeout = undefined;
 
   //dashboard
   let pages = [];
@@ -1372,9 +1372,12 @@
     .grd-3col1 {
       @apply grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 justify-items-center;
     }
+    .grd-4col1 {
+      @apply grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 justify-items-center;
+    }
     /*=============================================card and items inside===============================================*/
     .crd-itm-psn {
-      @apply flex mb-2 h-8 items-center;
+      @apply flex mb-2 h-6 items-center;
     }
     .wgt-dscr-stl {
       @apply pr-4 text-gray-500 font-bold;
