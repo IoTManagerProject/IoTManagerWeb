@@ -30,45 +30,47 @@
 </script>
 
 {#if show}
-  <div class="grd-1col1">
-    <Card title={"Список устройств"}>
-      <table class="tbl">
-        <thead class="bg-gray-100">
-          <tr class="txt-sz txt-pad">
-            <th class="tbl-hd">Название устройства</th>
-            <th class="tbl-hd">IP адрес</th>
-            <th class="tbl-hd">Идентификатор</th>
-            <th class="tbl-hd">Состояние</th>
-            <th class="tbl-hd">Пинг</th>
-            <th class="tbl-hd w-7" />
-          </tr>
-        </thead>
-        <tbody class="bg-white">
-          {#each deviceList as device, i}
+  <div class="my-4">
+    <div class="grd-1col1">
+      <Card title={"Список устройств"}>
+        <table class="tbl">
+          <thead class="bg-gray-100">
             <tr class="txt-sz txt-pad">
-              <td class="tbl-bdy-lg ipt-lg w-full">{device.name}</td>
-              <td class="tbl-bdy-lg ipt-lg w-full"><a href={"http://" + device.ip}>{device.ip}</a></td>
-              <td class="tbl-bdy-lg ipt-lg w-full">{device.id}</td>
-              <td class="tbl-bdy-lg ipt-lg w-full {device.status ? 'bg-green-50' : 'bg-red-50'}">{device.status ? "online" : "offline"}</td>
-              <td class="tbl-bdy-lg ipt-lg w-full">{device.ping ? device.ping : "-"}</td>
-              <td class="tbl-bdy-lg"><CrossIcon click={() => deleteLineFromDevlist(i)} /></td>
+              <th class="tbl-hd">Название устройства</th>
+              <th class="tbl-hd">IP адрес</th>
+              <th class="tbl-hd">Идентификатор</th>
+              <th class="tbl-hd">Состояние</th>
+              <th class="tbl-hd">Пинг</th>
+              <th class="tbl-hd w-7" />
             </tr>
-          {/each}
-          {#if showInput}
-            <tr class="txt-sz txt-pad">
-              <td class="tbl-bdy-lg"><input bind:value={newDevice.name} class="ipt-lg w-full" type="text" /></td>
-              <td class="tbl-bdy-lg"><input bind:value={newDevice.ip} class="ipt-lg w-full" type="text" /></td>
-              <td class="tbl-bdy-lg"><input bind:value={newDevice.id} class="ipt-lg w-full" type="text" /></td>
-              <td class="tbl-bdy-lg" />
-            </tr>
-          {/if}
-        </tbody>
-      </table>
-      <div class="grd-2col1">
-        <button class="btn-lg" on:click={() => ((showInput = !showInput), addDevInList())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
-        <button class="btn-lg" on:click={(msg) => sendToAllDevices("/reboot|")}>{"Перезагрузить все устройства"}</button>
-      </div>
-    </Card>
+          </thead>
+          <tbody class="bg-white">
+            {#each deviceList as device, i}
+              <tr class="txt-sz txt-pad">
+                <td class="tbl-bdy-lg ipt-lg w-full">{device.name}</td>
+                <td class="tbl-bdy-lg ipt-lg w-full"><a href={"http://" + device.ip}>{device.ip}</a></td>
+                <td class="tbl-bdy-lg ipt-lg w-full">{device.id}</td>
+                <td class="tbl-bdy-lg ipt-lg w-full {device.status ? 'bg-green-50' : 'bg-red-50'}">{device.status ? "online" : "offline"}</td>
+                <td class="tbl-bdy-lg ipt-lg w-full">{device.ping ? device.ping : "-"}</td>
+                <td class="tbl-bdy-lg"><CrossIcon click={() => deleteLineFromDevlist(i)} /></td>
+              </tr>
+            {/each}
+            {#if showInput}
+              <tr class="txt-sz txt-pad">
+                <td class="tbl-bdy-lg"><input bind:value={newDevice.name} class="ipt-lg w-full" type="text" /></td>
+                <td class="tbl-bdy-lg"><input bind:value={newDevice.ip} class="ipt-lg w-full" type="text" /></td>
+                <td class="tbl-bdy-lg"><input bind:value={newDevice.id} class="ipt-lg w-full" type="text" /></td>
+                <td class="tbl-bdy-lg" />
+              </tr>
+            {/if}
+          </tbody>
+        </table>
+        <div class="grd-2col1">
+          <button class="btn-lg" on:click={() => ((showInput = !showInput), addDevInList())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
+          <button class="btn-lg" on:click={(msg) => sendToAllDevices("/reboot|")}>{"Перезагрузить все устройства"}</button>
+        </div>
+      </Card>
+    </div>
     <Alarm>
       <p>Прошитые прошивкой IoT Manager устройства появятся в списке автоматически в течении минуты. Для обновления названий устройств нужно обновить страницу. Устройства должны быть подключены к одному wifi роутеру.</p>
     </Alarm>
