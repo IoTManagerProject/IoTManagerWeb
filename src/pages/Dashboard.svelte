@@ -35,38 +35,39 @@
 </script>
 
 {#if show}
-  <div class="grd-1col1 animate-pulse">
-    {#if empty}
-      <Card title={"Ваша панель управления пуста, вначале добавьте новые элементы в конфигураторе!"} />
-    {/if}
-  </div>
   <div class="my-4">
-  <div class="grd-3col1">
-    {#each pages as pagesName, p}
-      <Card title={pagesName.page}>
-        {#each layoutJson as widget, l}
-          {#if widget.page === pagesName.page}
-            {#if widget.widget === "input"}
-              <Input bind:value={widget.status} widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
+    <div class="grd-1col1 animate-pulse">
+      {#if empty}
+        <Card title={"Ваша панель управления пуста, вначале добавьте новые элементы в конфигураторе!"} />
+      {/if}
+    </div>
+
+    <div class="grd-3col1">
+      {#each pages as pagesName, p}
+        <Card title={pagesName.page}>
+          {#each layoutJson as widget, l}
+            {#if widget.page === pagesName.page}
+              {#if widget.widget === "input"}
+                <Input bind:value={widget.status} widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
+              {/if}
+              {#if widget.widget === "toggle"}
+                <Toggle bind:value={widget.status} widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
+              {/if}
+              {#if widget.widget === "anydata"}
+                <Anydata bind:value={widget.status} widget={widget} />
+              {/if}
+              {#if widget.widget === "range"}
+                <Range bind:value={widget.status} widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
+              {/if}
+              {#if widget.widget === "chart"}
+                <Chart bind:value={widget.status} widget={widget} />
+              {/if}
             {/if}
-            {#if widget.widget === "toggle"}
-              <Toggle bind:value={widget.status} widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
-            {/if}
-            {#if widget.widget === "anydata"}
-              <Anydata bind:value={widget.status} widget={widget} />
-            {/if}
-            {#if widget.widget === "range"}
-              <Range bind:value={widget.status} widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
-            {/if}
-            {#if widget.widget === "chart"}
-              <Chart bind:value={widget.status} widget={widget} />
-            {/if}
-          {/if}
-        {/each}
-      </Card>
-    {/each}
+          {/each}
+        </Card>
+      {/each}
+    </div>
   </div>
-</div>
 {:else}
   <Alarm title="Загрузка..." />
 {/if}

@@ -10,8 +10,10 @@
   export let deviceList;
   export let showInput;
   export let newDevice = {};
+  export let settingsJson;
 
   export let addDevInList = () => {};
+  export let saveList = () => {};
 
   export let sendToAllDevices = (msg) => {};
 
@@ -32,7 +34,7 @@
 {#if show}
   <div class="my-4">
     <div class="grd-1col1">
-      <Card title={"Список устройств"}>
+      <Card title={settingsJson.udps ? "Список устройств (авто режим)" : "Список устройств (ручной режим)"}>
         <table class="tbl">
           <thead class="bg-gray-100">
             <tr class="txt-sz txt-pad">
@@ -52,7 +54,9 @@
                 <td class="tbl-bdy-lg ipt-lg w-full">{device.id}</td>
                 <td class="tbl-bdy-lg ipt-lg w-full {device.status ? 'bg-green-50' : 'bg-red-50'}">{device.status ? "online" : "offline"}</td>
                 <td class="tbl-bdy-lg ipt-lg w-full">{device.ping ? device.ping : "-"}</td>
-                <td class="tbl-bdy-lg"><CrossIcon click={() => deleteLineFromDevlist(i)} /></td>
+                {#if i > 0}
+                  <td class="tbl-bdy-lg"><CrossIcon click={() => deleteLineFromDevlist(i)} /></td>
+                {/if}
               </tr>
             {/each}
             {#if showInput}
@@ -65,14 +69,17 @@
             {/if}
           </tbody>
         </table>
-        <div class="grd-2col1">
-          <button class="btn-lg" on:click={() => ((showInput = !showInput), addDevInList())}>{showInput ? "Сохранить" : "Добавить устройство"}</button>
+        <div class="grd-3col1">
+          {#if !settingsJson.udps}
+            <button class="btn-lg" on:click={() => ((showInput = !showInput), addDevInList())}>{showInput ? "Добавить" : "Добавить устройство"}</button>
+          {/if}
+          <button class="btn-lg" on:click={() => saveList()}>{"Сохранить список"}</button>
           <button class="btn-lg" on:click={(msg) => sendToAllDevices("/reboot|")}>{"Перезагрузить все устройства"}</button>
         </div>
       </Card>
     </div>
     <Alarm>
-      <p>Прошитые прошивкой IoT Manager устройства появятся в списке автоматически в течении минуты. Для обновления названий устройств нужно обновить страницу. Устройства должны быть подключены к одному wifi роутеру.</p>
+      <p>Авто режим - список создается автоматически, можно нажать кнопку "сохранить список" что бы использовать его потом в ручном режиме. Ручной режим - используется сохраненный список, возможно ручное добавление удаление устройств. Для переключения режима перейдите на страницу "системные"</p>
     </Alarm>
   </div>
 {:else}

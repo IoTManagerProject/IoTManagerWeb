@@ -334,7 +334,7 @@
               <div class="relative">
                 <input bind:checked={settingsJson.log} on:change={() => (paramsBeenChanged = true)} id="log" type="checkbox" class="sr-only" />
                 <div class="block {settingsJson.log ? 'bg-blue-600' : 'bg-gray-600'} w-10 h-6 rounded-full shadow-lg" />
-                <div class="dot bg-gray-100 absolute left-1 top-1  w-4 h-4 rounded-full transition shadow-lg" />
+                <div class="dot bg-gray-100 absolute left-1 top-1 w-4 h-4 rounded-full transition shadow-lg" />
               </div>
             </label>
           </div>
@@ -350,7 +350,7 @@
               <div class="relative">
                 <input bind:checked={settingsJson.mqttin} on:change={() => (reboot = true)} id="mqtt" type="checkbox" class="sr-only" />
                 <div class="block {settingsJson.mqttin ? 'bg-blue-600' : 'bg-gray-600'} w-10 h-6 rounded-full shadow-lg" />
-                <div class="dot bg-gray-100 absolute left-1 top-1  w-4 h-4 rounded-full transition shadow-lg" />
+                <div class="dot bg-gray-100 absolute left-1 top-1 w-4 h-4 rounded-full transition shadow-lg" />
               </div>
             </label>
           </div>
@@ -367,11 +367,12 @@
               <div class="relative">
                 <input bind:checked={settingsJson.i2c} on:change={() => (reboot = true)} id="i2c" type="checkbox" class="sr-only" />
                 <div class="block {settingsJson.i2c ? 'bg-blue-600' : 'bg-gray-600'} w-10 h-6 rounded-full shadow-lg" />
-                <div class="dot bg-gray-100 absolute left-1 top-1  w-4 h-4 rounded-full transition shadow-lg" />
+                <div class="dot bg-gray-100 absolute left-1 top-1 w-4 h-4 rounded-full transition shadow-lg" />
               </div>
             </label>
           </div>
         </div>
+
         {#if settingsJson.i2c === true}
           <div class="flex mb-2 h-6 items-center">
             <div class="w-2/3">
@@ -398,6 +399,22 @@
             </div>
           </div>
         {/if}
+
+        <!--Dev list mode-->
+        <div class="flex mb-2 h-6 items-center">
+          <div class="w-2/3">
+            <p class="pr-4 text-gray-500 font-bold text-sm truncate">Автоматический поиск устройств по UDP</p>
+          </div>
+          <div class="flex justify-center w-1/3">
+            <label for="udps" class="items-center cursor-pointer">
+              <div class="relative">
+                <input bind:checked={settingsJson.udps} on:change={() => (reboot = true)} id="udps" type="checkbox" class="sr-only" />
+                <div class="block {settingsJson.udps ? 'bg-blue-600' : 'bg-gray-600'} w-10 h-6 rounded-full shadow-lg" />
+                <div class="dot bg-gray-100 absolute left-1 top-1 w-4 h-4 rounded-full transition shadow-lg" />
+              </div>
+            </label>
+          </div>
+        </div>
 
         <!--control-->
         <!--<div class="grd-2col1">-->

@@ -26,25 +26,27 @@
 </script>
 
 {#if show}
-  <div class="grd-3col1">
-    <Card title="layoutJson">
-      <textarea on:input={layoutJson} rows="23" class="w-full" id="1">{syntaxHighlight(JSON.stringify(layoutJson))}</textarea>
-    </Card>
-    <Card title="paramsJson">
-      <textarea on:input={paramsJson} rows="23" class="w-full" id="4">{syntaxHighlight(JSON.stringify(paramsJson))}</textarea>
-    </Card>
-    <Card title="errorsJson">
-      <textarea on:input={errorsJson} rows="23" class="w-full" id="2">{syntaxHighlight(JSON.stringify(errorsJson))}</textarea>
-    </Card>
-    <Card title="settingsJson">
-      <textarea on:input={settingsJson} rows="23" class="w-full" id="3">{syntaxHighlight(JSON.stringify(settingsJson))}</textarea>
-    </Card>
-    <Card title="configJson">
-      <textarea on:input={configJson} rows="23" class="w-full" id="3">{syntaxHighlight(JSON.stringify(configJson))}</textarea>
-    </Card>
-    <Card title="itemsJson">
-      <textarea on:input={itemsJson} rows="23" class="w-full" id="4">{syntaxHighlight(JSON.stringify(itemsJson))}</textarea>
-    </Card>
+  <div class="my-4">
+    <div class="grd-3col1">
+      <Card title="layoutJson">
+        <textarea on:input={layoutJson} rows="23" class="w-full" id="1">{syntaxHighlight(JSON.stringify(layoutJson))}</textarea>
+      </Card>
+      <Card title="paramsJson">
+        <textarea on:input={paramsJson} rows="23" class="w-full" id="4">{syntaxHighlight(JSON.stringify(paramsJson))}</textarea>
+      </Card>
+      <Card title="errorsJson">
+        <textarea on:input={errorsJson} rows="23" class="w-full" id="2">{syntaxHighlight(JSON.stringify(errorsJson))}</textarea>
+      </Card>
+      <Card title="settingsJson">
+        <textarea on:input={settingsJson} rows="23" class="w-full" id="3">{syntaxHighlight(JSON.stringify(settingsJson))}</textarea>
+      </Card>
+      <Card title="configJson">
+        <textarea on:input={configJson} rows="23" class="w-full" id="3">{syntaxHighlight(JSON.stringify(configJson))}</textarea>
+      </Card>
+      <Card title="itemsJson">
+        <textarea on:input={itemsJson} rows="23" class="w-full" id="4">{syntaxHighlight(JSON.stringify(itemsJson))}</textarea>
+      </Card>
+    </div>
   </div>
 {:else}
   <Alarm title="Загрузка..." />

@@ -2,7 +2,8 @@
   /*
    Svelte IoT Manager app
    created by Dmitry Borisenko
-   Sandgasse 46/4, Vienna 1190, Austria
+   Vienna, Austria 1030, Juchgasse 5/17
+   +43 67761588253
   */
 
   //******************************************************import section*********************************************************/
@@ -34,7 +35,7 @@
   const debug = true;
   const LOG_MAX_MESSAGES = 100;
   const reconnectTimeout = 120000; //период проверки соединения с устройством
-  const waitingAckTimeout = 18000; //время ожидания ответа от устройства
+  const waitingAckTimeout = 12000; //время ожидания ответа от устройства
   const rebootingTimeout = 20000;
   const updatingTimeout = 130000;
   let opened = false;
@@ -45,12 +46,13 @@
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.88.238";
+  if (devMode) myip = "192.168.1.238";
 
   //Flags
   let firstDevListRequest = true;
   let showInput = false;
   let showModalFlag = false;
+  let showDropdown = true;
 
   let rebootingUpdatingInProgress = false;
   let myTimeout = undefined;
@@ -125,6 +127,8 @@
   let newDevice = {};
   let coreMessages = [];
 
+  let timeOut;
+
   let parcedEvent = 0;
 
   //***********************************************************navigation********************************************************/
@@ -144,6 +148,13 @@
     if (currentPageName != "/dev") {
       clearData();
     }
+
+    if (currentPageName === "/list" || "/") {
+      showDropdown = false;
+    } else {
+      showDropdown = true;
+    }
+
     currentPageName = currentPageName + "|";
     console.log("[i]", "user on page:", currentPageName);
 
@@ -164,10 +175,13 @@
   onMount(async () => {
     console.log("[i]", "mounted");
     whenDeviceListWasUpdated();
+    //флаг первого запроса списка устройств
     firstDevListRequest = true;
+    //вначале подключимся к известному нам ip этого устройства
     connectToAllDevices();
     wsTestMsgTask();
     //sortingLayout();
+    ticker();
   });
 
   //****************************************************web sockets section******************************************************/
@@ -181,6 +195,7 @@
       if (!device.status) {
         wsConnect(ws);
         wsEventAdd(ws);
+      } else {
       }
       ws++;
     });
@@ -592,14 +607,18 @@
       deviceList = incDeviceList;
       deviceList[0].status = true;
     } else {
+      //при последующих прилетах списка устройств мы переписываем в массиве только то что изменилось
       deviceList = combineArrays(deviceList, incDeviceList);
     }
+    //deviceList = incDeviceList;
     firstDevListRequest = false;
     deviceList = deviceList;
     parsed.deviceListJson = true;
     if (blobDebug) console.log("[✔]", "deviceList parced");
     onParced();
     whenDeviceListWasUpdated();
+    console.log("[✔]", deviceList);
+    //затем подключимся к всему полученному списку устройств
     connectToAllDevices();
   }
 
@@ -746,16 +765,25 @@
 
   function saveSett() {
     var size = Object.keys(settingsJson).length;
-    //console.log("[i]", "settingsJson length: " + size);
+    console.log("[i]", "settingsJson length: " + size);
     if (size > 5) {
       jsonArrWrite(deviceList, "ip", getIP(selectedWs), "name", settingsJson.name);
       deviceList = deviceList;
       wsSendMsg(selectedWs, "/sgnittes|" + JSON.stringify(settingsJson));
     } else {
-      window.alert("Ошибка");
+      window.alert("Ошибка размера settingsJson (возможно не был передан странице)");
     }
     clearData();
     sendCurrentPageName();
+  }
+
+  function saveList() {
+    //при сохранении списка в память необходимо удалить все статусы
+    let devListForSave = Object.assign([], deviceList);
+    for (let i = 0; i < devListForSave.length; i++) {
+      delete devListForSave[i].status;
+    }
+    wsSendMsg(selectedWs, "/tsil|" + JSON.stringify(devListForSave));
   }
 
   function cleanLogs() {
@@ -859,6 +887,16 @@
     layoutJson = [];
     paramsJson = {}; //?
 
+    //deviceList = [
+    //  {
+    //    name: "--",
+    //    id: "--",
+    //    ip: myip,
+    //    ws: 0,
+    //    status: false,
+    //  },
+    //];
+
     for (const [key, value] of Object.entries(pageReady)) {
       pageReady[key] = false;
     }
@@ -877,10 +915,10 @@
   }
 
   function clearFlags() {
-    for (let i = 0; i < deviceList.length; i++) {
-      deviceList[i].pp = false;
-      deviceList[i].lp = false;
-    }
+    //for (let i = 0; i < deviceList.length; i++) {
+    //deviceList[i].pp = false;
+    //deviceList[i].lp = false;
+    //}
   }
 
   function wsPush(ws, topic, status) {
@@ -895,6 +933,7 @@
     setTimeout(wsTestMsgTask, reconnectTimeout);
     if (!rebootingUpdatingInProgress) {
       if (debug) console.log("[i]", "----timer tick----");
+
       if (!firstTime) {
         deviceList.forEach((device) => {
           if (!getDeviceStatus(device.ws)) {
@@ -976,6 +1015,7 @@
     }
   }
 
+  //функция которая записывает в переменную данные выбранного юзером устройства
   function getSelectedDeviceData(ws) {
     for (let i = 0; i < deviceList.length; i++) {
       let device = deviceList[i];
@@ -1265,15 +1305,18 @@
   {/if}
   <header class="h-10 w-full bg-gray-100 overflow-auto shadow-md">
     <div class="flex content-center items-center justify-end">
-      <div class="px-15 py-1">
-        <select class="border border-indigo-500 border-4" bind:value={selectedWs} on:change={() => devicesDropdownChange()}>
-          {#each deviceList as device}
-            <option value={device.ws}>
-              {device.name}
-            </option>
-          {/each}
-        </select>
-      </div>
+      {#if showDropdown}
+        <div class="px-15 py-1">
+          <select class="border border-indigo-500 border-4" bind:value={selectedWs} on:change={() => devicesDropdownChange()}>
+            {#each deviceList as device}
+              <option value={device.ws}>
+                {device.name}
+              </option>
+            {/each}
+          </select>
+        </div>
+      {/if}
+
       <!--<div class="pl-4 pr-1 py-1">-->
       <!--<BookIcon color={socketConnected === true ? "text-green-500" : "text-red-500"} />-->
       <!--</div>-->
@@ -1324,22 +1367,22 @@
             <DashboardPage show={pageReady.dash} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
           </Route>
           <Route path="/config">
-            <ConfigPage show={pageReady.config} bind:configJson bind:scenarioTxt widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} cleanLogs={() => cleanLogs()} rebootEsp={() => rebootEsp()} moduleOrder={(id, key, value) => moduleOrder(id, key, value)} />
+            <ConfigPage show={pageReady.config} bind:configJson={configJson} bind:scenarioTxt={scenarioTxt} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} cleanLogs={() => cleanLogs()} rebootEsp={() => rebootEsp()} moduleOrder={(id, key, value) => moduleOrder(id, key, value)} />
           </Route>
           <Route path="/connection">
             <ConnectionPage show={pageReady.connection} rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />
           </Route>
           <Route path="/list">
-            <ListPage show={pageReady.list} deviceList={deviceList} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} />
+            <ListPage show={pageReady.list} deviceList={deviceList} settingsJson={settingsJson} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} saveList={() => saveList()} />
           </Route>
           <Route path="/system">
-            <SystemPage show={pageReady.system} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion startUpdate={() => startUpdate()} coreMessages={coreMessages} />
+            <SystemPage show={pageReady.system} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion={choosingVersion} startUpdate={() => startUpdate()} coreMessages={coreMessages} />
           </Route>
           {#if devMode}
             <Route path="/dev">
-              <Card title="Кнопка">
+              <!--<Card title="Кнопка">
                 <button class="btn-lg" on:click={() => test()}>{"Тест"}</button>
-              </Card>
+              </Card>-->
               <DevPage show={pageReady.dev} layoutJson={layoutJson} errorsJson={errorsJson} settingsJson={settingsJson} configJson={configJson} itemsJson={itemsJson} paramsJson={paramsJson} />
             </Route>
           {/if}
@@ -1348,7 +1391,7 @@
     </ul>
   </main>
 
-  <footer class="h-4 bg-gray-100 border-gray-200 shadow-lg">
+  <footer class="h-4 bg-gray-100 border-gray-300 shadow-lg">
     <div class="flex justify-center content-center text-xxs text-gray-500">Developed by Dmitry Borisenko</div>
   </footer>
 </div>
