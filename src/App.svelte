@@ -34,7 +34,7 @@
   //******************************************************************************************************************************/
   const debug = true;
   const LOG_MAX_MESSAGES = 100;
-  const reconnectTimeout = 120000; //период проверки соединения с устройством
+  const reconnectTimeout = 60000; //период проверки соединения с устройством
   const waitingAckTimeout = 12000; //время ожидания ответа от устройства
   const rebootingTimeout = 20000;
   const updatingTimeout = 130000;
@@ -42,6 +42,9 @@
   let preventMove = false;
   const blobDebug = false;
   const devMode = true;
+
+  let timeout = reconnectTimeout / 1000;
+  let percent;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
@@ -149,14 +152,14 @@
       clearData();
     }
 
-    if (currentPageName === "/list" || "/") {
+    currentPageName = currentPageName + "|";
+    console.log("[i]", "user on page:", currentPageName);
+
+    if (currentPageName === "/list|") {
       showDropdown = false;
     } else {
       showDropdown = true;
     }
-
-    currentPageName = currentPageName + "|";
-    console.log("[i]", "user on page:", currentPageName);
 
     if (currentPageName === "/|") {
       sendToAllDevices(currentPageName);
@@ -181,7 +184,6 @@
     connectToAllDevices();
     wsTestMsgTask();
     //sortingLayout();
-    ticker();
   });
 
   //****************************************************web sockets section******************************************************/
@@ -582,7 +584,7 @@
       pageReady.connection = true;
     }
 
-    if (currentPageName === "/list|" && parsed.deviceListJson) {
+    if (currentPageName === "/list|" && parsed.deviceListJson && parsed.settingsJson) {
       clearParcedFlags();
       if (debug) console.log("✔✔", "list page parced");
       pageReady.list = true;
@@ -610,7 +612,7 @@
       //при последующих прилетах списка устройств мы переписываем в массиве только то что изменилось
       deviceList = combineArrays(deviceList, incDeviceList);
     }
-    //deviceList = incDeviceList;
+
     firstDevListRequest = false;
     deviceList = deviceList;
     parsed.deviceListJson = true;
@@ -929,25 +931,37 @@
     wsSendMsg(ws, "/control|" + key + "/" + status);
   }
 
-  function wsTestMsgTask() {
-    setTimeout(wsTestMsgTask, reconnectTimeout);
-    if (!rebootingUpdatingInProgress) {
-      if (debug) console.log("[i]", "----timer tick----");
+  function scale(number, inMin, inMax, outMin, outMax) {
+    return ((number - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+  }
 
-      if (!firstTime) {
-        deviceList.forEach((device) => {
-          if (!getDeviceStatus(device.ws)) {
-            wsConnect(device.ws);
-            wsEventAdd(device.ws);
-          } else {
-            wsSendMsg(device.ws, "/tst|");
-            ack(device.ws, false);
-          }
-        });
-      }
-      firstTime = false;
+  function wsTestMsgTask() {
+    setTimeout(wsTestMsgTask, 1000);
+    timeout--;
+    percent = scale(timeout, reconnectTimeout / 1000, 0, 0, 100);
+    
+    if (timeout <= 0) {
+      timeout = reconnectTimeout / 1000;
+      //if (!rebootingUpdatingInProgress) {
+      if (debug) console.log("[i]", "----timer tick----");
+      //if (!firstTime) {
+
+      deviceList.forEach((device) => {
+        if (!device.status) {
+          wsConnect(device.ws);
+          wsEventAdd(device.ws);
+        } else {
+          wsSendMsg(device.ws, "/tst|");
+          ack(device.ws, false);
+        }
+      });
+      //}
+      //firstTime = false;
+      //} else {
+      //  if (debug) console.log("[i]", "----timer skipped----");
+      //}
     } else {
-      if (debug) console.log("[i]", "----timer skipped----");
+      //console.log("[i]", timeout);
     }
   }
 
@@ -1202,10 +1216,12 @@
   }
 
   function rebootingTask() {
-    clearTimeout(myTimeout);
-    clearData();
-    connectToAllDevices();
-    rebootingUpdatingInProgress = false;
+    //перезапуск приложения
+    location.reload();
+    //clearTimeout(myTimeout);
+    //clearData();
+    //connectToAllDevices();
+    //rebootingUpdatingInProgress = false;
   }
 
   function cancelAlarm(alarmKey) {
@@ -1361,7 +1377,7 @@
     <ul class="menu__main">
       <div class="bg-cover pt-0 px-4">
         {#if !socketConnected && currentPageName != "/|"}
-          <Alarm title="Подключение..." />
+          <Alarm title="Подключение через {timeout} сек." />
         {:else}
           <Route path="/">
             <DashboardPage show={pageReady.dash} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
@@ -1373,7 +1389,7 @@
             <ConnectionPage show={pageReady.connection} rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />
           </Route>
           <Route path="/list">
-            <ListPage show={pageReady.list} deviceList={deviceList} settingsJson={settingsJson} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} saveList={() => saveList()} />
+            <ListPage show={pageReady.list} deviceList={deviceList} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} saveList={() => saveList()} percent={percent} />
           </Route>
           <Route path="/system">
             <SystemPage show={pageReady.system} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion={choosingVersion} startUpdate={() => startUpdate()} coreMessages={coreMessages} />
