@@ -290,7 +290,7 @@
         <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить устройство"}</button>
         <button class="btn-lg" on:click={() => createExportFile()}>{"Экспорт конфигурации"}</button>
         <label on:click={() => reset()} class="btn-lg cursor-pointer select-none">
-          <input bind:files accept="application/JSON" type="file" id="formFile" />
+          <input bind:files={files} accept="application/JSON" type="file" id="formFile" />
           {"Импорт конфигурации"}
         </label>
       </div>

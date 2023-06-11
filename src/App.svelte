@@ -6,6 +6,8 @@
    +43 67761588253
   */
 
+  //6+49 кб 09/06/2023
+
   //******************************************************import section*********************************************************/
   //*****************************************************************************************************************************/
   import { onMount } from "svelte";
@@ -41,7 +43,7 @@
   let opened = false;
   let preventMove = false;
   const blobDebug = false;
-  const devMode = true;
+  const devMode = false;
 
   let timeout = reconnectTimeout / 1000;
   let percent;
@@ -58,7 +60,6 @@
   let showDropdown = true;
 
   let rebootingUpdatingInProgress = false;
-  let myTimeout = undefined;
 
   //dashboard
   let pages = [];
@@ -72,8 +73,6 @@
     system: false,
     dev: false,
   };
-
-  let systemReady = false;
 
   //update esp
   let versionsList = {};
@@ -116,8 +115,6 @@
     paramsJson: false,
   };
 
-  let chartJsonFlag = {};
-  let layoutJsonFlag = {};
   //===============================================
 
   //web sockets
@@ -125,46 +122,42 @@
   let socketConnected = false;
   let selectedDeviceData = undefined;
   let selectedWs = 0;
+  let originalWs = 0;
 
-  let firstTime = true;
   let newDevice = {};
   let coreMessages = [];
 
-  let timeOut;
-
-  let parcedEvent = 0;
-
   //***********************************************************navigation********************************************************/
   let currentPageName = undefined;
-
-  //var chartJsonBlobArray = [];
-  //let chartTopic = "";
-  //var chartJsonBlob = new MyBlobBuilder();
-  //var layoutJsonBlobArray = [];
 
   router.subscribe(handleNavigation);
 
   function handleNavigation() {
     currentPageName = $router.path.toString();
+    currentPageName = currentPageName + "|";
+
+    console.log("[i]", "user on page:", currentPageName);
 
     //не нужно очищать переменные когда переходим на страницу разработчика
-    if (currentPageName != "/dev") {
+    if (currentPageName != "/dev|") {
       clearData();
     }
 
-    currentPageName = currentPageName + "|";
-    console.log("[i]", "user on page:", currentPageName);
-
-    if (currentPageName === "/list|") {
-      showDropdown = false;
-    } else {
-      showDropdown = true;
-    }
-
+    //если мы на странице dashboard то рассылаем всем устройствам запрос данных
     if (currentPageName === "/|") {
       sendToAllDevices(currentPageName);
+      showDropdown = false;
+      //в остальных случаях шлем только выбранному устройству запрос данных
     } else {
-      sendCurrentPageName();
+      //если мы перешли на страницу списка устройств то всегда запрашиваем список только этого устройства
+      if (currentPageName === "/list|") {
+        showDropdown = false;
+        selectedWs = 0;
+        wsSendMsg(selectedWs, currentPageName);
+      } else {
+        sendCurrentPageName();
+        showDropdown = true;
+      }
     }
   }
 
@@ -177,7 +170,7 @@
   //*******************************************************initialisation********************************************************************/
   onMount(async () => {
     console.log("[i]", "mounted");
-    whenDeviceListWasUpdated();
+    selectedDeviceDataRefresh();
     //флаг первого запроса списка устройств
     firstDevListRequest = true;
     //вначале подключимся к известному нам ip этого устройства
@@ -251,22 +244,12 @@
         }
       }
     });
-    whenDeviceListWasUpdated();
+    selectedDeviceDataRefresh();
     deviceList = deviceList;
   }
 
   function deleteWidget(ws) {
     layoutJson = layoutJson.filter((item) => item.ws !== ws);
-  }
-
-  function getDeviceStatus(ws) {
-    let ret = false;
-    deviceList.forEach((device) => {
-      if (ws === device.ws) {
-        ret = device.status;
-      }
-    });
-    return ret;
   }
 
   function wsConnect(ws) {
@@ -431,7 +414,7 @@
         incDeviceList = out.json;
         parsed.incDeviceList = true;
         if (blobDebug) console.log("[✔]", "incDeviceList: ", incDeviceList);
-        handleDeviseList();
+        initDevList();
       } else {
         parsed.incDeviceList = false;
         if (blobDebug) console.log("[e]", "incDeviceList parse error");
@@ -568,8 +551,6 @@
 
   async function onParced() {
     if (currentPageName === "/|") {
-      //clearParcedFlags();
-      //if (debug) console.log("✔", "dashboard data received");
       pageReady.dash = true;
     }
 
@@ -604,24 +585,49 @@
     }
   }
 
-  function handleDeviseList() {
+  function initDevList() {
+    //при первом запросе листа устройств запишем его целеком
     if (firstDevListRequest) {
-      deviceList = incDeviceList;
-      deviceList[0].status = true;
+      devListOverride();
     } else {
       //при последующих прилетах списка устройств мы переписываем в массиве только то что изменилось
-      deviceList = combineArrays(deviceList, incDeviceList);
+      devListCombine();
     }
-
     firstDevListRequest = false;
     deviceList = deviceList;
     parsed.deviceListJson = true;
     if (blobDebug) console.log("[✔]", "deviceList parced");
     onParced();
-    whenDeviceListWasUpdated();
-    console.log("[✔]", deviceList);
+    selectedDeviceDataRefresh();
     //затем подключимся к всему полученному списку устройств
     connectToAllDevices();
+  }
+  //перезапись листа устройств
+  function devListOverride() {
+    deviceList = incDeviceList;
+    sortList(deviceList);
+    //if (deviceList.length >= 1) deviceList[0].status = true;
+    console.log("[i]", "[devlist]", "devlist overrided");
+  }
+  //добавление только новых элементов в лист устройств (если такого ip не было)
+  function devListCombine() {
+    deviceList = combineArrays(deviceList, incDeviceList);
+    sortList(deviceList);
+    console.log("[i]", "[devlist]", "devlist combined");
+  }
+
+  function sortList(list) {
+    let firstDev = list.shift();
+    list.sort(function (a, b) {
+      if (a.name < b.name) {
+        return -1;
+      }
+      if (a.name > b.name) {
+        return 1;
+      }
+      return 0;
+    });
+    list.unshift(firstDev);
   }
 
   //***********************************************************dashboard***************************************************************/
@@ -835,8 +841,6 @@
           let widget = Object.assign({}, widgetsJson[w]);
           widget.page = config.page;
           widget.descr = config.descr;
-          //widget.id = config.id;
-          //widget.ws = selectedWs;
 
           widget.topic = settingsJson.root + "/" + config.id;
           if (setWidget !== "nil") layout.push(widget);
@@ -876,8 +880,6 @@
     return layout;
   }
 
-  function layoutOrderForMobileApp() {}
-
   function clearData() {
     itemsJson = [];
     widgetsJson = [];
@@ -889,15 +891,7 @@
     layoutJson = [];
     paramsJson = {}; //?
 
-    //deviceList = [
-    //  {
-    //    name: "--",
-    //    id: "--",
-    //    ip: myip,
-    //    ws: 0,
-    //    status: false,
-    //  },
-    //];
+    //incDeviceList = [];
 
     for (const [key, value] of Object.entries(pageReady)) {
       pageReady[key] = false;
@@ -939,7 +933,7 @@
     setTimeout(wsTestMsgTask, 1000);
     timeout--;
     percent = scale(timeout, reconnectTimeout / 1000, 0, 0, 100);
-    
+
     if (timeout <= 0) {
       timeout = reconnectTimeout / 1000;
       //if (!rebootingUpdatingInProgress) {
@@ -1013,19 +1007,26 @@
     return output;
   }
 
-  function whenDeviceListWasUpdated() {
+  //всякий раз когда список устройств был обновлен
+  function selectedDeviceDataRefresh() {
+    //запишем в переменную selectedDeviceData выбранное устройство, что бы в коде было известно выбранное устройство
     getSelectedDeviceData(selectedWs);
     socketConnected = selectedDeviceData.status;
   }
 
   function devicesDropdownChange() {
-    whenDeviceListWasUpdated();
-    clearData();
-    handleNavigation();
-    //sendCurrentPageName();
-    if (debug) console.log("[i]", "user selected device:", selectedDeviceData.name);
-    if (selectedDeviceData.ip === myip) {
-      if (debug) console.log("[i]", "user selected original device", selectedDeviceData.name);
+    if (currentPageName === "/list|") {
+      console.log("[i]", "user change dropdown on list page!!!");
+    } else {
+      selectedDeviceDataRefresh();
+      clearData();
+      //запускаем навигацию что дать контроллеру запрос данных
+      handleNavigation();
+      if (debug) console.log("[i]", "user selected device:", selectedDeviceData.name);
+      if (selectedDeviceData.ip === myip) {
+        originalWs = selectedWs;
+        if (debug) console.log("[i]", "user selected original device", selectedDeviceData.name);
+      }
     }
   }
 
@@ -1041,18 +1042,20 @@
   }
 
   function addDevInList() {
-    //createDefaultDevice();
     if (!showInput) {
       if (newDevice.name !== undefined && newDevice.ip !== undefined && newDevice.id !== undefined) {
         newDevice.status = false;
-        deviceList.push(newDevice);
-        deviceList = deviceList;
-        newDevice = {};
-        whenDeviceListWasUpdated();
+        newDevice.ws = deviceList.length;
+        incDeviceList.push(newDevice);
+        devListCombine();
+        //onParced();
+        //selectedDeviceDataRefresh();
         connectToAllDevices();
         if (debug) console.log("[i]", "selected device:", selectedDeviceData);
+        return true;
       } else {
         if (debug) console.log("[e]", "wrong data");
+        return false;
       }
     }
   }
@@ -1217,11 +1220,11 @@
 
   function rebootingTask() {
     //перезапуск приложения
-    location.reload();
-    //clearTimeout(myTimeout);
-    //clearData();
-    //connectToAllDevices();
-    //rebootingUpdatingInProgress = false;
+    //location.reload();
+    clearTimeout(myTimeout);
+    clearData();
+    connectToAllDevices();
+    rebootingUpdatingInProgress = false;
   }
 
   function cancelAlarm(alarmKey) {
@@ -1308,11 +1311,6 @@
     console.log(json);
     wsSendMsg(selectedWs, "/order|" + JSON.stringify(json));
   }
-
-  function test() {
-    //wsSendMsg(selectedWs, "/test|");
-    //console.log("[i]", "test");
-  }
 </script>
 
 <div class="flex flex-col h-screen bg-gray-50">
@@ -1389,7 +1387,7 @@
             <ConnectionPage show={pageReady.connection} rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />
           </Route>
           <Route path="/list">
-            <ListPage show={pageReady.list} deviceList={deviceList} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} saveList={() => saveList()} percent={percent} />
+            <ListPage show={pageReady.list} deviceList={deviceList} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} saveList={() => saveList()} percent={percent} devListOverride={() => devListOverride()} />
           </Route>
           <Route path="/system">
             <SystemPage show={pageReady.system} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion={choosingVersion} startUpdate={() => startUpdate()} coreMessages={coreMessages} />

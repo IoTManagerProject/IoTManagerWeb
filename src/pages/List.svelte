@@ -16,8 +16,6 @@
   export let addDevInList = () => {};
   export let saveList = () => {};
   export let saveSett = () => {};
-  export let rebootEsp = () => {};
-
   export let sendToAllDevices = (msg) => {};
 
   let debug = true;
@@ -32,6 +30,49 @@
       }
     }
   }
+
+  function onModeChange() {
+    show = false;
+    saveSett();
+    location.reload();
+  }
+
+  function onSaveList() {
+    //если ручной режим
+    if (!settingsJson.udps) {
+      //если открыли поля для заполнения
+      if (showInput) {
+        //если поля были заполнены
+        if (addDevInList()) {
+          show = false;
+          saveList();
+          showInput = false;
+          //window.alert("Устройство было добавленно");
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        } else {
+          showInput = false;
+        }
+        //если не открыли поля для заполнения
+      } else {
+        show = false;
+        saveList();
+        //window.alert("Список устройств сохранен на ESP");
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+      }
+      //если авторежим
+    } else {
+      saveList();
+      window.alert("Список устройств сохранен в память ESP. Перейдите в ручной режим для использования сохраненного списка");
+      show = false;
+      setTimeout(() => {
+        location.reload();
+      }, 1000);
+    }
+  }
 </script>
 
 {#if show}
@@ -41,6 +82,7 @@
         <table class="tbl mb-0">
           <thead class="bg-gray-100">
             <tr class="txt-sz txt-pad">
+              <th class="tbl-hd w-7">№</th>
               <th class="tbl-hd">Название устройства</th>
               <th class="tbl-hd">IP адрес</th>
               <th class="tbl-hd">Идентификатор</th>
@@ -52,11 +94,13 @@
           <tbody class="bg-white">
             {#each deviceList as device, i}
               <tr class="txt-sz txt-pad">
+                <td class="tbl-bdy-lg ipt-lg w-full">{device.ws + 1}</td>
                 <td class="tbl-bdy-lg ipt-lg w-full">{device.name}</td>
                 <td class="tbl-bdy-lg ipt-lg w-full"><a href={"http://" + device.ip}>{device.ip}</a></td>
                 <td class="tbl-bdy-lg ipt-lg w-full">{device.id}</td>
                 <td class="tbl-bdy-lg ipt-lg w-full {device.status ? 'bg-green-50' : 'bg-red-50'}">{device.status ? "online" : "offline"}</td>
                 <td class="tbl-bdy-lg ipt-lg w-full">{device.ping ? device.ping : "-"}</td>
+
                 {#if i > 0}
                   <td class="tbl-bdy-lg"><CrossIcon click={() => deleteLineFromDevlist(i)} /></td>
                 {/if}
@@ -64,9 +108,10 @@
             {/each}
             {#if showInput}
               <tr class="txt-sz txt-pad">
-                <td class="tbl-bdy-lg"><input bind:value={newDevice.name} class="ipt-lg w-full" type="text" /></td>
-                <td class="tbl-bdy-lg"><input bind:value={newDevice.ip} class="ipt-lg w-full" type="text" /></td>
-                <td class="tbl-bdy-lg"><input bind:value={newDevice.id} class="ipt-lg w-full" type="text" /></td>
+                <td class="tbl-bdy-lg" />
+                <td class="tbl-bdy-lg"><input bind:value={newDevice.name} class="ipt-lg w-full m-0" type="text" /></td>
+                <td class="tbl-bdy-lg"><input bind:value={newDevice.ip} class="ipt-lg w-full m-0" type="text" /></td>
+                <td class="tbl-bdy-lg"><input bind:value={newDevice.id} class="ipt-lg w-full m-0" type="text" /></td>
                 <td class="tbl-bdy-lg" />
               </tr>
             {/if}
@@ -74,15 +119,15 @@
         </table>
         <div class="mb-4">
           <div class="w-full bg-gray-200 rounded-full h-0.5 dark:bg-gray-700">
-            <div class="bg-green-200 h-0.5 rounded-full" style="width: {percent}%" />
+            <div class="bg-green-300 h-0.5 rounded-full" style="width: {percent}%" />
           </div>
         </div>
         <div class={settingsJson.udps ? "grd-2col1" : "grd-3col1"}>
-          {#if !settingsJson.udps}
-            <button class="btn-lg" on:click={() => ((showInput = !showInput), addDevInList())}>{showInput ? "Добавить" : "Добавить устройство"}</button>
+          {#if !settingsJson.udps && !showInput}
+            <button class="btn-lg" on:click={() => (showInput = !showInput)}>{"Добавить устройство"}</button>
           {/if}
-          <button class="btn-lg" on:click={() => saveList()}>{"Сохранить список"}</button>
-          <button class="btn-lg" on:click={(msg) => sendToAllDevices("/reboot|")}>{"Перезагрузить все устройства"}</button>
+          <button class="btn-lg" on:click={() => onSaveList()}>{"Сохранить"}</button>
+          <button class="btn-lg" on:click={(msg) => (sendToAllDevices("/reboot|"), window.alert("Все устройства будут перезагружены"))}>{"Перезагрузить все устройства"}</button>
         </div>
 
         <!--Dev list mode-->
@@ -94,7 +139,7 @@
             <div class="flex justify-end w-1/4">
               <label for="udps" class="items-center cursor-pointer">
                 <div class="relative">
-                  <input bind:checked={settingsJson.udps} on:change={() => (window.alert("Для данного действия необходима перезагрузка"), saveSett(), rebootEsp())} id="udps" type="checkbox" class="sr-only" />
+                  <input bind:checked={settingsJson.udps} on:change={() => onModeChange()} id="udps" type="checkbox" class="sr-only" />
                   <div class="block {settingsJson.udps ? 'bg-blue-600' : 'bg-gray-600'} w-10 h-6 rounded-full shadow-lg" />
                   <div class="dot bg-gray-100 absolute left-1 top-1 w-4 h-4 rounded-full transition shadow-lg" />
                 </div>
