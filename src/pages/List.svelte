@@ -17,6 +17,7 @@
   export let saveList = () => {};
   export let saveSett = () => {};
   export let sendToAllDevices = (msg) => {};
+  export let applicationReboot = () => {};
 
   let debug = true;
 
@@ -34,7 +35,8 @@
   function onModeChange() {
     show = false;
     saveSett();
-    location.reload();
+    applicationReboot();
+    //location.reload();
   }
 
   function onSaveList() {
@@ -44,33 +46,22 @@
       if (showInput) {
         //если поля были заполнены
         if (addDevInList()) {
-          show = false;
           saveList();
           showInput = false;
-          //window.alert("Устройство было добавленно");
-          setTimeout(() => {
-            location.reload();
-          }, 1000);
+          applicationReboot();
         } else {
           showInput = false;
         }
         //если не открыли поля для заполнения
       } else {
-        show = false;
         saveList();
-        //window.alert("Список устройств сохранен на ESP");
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
+        applicationReboot();
       }
       //если авторежим
     } else {
       saveList();
       window.alert("Список устройств сохранен в память ESP. Перейдите в ручной режим для использования сохраненного списка");
-      show = false;
-      setTimeout(() => {
-        location.reload();
-      }, 1000);
+      applicationReboot();
     }
   }
 </script>
@@ -86,6 +77,7 @@
               <th class="tbl-hd">Название устройства</th>
               <th class="tbl-hd">IP адрес</th>
               <th class="tbl-hd">Идентификатор</th>
+              <th class="tbl-hd">Версия</th>
               <th class="tbl-hd">Состояние</th>
               <th class="tbl-hd">Пинг</th>
               <th class="tbl-hd w-7" />
@@ -98,6 +90,7 @@
                 <td class="tbl-bdy-lg ipt-lg w-full">{device.name}</td>
                 <td class="tbl-bdy-lg ipt-lg w-full"><a href={"http://" + device.ip}>{device.ip}</a></td>
                 <td class="tbl-bdy-lg ipt-lg w-full">{device.id}</td>
+                <td class="tbl-bdy-lg ipt-lg w-full">{device.fv ? device.fv : "-"}</td>
                 <td class="tbl-bdy-lg ipt-lg w-full {device.status ? 'bg-green-50' : 'bg-red-50'}">{device.status ? "online" : "offline"}</td>
                 <td class="tbl-bdy-lg ipt-lg w-full">{device.ping ? device.ping : "-"}</td>
 

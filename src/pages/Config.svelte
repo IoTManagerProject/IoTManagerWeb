@@ -289,6 +289,7 @@
         <button class="btn-lg" on:click={() => saveConfig()}>{"Сохранить на устройстве"}</button>
         <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить устройство"}</button>
         <button class="btn-lg" on:click={() => createExportFile()}>{"Экспорт конфигурации"}</button>
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
         <label on:click={() => reset()} class="btn-lg cursor-pointer select-none">
           <input bind:files={files} accept="application/JSON" type="file" id="formFile" />
           {"Импорт конфигурации"}

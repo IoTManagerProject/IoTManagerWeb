@@ -37,13 +37,15 @@
   const debug = true;
   const LOG_MAX_MESSAGES = 100;
   const reconnectTimeout = 60000; //период проверки соединения с устройством
+  let preventReconnect = false;
   const waitingAckTimeout = 12000; //время ожидания ответа от устройства
   const rebootingTimeout = 20000;
   const updatingTimeout = 130000;
+  let rebootTimer;
   let opened = false;
   let preventMove = false;
-  const blobDebug = false;
-  const devMode = false;
+  const blobDebug = true;
+  const devMode = true;
 
   let timeout = reconnectTimeout / 1000;
   let percent;
@@ -59,7 +61,7 @@
   let showModalFlag = false;
   let showDropdown = true;
 
-  let rebootingUpdatingInProgress = false;
+  let showAwaitingCircle = false;
 
   //dashboard
   let pages = [];
@@ -149,19 +151,18 @@
       showDropdown = false;
       //в остальных случаях шлем только выбранному устройству запрос данных
     } else {
-      //если мы перешли на страницу списка устройств то всегда запрашиваем список только этого устройства
       if (currentPageName === "/list|") {
+        //если мы перешли на страницу списка устройств отключаем выпадающий список
         showDropdown = false;
-        selectedWs = 0;
-        wsSendMsg(selectedWs, currentPageName);
       } else {
-        sendCurrentPageName();
         showDropdown = true;
       }
+      //если мы на любой другой странице то запрашиваем данные
+      sendCurrentPageNameToSelectedWs();
     }
   }
 
-  function sendCurrentPageName() {
+  function sendCurrentPageNameToSelectedWs() {
     if (selectedWs !== undefined) {
       wsSendMsg(selectedWs, currentPageName);
     }
@@ -181,26 +182,29 @@
 
   //****************************************************web sockets section******************************************************/
   function connectToAllDevices() {
-    //closeAllConnection();
-    //socket = [];
+    console.log("[i]", "[ws]", "connectToAllDevices", deviceList);
     getSelectedDeviceData(selectedWs);
-    let ws = 0;
-    deviceList.forEach((device) => {
-      device.ws = ws;
-      if (!device.status) {
-        wsConnect(ws);
-        wsEventAdd(ws);
-      } else {
+    for (let i = 0; i < deviceList.length; i++) {
+      deviceList[i].ws = i;
+      if (deviceList[i].status === false || deviceList[i].status === undefined) {
+        wsConnect(i);
+        wsEventAdd(i);
       }
-      ws++;
-    });
-    deviceList = deviceList;
+    }
   }
 
   function closeAllConnection() {
     let s;
     for (s in socket) {
       socket[s].close();
+    }
+  }
+
+  function printAllCreatedWs() {
+    if (socket) {
+      for (let i = 0; i < socket.length; i++) {
+        if (debug) console.log("[i]", "[ws]", "WebSocket client No: ", i);
+      }
     }
   }
 
@@ -235,7 +239,7 @@
       if (device.ws === ws) {
         device.status = status;
         device.ping = 0;
-        if (device.status) {
+        if (device.status === true) {
           console.log("[i]", device.ip, ws, "status online");
         } else {
           console.log("[i]", device.ip, ws, "status offline");
@@ -277,9 +281,10 @@
     if (socket[ws]) {
       let ip = getIP(ws);
       socket[ws].addEventListener("open", function (event) {
-        if (debug) console.log("[i]", ip, ws, "completed connecting");
+        //if (debug) console.log("[i]", ip, ws, "completed connecting");
         markDeviceStatus(ws, true);
-        if (firstDevListRequest) wsSendMsg(0, "/list|");
+        //при первом подключении запросим список устройств
+        if (firstDevListRequest && ws === 0) wsSendMsg(ws, "/devlist|");
         //при подключении отправляем название страницы
         if (currentPageName === "/|") {
           //всем устройствам
@@ -287,7 +292,7 @@
         } else {
           //только выбранному
           if (ws === selectedWs) {
-            sendCurrentPageName();
+            sendCurrentPageNameToSelectedWs();
           }
         }
       });
@@ -304,7 +309,7 @@
         if (event.data instanceof Blob) {
           //принимаем данные только для выбранного устройства
           if (ws === selectedWs) {
-            parseBlob(event.data);
+            parseBlob(event.data, ws);
           }
           //собираем данные со всех устройств только в случае если пользователь на dashboard
           if (currentPageName === "/|") {
@@ -327,7 +332,7 @@
     }
   }
 
-  async function parseBlob(blob) {
+  async function parseBlob(blob, ws) {
     //получаем заголовок
     var blobHeader = blob.slice(0, 6);
     let header = await blobHeader.text();
@@ -372,8 +377,7 @@
     }
     if (header === "scenar") {
       scenarioTxt = await getPayloadAsTxt(blob, size);
-      //if (blobDebug)
-      console.log("[i]", "scenarioTxt: ", scenarioTxt);
+      if (blobDebug) console.log("[i]", "scenarioTxt: ", scenarioTxt);
     }
     if (header === "settin") {
       let out = {};
@@ -397,24 +401,36 @@
         if (blobDebug) console.log("[e]", "ssidJson parse error");
       }
     }
+    //прием данных об ошибках
     if (header === "errors") {
       let out = {};
       if (await getPayloadAsJson(blob, size, out)) {
         errorsJson = out.json;
         parsed.errorsJson = true;
+        //когда запустили обновление предотвращаем попытки проверки связи
+        if (errorsJson.upd === 1) {
+          preventReconnect = true;
+        }
+        //когда устройство обновилось переподключимся через 5ть секунд
+        if (errorsJson.upd === 5) {
+          preventReconnect = false;
+          timeout = 20;
+        }
         if (blobDebug) console.log("[✔]", "errorsJson: ", errorsJson);
       } else {
         parsed.errorsJson = false;
         if (blobDebug) console.log("[e]", "errorsJson parse error");
       }
     }
+    //приход списка устройств
     if (header === "devlis") {
       let out = {};
       if (await getPayloadAsJson(blob, size, out)) {
+        incDeviceList = [];
         incDeviceList = out.json;
         parsed.incDeviceList = true;
         if (blobDebug) console.log("[✔]", "incDeviceList: ", incDeviceList);
-        initDevList();
+        await initDevList();
       } else {
         parsed.incDeviceList = false;
         if (blobDebug) console.log("[e]", "incDeviceList parse error");
@@ -422,6 +438,7 @@
     }
     if (header === "corelg") {
       let txt = await getPayloadAsTxt(blob, size);
+      //console.log("[--]", ws, txt);
       addCoreMsg(txt);
     }
 
@@ -565,7 +582,7 @@
       pageReady.connection = true;
     }
 
-    if (currentPageName === "/list|" && parsed.deviceListJson && parsed.settingsJson) {
+    if (currentPageName === "/list|" && parsed.settingsJson) {
       clearParcedFlags();
       if (debug) console.log("✔✔", "list page parced");
       pageReady.list = true;
@@ -585,9 +602,9 @@
     }
   }
 
-  function initDevList() {
-    //при первом запросе листа устройств запишем его целеком
+  async function initDevList() {
     if (firstDevListRequest) {
+      //при первом запросе листа устройств запишем его целеком
       devListOverride();
     } else {
       //при последующих прилетах списка устройств мы переписываем в массиве только то что изменилось
@@ -602,15 +619,18 @@
     //затем подключимся к всему полученному списку устройств
     connectToAllDevices();
   }
+
   //перезапись листа устройств
-  function devListOverride() {
+  async function devListOverride() {
     deviceList = incDeviceList;
     sortList(deviceList);
-    //if (deviceList.length >= 1) deviceList[0].status = true;
+    //установим заведомо статус уже присутствующего устроства в true для того что бы предотвратить повторное подключение!!!
+    deviceList[0].status = true;
     console.log("[i]", "[devlist]", "devlist overrided");
   }
+
   //добавление только новых элементов в лист устройств (если такого ip не было)
-  function devListCombine() {
+  async function devListCombine() {
     deviceList = combineArrays(deviceList, incDeviceList);
     sortList(deviceList);
     console.log("[i]", "[devlist]", "devlist combined");
@@ -768,7 +788,7 @@
 
     wsSendMsg(selectedWs, "/oiranecs|" + scenarioTxt);
     clearData();
-    sendCurrentPageName();
+    sendCurrentPageNameToSelectedWs();
   }
 
   function saveSett() {
@@ -782,14 +802,15 @@
       window.alert("Ошибка размера settingsJson (возможно не был передан странице)");
     }
     clearData();
-    sendCurrentPageName();
+    sendCurrentPageNameToSelectedWs();
   }
 
   function saveList() {
     //при сохранении списка в память необходимо удалить все статусы
     let devListForSave = Object.assign([], deviceList);
     for (let i = 0; i < devListForSave.length; i++) {
-      delete devListForSave[i].status;
+      //delete devListForSave[i].status;
+      devListForSave[i].status = false;
     }
     wsSendMsg(selectedWs, "/tsil|" + JSON.stringify(devListForSave));
   }
@@ -931,38 +952,30 @@
 
   function wsTestMsgTask() {
     setTimeout(wsTestMsgTask, 1000);
-    timeout--;
-    percent = scale(timeout, reconnectTimeout / 1000, 0, 0, 100);
-
-    if (timeout <= 0) {
-      timeout = reconnectTimeout / 1000;
-      //if (!rebootingUpdatingInProgress) {
-      if (debug) console.log("[i]", "----timer tick----");
-      //if (!firstTime) {
-
-      deviceList.forEach((device) => {
-        if (!device.status) {
-          wsConnect(device.ws);
-          wsEventAdd(device.ws);
-        } else {
-          wsSendMsg(device.ws, "/tst|");
-          ack(device.ws, false);
-        }
-      });
-      //}
-      //firstTime = false;
-      //} else {
-      //  if (debug) console.log("[i]", "----timer skipped----");
-      //}
-    } else {
-      //console.log("[i]", timeout);
+    if (!preventReconnect) {
+      timeout--;
+      percent = scale(timeout, reconnectTimeout / 1000, 0, 0, 100);
+      if (timeout <= 0) {
+        if (debug) console.log("[i]", "----timer tick----");
+        printAllCreatedWs();
+        timeout = reconnectTimeout / 1000;
+        deviceList.forEach((device) => {
+          if (device.status === false || device.status === undefined) {
+            wsConnect(device.ws);
+            wsEventAdd(device.ws);
+          } else {
+            wsSendMsg(device.ws, "/tst|");
+            ack(device.ws, false);
+          }
+        });
+      }
     }
   }
 
   function wsSendMsg(ws, msg) {
     if (socket[ws] && socket[ws].readyState === 1) {
       socket[ws].send(msg);
-      if (debug) console.log("[i]", getIP(ws), ws, "msg send success");
+      if (debug) console.log("[i]", getIP(ws), ws, "msg send success", msg);
     } else {
       if (debug) console.log("[e]", getIP(ws), ws, "msg not send");
     }
@@ -970,7 +983,7 @@
 
   function sendToAllDevices(msg) {
     deviceList.forEach((device) => {
-      if (device.status) {
+      if (device.status === true) {
         wsSendMsg(device.ws, msg);
       }
     });
@@ -1051,7 +1064,7 @@
         //onParced();
         //selectedDeviceDataRefresh();
         connectToAllDevices();
-        if (debug) console.log("[i]", "selected device:", selectedDeviceData);
+        if (debug) console.log("[i]", "selected device: ", selectedDeviceData);
         return true;
       } else {
         if (debug) console.log("[e]", "wrong data");
@@ -1214,17 +1227,28 @@
     if (debug) console.log("[i]", "reboot...");
     wsSendMsg(selectedWs, "/reboot|");
     markDeviceStatus(selectedWs, false);
-    rebootingUpdatingInProgress = true;
-    myTimeout = setTimeout(rebootingTask, rebootingTimeout);
+    showAwaitingCircle = true;
+    rebootTimer = setTimeout(rebootingTask, rebootingTimeout);
+  }
+
+  function applicationReboot() {
+    console.log("[i]", "reboot svelte...");
+    for (const [key, value] of Object.entries(pageReady)) {
+      pageReady[key] = false;
+    }
+    showAwaitingCircle = true;
+    setTimeout(() => {
+      location.reload();
+    }, 1000);
   }
 
   function rebootingTask() {
     //перезапуск приложения
     //location.reload();
-    clearTimeout(myTimeout);
+    clearTimeout(rebootTimer);
     clearData();
     connectToAllDevices();
-    rebootingUpdatingInProgress = false;
+    showAwaitingCircle = false;
   }
 
   function cancelAlarm(alarmKey) {
@@ -1264,19 +1288,22 @@
     }
   }
 
-  function startUpdate() {
+  function startUpdate(all) {
     if (choosingVersion !== undefined) {
       //if (choosingVersion === errorsJson.bver) {
       //  window.alert("Эта версия уже установленна");
       //} else {
-      if (confirm("Запустить обновление?")) {
+      if (confirm("После обновления устройство перезагрузится. Запустить обновление?")) {
         console.log("start update...");
-        //запишем выбранную версию в файл на esp
-        wsSendMsg(selectedWs, '/rorre|{"chver":' + choosingVersion + "}");
-        //начнем обновление
-        wsSendMsg(selectedWs, "/update|");
-        rebootingUpdatingInProgress = true;
-        myTimeout = setTimeout(rebootingTask, updatingTimeout);
+        if (all) {
+          sendToAllDevices('/rorre|{"chver":' + choosingVersion + "}");
+          sendToAllDevices("/update|");
+        } else {
+          wsSendMsg(selectedWs, '/rorre|{"chver":' + choosingVersion + "}");
+          wsSendMsg(selectedWs, "/update|");
+        }
+        //showAwaitingCircle = true;
+        //rebootTimer = setTimeout(rebootingTask, updatingTimeout);
       } else {
         console.log("update canceled");
       }
@@ -1314,7 +1341,7 @@
 </script>
 
 <div class="flex flex-col h-screen bg-gray-50">
-  {#if rebootingUpdatingInProgress}
+  {#if showAwaitingCircle}
     <Progress />
   {/if}
   <header class="h-10 w-full bg-gray-100 overflow-auto shadow-md">
@@ -1358,15 +1385,15 @@
         <a class="menu__item" href="/connection">{"Подключение"}</a>
       </li>
       <li>
-        <a class="menu__item" href="/list">{"Устройства"}</a>
-      </li>
-      <li>
         <a class="menu__item" href="/system">{"Системные"}</a>
       </li>
+      <li>
+        <a class="menu__item" href="/list">{"Устройства"}</a>
+      </li>
       {#if devMode}
-        <li>
+        <!--<li>
           <a class="menu__item" href="/dev">{"Разработчик"}</a>
-        </li>
+        </li>-->
       {/if}
     </ul>
   </nav>
@@ -1387,10 +1414,10 @@
             <ConnectionPage show={pageReady.connection} rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />
           </Route>
           <Route path="/list">
-            <ListPage show={pageReady.list} deviceList={deviceList} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} saveList={() => saveList()} percent={percent} devListOverride={() => devListOverride()} />
+            <ListPage show={pageReady.list} deviceList={deviceList} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} saveList={() => saveList()} percent={percent} devListOverride={() => devListOverride()} applicationReboot={() => applicationReboot()} />
           </Route>
           <Route path="/system">
-            <SystemPage show={pageReady.system} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion={choosingVersion} startUpdate={() => startUpdate()} coreMessages={coreMessages} />
+            <SystemPage show={pageReady.system} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion={choosingVersion} startUpdate={(all) => startUpdate(all)} coreMessages={coreMessages} />
           </Route>
           {#if devMode}
             <Route path="/dev">

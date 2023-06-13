@@ -136,7 +136,7 @@
   export let coreMessages;
   export let settingsJson;
 
-  export let startUpdate = () => {};
+  export let startUpdate = (all) => {};
   export let saveSett = () => {};
   export let cleanLogs = () => {};
   export let rebootEsp = () => {};
@@ -161,6 +161,14 @@
           </div>
           <div class="flex justify-center w-1/3">
             <p class="text-gray-500 font-bold text-sm text-center truncate">{errorsJson.bn}</p>
+          </div>
+        </div>
+        <div class="flex mb-2 h-6 items-center">
+          <div class="w-2/3">
+            <p class="pr-4 text-gray-500 font-bold text-sm truncate">Время компиляции</p>
+          </div>
+          <div class="flex justify-center w-1/3">
+            <p class="text-gray-500 font-bold text-sm text-center truncate">{errorsJson.bt ? errorsJson.bt : "-"}</p>
           </div>
         </div>
         <div class="flex mb-2 h-6 items-center">
@@ -291,7 +299,42 @@
             <p class="{errorsJson.rst.toString().includes('Watchdog') || errorsJson.rst.toString().includes('Exception') ? 'text-red-500' : 'text-green-500'} font-bold text-center truncate">{errorsJson.rst}</p>
           </div>
         </div>
-        <button class="btn-lg" on:click={() => startUpdate()}>{"Обновить прошивку"}</button>
+        <!--
+        NOT_STARTED
+        UPDATE_FS_IN_PROGRESS
+        UPDATE_FS_COMPLETED
+        UPDATE_FS_FAILED
+        UPDATE_BUILD_IN_PROGRESS
+        UPDATE_BUILD_COMPLETED
+        UPDATE_BUILD_FAILED
+        PATH_ERROR
+        -->
+        <div class="flex justify-center text-xs sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base break-words">
+          {#if errorsJson.upd === 1}
+            <p class="text-green-500 mb-2 font-bold text-sm text-center truncate">Обновление FS в процессе...</p>
+          {/if}
+          {#if errorsJson.upd === 2}
+            <p class="text-green-500 mb-2 font-bold text-sm text-center truncate">FS обновлено!</p>
+          {/if}
+          {#if errorsJson.upd === 3}
+            <p class="text-red-500 mb-2 font-bold text-sm text-center truncate">Ошибка обновления FS</p>
+          {/if}
+          {#if errorsJson.upd === 4}
+            <p class="text-green-500 mb-2 font-bold text-sm text-center truncate">Обновление Build в процессе...</p>
+          {/if}
+          {#if errorsJson.upd === 5}
+            <p class="text-green-500 mb-2 font-bold text-sm text-center truncate">Build обновлено!</p>
+          {/if}
+          {#if errorsJson.upd === 6}
+            <p class="text-red-500 mb-2 font-bold text-sm text-center truncate">Ошибка обновления Build</p>
+          {/if}
+          {#if errorsJson.upd === 7}
+            <p class="text-red-500 mb-2 font-bold text-sm text-center truncate">Ошибка пути обновления</p>
+          {/if}
+        </div>
+        <button class="btn-lg mb-2" on:click={() => startUpdate(false)}>{"Обновить прошивку"}</button>
+        <button class="btn-lg mb-2" on:click={() => startUpdate(true)}>{"Обновить прошивку на всех устройствах"}</button>
+        <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить устройство"}</button>
       </Card>
       <!--SETTINGS-->
       <Card title="Системные настройки">
@@ -414,7 +457,7 @@
 
       <!--LOG-->
       <Card title="Лог" class="z-50">
-        <div class="h-80 overflow-y-auto">
+        <div class="h-96 overflow-y-auto">
           {#each coreMessages as message, i}
             <div class={message.msg.toString().includes("[E]") || message.msg.toString().includes("[!]") ? "text-xs text-red-500" : "text-xs text-black"}>{message.msg}</div>
           {/each}
