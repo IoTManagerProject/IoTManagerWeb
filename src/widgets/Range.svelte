@@ -1,7 +1,6 @@
 <script>
   export let widget;
   export let wsPush = (ws, topic, status) => {};
-  export let val = 0;
 
   function map(val, in_min, in_max, out_min, out_max) {
     return Math.round(((val - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min);
@@ -9,20 +8,35 @@
 
   $: widget.status, calc();
 
+  let minForMCU = widget.min;
+  let maxForMCU = widget.max;
+
+  let valueForUser;
+
   function calc() {
-    val = map(widget.status, 0, 1024, widget.min, widget.max);
+    valueForUser = Math.round(widget.status);
+    //если коэффициент масштабирования присутствует
+    if (widget.k) {
+      if (widget.k !== 0) {
+        //тогда приведем диапазоны
+        minForMCU = widget.min / widget.k;
+        maxForMCU = widget.max / widget.k;
+        valueForUser = map(widget.status, minForMCU, maxForMCU, widget.min, widget.max);
+      }
+    }
   }
 </script>
 
-<!--<div class="text-center">-->
-<!-- svelte-ignore a11y-label-has-associated-control -->
-<label class="wgt-dscr-stl">{!widget.descr ? "" : widget.descr} {val} {widget.after}</label>
-<!--</div>-->
+<!--ползунок работает в режиме для микроконтроллера-->
+<div class="text-center">
+  <!-- svelte-ignore a11y-label-has-associated-control -->
+  <label class="pr-4 text-{widget.descrColor ? widget.descrColor : 'gray'}-500 font-bold">{!widget.descr ? "" : widget.descr} {valueForUser} {widget.after} </label>
+</div>
 <input
   bind:value={widget.status}
   on:change={() => ((widget.sent = true), wsPush(widget.ws, widget.topic, widget.status))}
   class="form-range range-secondary w-full h-2 p-0 rounded-lg {widget.sent ? 'bg-red-300' : 'bg-gray-300'} 
   focus:outline-none appearance-none"
   type="range"
-  min="0"
-  max="1024" />
+  min={minForMCU}
+  max={maxForMCU} />

@@ -18,7 +18,7 @@
   import Progress from "./components/Progress.svelte";
   import Card from "./components/Card.svelte";
 
-  //import Modal from "./components/Modal.svelte";
+  import ModalPass from "./components/ModalPass.svelte";
   import DashboardPage from "./pages/Dashboard.svelte";
   import ConfigPage from "./pages/Config.svelte";
   import ConnectionPage from "./pages/Connection.svelte";
@@ -44,7 +44,7 @@
   let rebootTimer;
   let opened = false;
   let preventMove = false;
-  const blobDebug = true;
+  const blobDebug = false;
   const devMode = true;
 
   let timeout = reconnectTimeout / 1000;
@@ -58,7 +58,7 @@
   //Flags
   let firstDevListRequest = true;
   let showInput = false;
-  let showModalFlag = false;
+  let authorization = false;
   let showDropdown = true;
 
   let showAwaitingCircle = false;
@@ -182,7 +182,6 @@
 
   //****************************************************web sockets section******************************************************/
   function connectToAllDevices() {
-    console.log("[i]", "[ws]", "connectToAllDevices", deviceList);
     getSelectedDeviceData(selectedWs);
     for (let i = 0; i < deviceList.length; i++) {
       deviceList[i].ws = i;
@@ -442,7 +441,7 @@
       addCoreMsg(txt);
     }
 
-    onParced();
+    await onParced();
   }
 
   async function parseAllBlob(blob, ws) {
@@ -1203,10 +1202,6 @@
   }
 
   //**********************************************************modal*************************************************************************/
-  function showModal() {
-    showModalFlag = !showModalFlag;
-  }
-
   function onCheck() {
     let width = screen.width;
     //console.log("width", width);
@@ -1338,12 +1333,25 @@
     console.log(json);
     wsSendMsg(selectedWs, "/order|" + JSON.stringify(json));
   }
+
+  function checkPassword(pass) {
+    if (pass === settingsJson.passw) {
+      settingsJson.pass = false;
+      authorization = false;
+      saveSett();
+    }
+  }
 </script>
 
 <div class="flex flex-col h-screen bg-gray-50">
   {#if showAwaitingCircle}
     <Progress />
   {/if}
+
+  <!--{#if authorization}
+    <ModalPass checkPassword={(pass) => checkPassword(pass)} />
+  {/if}-->
+
   <header class="h-10 w-full bg-gray-100 overflow-auto shadow-md">
     <div class="flex content-center items-center justify-end">
       {#if showDropdown}

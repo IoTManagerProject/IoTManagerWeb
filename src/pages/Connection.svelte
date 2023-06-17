@@ -84,7 +84,7 @@
       <Card title="Подключение к MQTT">
         <div class="crd-itm-psn">
           <div class="w-4/6">
-            <p class="wgt-dscr-stl truncate">Состояние подключения</p>
+            <p class="wgt-dscr-stl text-rose-500 truncate">Состояние подключения</p>
           </div>
           <div class="flex justify-center w-3/6 align-baseline text-sm sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base break-words">
             {#if errorsJson.mqtt === "e5"}

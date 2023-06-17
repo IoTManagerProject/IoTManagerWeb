@@ -111,7 +111,7 @@
 
 <div class="text-center">
   <!-- svelte-ignore a11y-label-has-associated-control -->
-  <label class="inline-block italic align-top text-center text-gray-500 txt-sz">{!widget.descr ? "" : widget.descr}</label>
+  <label class="inline-block italic align-top text-center text-{widget.descrColor ? widget.descrColor : 'gray'}-500 txt-sz">{!widget.descr ? "" : widget.descr}</label>
 </div>
 
-<Chart data={datachart} type={type} lineOptions={lineOptions} axisOptions={axisOptions} height="200" padding="0px" />
+<Chart data={datachart} type={type} lineOptions={lineOptions} axisOptions={axisOptions} height="150" padding="0px" />

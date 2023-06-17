@@ -53,7 +53,7 @@
 <div class="crd-itm-psn">
   <div class="w-2/3">
     <!-- svelte-ignore a11y-label-has-associated-control -->
-    <label class="wgt-dscr-stl">{!widget.descr ? "" : widget.descr}</label>
+    <label class="pr-4 text-{widget.descrColor ? widget.descrColor : 'gray'}-500 font-bold">{!widget.descr ? "" : widget.descr}</label>
   </div>
   <div class="flex justify-end w-1/3">
     {#if widget.type == "number"}

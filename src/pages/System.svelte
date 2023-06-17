@@ -443,6 +443,32 @@
           </div>
         {/if}
 
+        <!--password-->
+        <!--<div class="flex mb-2 h-6 items-center">
+          <div class="w-2/3">
+            <p class="pr-4 text-gray-500 font-bold text-sm truncate">Включить защиту паролем</p>
+          </div>
+
+          <div class="flex justify-center w-1/3">
+            <label for="pass" class="items-center cursor-pointer">
+              <div class="relative">
+                <input bind:checked={settingsJson.pass} on:change={() => (paramsBeenChanged = true)} id="pass" type="checkbox" class="sr-only" />
+                <div class="block {settingsJson.pass ? 'bg-blue-600' : 'bg-gray-600'} w-10 h-6 rounded-full shadow-lg" />
+                <div class="dot bg-gray-100 absolute left-1 top-1 w-4 h-4 rounded-full transition shadow-lg" />
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex mb-2 h-6 items-center">
+          <div class="w-2/3">
+            <p class="pr-4 text-gray-500 font-bold text-sm truncate">Пароль защиты веб интерфейса</p>
+          </div>
+          <div class="flex justify-center w-1/3">
+            <input bind:value={settingsJson.passw} on:change={() => (paramsBeenChanged = true)} class="ipt-rnd h-7 text-center focus:border-indigo-500" />
+          </div>
+        </div>-->
+
         <!--control-->
         <!--<div class="grd-2col1">-->
         {#if paramsBeenChanged}
@@ -456,8 +482,8 @@
       </Card>
 
       <!--LOG-->
-      <Card title="Лог" class="z-50">
-        <div class="h-96 overflow-y-auto">
+      <Card title="Лог">
+        <div class="overflow-y-auto" style={{ width: `$200px` }}>
           {#each coreMessages as message, i}
             <div class={message.msg.toString().includes("[E]") || message.msg.toString().includes("[!]") ? "text-xs text-red-500" : "text-xs text-black"}>{message.msg}</div>
           {/each}
