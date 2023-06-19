@@ -3,7 +3,7 @@
   export let value;
   value = value;
 
-  $: widget.status, blink(), colorSet();
+  $: widget.status, blink();
 
   let prevStatus;
 
@@ -49,8 +49,8 @@
   </div>
   <div class="flex justify-end w-1/3">
     <!-- svelte-ignore a11y-label-has-associated-control -->
-    <label class="wgt-adt-stl text-{setedColor}-500 {green ? 'text-green-500' : ''}">{!widget.status ? "" : widget.status}</label>
+    <label class="wgt-adt-stl  {green ? 'text-green-500' : ''}">{!widget.status ? "" : widget.status}</label>
     <!-- svelte-ignore a11y-label-has-associated-control -->
-    <label class="wgt-adt-stl text-{setedColor}-500 {green ? 'text-green-500' : ''}">&nbsp;{!widget.after ? "" : widget.after}</label>
+    <label class="wgt-adt-stl  {green ? 'text-green-500' : ''}">&nbsp;{!widget.after ? "" : widget.after}</label>
   </div>
 </div>

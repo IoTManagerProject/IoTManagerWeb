@@ -176,7 +176,7 @@
             <p class="pr-4 text-gray-500 font-bold text-sm truncate">Доступные версии</p>
           </div>
           <div class="flex justify-center w-1/3">
-            <select class="border border-indigo-500 border-4 text-center" bind:value={choosingVersion}>
+            <select class="border border-indigo-500 border-1 text-center" bind:value={choosingVersion}>
               {#if versionsList}
                 {#each Object.entries(versionsList) as [key, param]}
                   <option value={param}>
@@ -483,7 +483,7 @@
 
       <!--LOG-->
       <Card title="Лог">
-        <div class="overflow-y-auto" style={{ width: `$200px` }}>
+        <div class="h-96 overflow-y-auto">
           {#each coreMessages as message, i}
             <div class={message.msg.toString().includes("[E]") || message.msg.toString().includes("[!]") ? "text-xs text-red-500" : "text-xs text-black"}>{message.msg}</div>
           {/each}

@@ -24,7 +24,7 @@
   import ConnectionPage from "./pages/Connection.svelte";
   import ListPage from "./pages/List.svelte";
   import SystemPage from "./pages/System.svelte";
-  import DevPage from "./pages/Dev.svelte";
+  import DevPage from "./pages/Dev.svelte"; 
 
   //import UtilitiesPage from "./pages/Utilities.svelte";
   //import LogPage from "./pages/Log.svelte";
@@ -1356,7 +1356,7 @@
     <div class="flex content-center items-center justify-end">
       {#if showDropdown}
         <div class="px-15 py-1">
-          <select class="border border-indigo-500 border-4" bind:value={selectedWs} on:change={() => devicesDropdownChange()}>
+          <select class="border border-indigo-500 border-1" bind:value={selectedWs} on:change={() => devicesDropdownChange()}>
             {#each deviceList as device}
               <option value={device.ws}>
                 {device.name}

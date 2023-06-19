@@ -21,7 +21,7 @@ module.exports = {
       //keyframes: true,
     },
   },
-  darkMode: false, // or 'media' or 'class'
+  //darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {
       colors: {
@@ -32,12 +32,6 @@ module.exports = {
         //emerald: colors.emerald,
       },
     },
-  },
-  variants: {
-    extend: {},
-  },
-  plugins: [],
-  theme: {
     fontSize: {
       xxs: ".5rem",
       xs: ".75rem",
@@ -54,4 +48,8 @@ module.exports = {
       "7xl": "5rem",
     },
   },
+  variants: {
+    extend: {},
+  },
+  plugins: [],
 };
