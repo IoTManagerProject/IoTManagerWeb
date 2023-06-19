@@ -24,7 +24,7 @@
   import ConnectionPage from "./pages/Connection.svelte";
   import ListPage from "./pages/List.svelte";
   import SystemPage from "./pages/System.svelte";
-  import DevPage from "./pages/Dev.svelte"; 
+  import DevPage from "./pages/Dev.svelte";
 
   //import UtilitiesPage from "./pages/Utilities.svelte";
   //import LogPage from "./pages/Log.svelte";
@@ -45,7 +45,7 @@
   let opened = false;
   let preventMove = false;
   const blobDebug = false;
-  const devMode = true;
+  const devMode = false;
 
   let timeout = reconnectTimeout / 1000;
   let percent;
