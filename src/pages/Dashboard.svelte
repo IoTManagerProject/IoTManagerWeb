@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from "svelte";
   import Card from "../components/Card.svelte";
   import Input from "../widgets/Input.svelte";
   import Range from "../widgets/Range.svelte";
@@ -7,8 +6,6 @@
   import Toggle from "../widgets/Toggle.svelte";
   import Anydata from "../widgets/Anydata.svelte";
   import Alarm from "../components/Alarm.svelte";
-
-  onMount(async () => {});
 
   export let layoutJson;
 

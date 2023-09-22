@@ -29,8 +29,7 @@
 
 <!--ползунок работает в режиме для микроконтроллера-->
 <div class="text-center">
-  <!-- svelte-ignore a11y-label-has-associated-control -->
-  <label class="pr-4 text-{widget.descrColor ? widget.descrColor : 'gray'}-500 font-bold">{!widget.descr ? "" : widget.descr} {valueForUser} {widget.after} </label>
+  <p class="pr-4 truncate text-{widget.descrColor ? widget.descrColor : 'gray'}-500 font-bold">{!widget.descr ? "" : widget.descr} {valueForUser} {widget.after}</p>
 </div>
 <input
   bind:value={widget.status}

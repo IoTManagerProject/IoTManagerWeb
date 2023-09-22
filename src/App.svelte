@@ -38,14 +38,14 @@
   const LOG_MAX_MESSAGES = 100;
   const reconnectTimeout = 60000; //период проверки соединения с устройством
   let preventReconnect = false;
-  const waitingAckTimeout = 12000; //время ожидания ответа от устройства
-  const rebootingTimeout = 20000;
+  const waitingAckTimeout = 18000; //время ожидания ответа от устройства
+  const rebootingTimeout = 30000;
   const updatingTimeout = 130000;
   let rebootTimer;
   let opened = false;
   let preventMove = false;
   const blobDebug = false;
-  const devMode = false;
+  const devMode = true;
 
   let timeout = reconnectTimeout / 1000;
   let percent;
@@ -53,7 +53,7 @@
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.1.238";
+  if (devMode) myip = "192.168.1.247";
 
   //Flags
   let firstDevListRequest = true;
@@ -949,6 +949,7 @@
     return ((number - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
   }
 
+  //тикер который тикает каждую секунду и на каждую 0 секунду запускает проверку соединения
   function wsTestMsgTask() {
     setTimeout(wsTestMsgTask, 1000);
     if (!preventReconnect) {
@@ -1656,5 +1657,26 @@
 
   input[type="file"] {
     display: none;
+  }
+
+  /* width */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  /* Track */
+  ::-webkit-scrollbar-track {
+    background: #ebebeb;
+  }
+
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: #cbcbcb;
+    border-radius: 2px;
+  }
+
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: #aeaeae;
   }
 </style>

@@ -257,7 +257,7 @@
                         </td>
                         {#if element[key] != "nil"}
                           <td class="tbl-bdy-sm text-center">
-                            <input bind:value={element[key]} class="ipt-sm w-full" type="text" />
+                            <input bind:value={element[key]} class="ipt-sm w-full text-sm" type="text" />
                           </td>
                         {/if}
                       {:else}
@@ -265,7 +265,7 @@
                           <p class="txt-ita">{key}</p>
                         </td>
                         <td class="tbl-bdy-sm text-center">
-                          <input bind:value={element[key]} class="ipt-sm w-full" type="text" />
+                          <input bind:value={element[key]} class="ipt-sm w-full text-sm" type="text" />
                         </td>
                       {/if}
                     </tr>

@@ -1,11 +1,5 @@
 <script>
   import Chart from "svelte-frappe-charts";
-  import { onMount } from "svelte";
-
-  onMount(async () => {
-    console.log("[i]", "chart component mounted");
-  });
-
   export let widget;
 
   let datachart = {
@@ -25,7 +19,7 @@
   let labels = [];
   let values = [];
 
-  let axisOptions = { xAxisMode: "tick", xIsSeries: true };
+  let axisOptions = { xAxisMode: "tick", xIsSeries: true, xIsSeries: true };
   let lineOptions;
   if (widget.pointRadius == "0") {
     lineOptions = { regionFill: 1, hideDots: 1, spline: 1 };
@@ -110,8 +104,7 @@
 </script>
 
 <div class="text-center">
-  <!-- svelte-ignore a11y-label-has-associated-control -->
-  <label class="inline-block italic align-top text-center text-{widget.descrColor ? widget.descrColor : 'gray'}-500 txt-sz">{!widget.descr ? "" : widget.descr}</label>
+  <p class="inline-block italic truncate align-top text-center text-{widget.descrColor ? widget.descrColor : 'gray'}-500 txt-sz">{!widget.descr ? "" : widget.descr}</p>
 </div>
 
-<Chart data={datachart} type={type} lineOptions={lineOptions} axisOptions={axisOptions} height="150" padding="0px" />
+<Chart id={"notes"} data={datachart} type={type} title={""} lineOptions={lineOptions} axisOptions={axisOptions} height="150" padding="0px" margin="0px" />
