@@ -1401,11 +1401,11 @@
         <a class="menu__item" href="/login">{"Вход"}</a>
       </li>
       <li class="flex flex-col pl-6 pt-3 w-full h-screen">
-        <select class="border border-indigo-500 border-1 h-6 w-12" bind:value={$locale}>
+        <!--<select class="border border-indigo-500 border-1 h-6 w-12" bind:value={$locale}>
           {#each locales as l}
             <option value={l}>{l}</option>
           {/each}
-        </select>
+        </select>-->
       </li>
     </ul>
   </nav>

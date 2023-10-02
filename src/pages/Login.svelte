@@ -5,10 +5,10 @@
   export let show = true;
 
   let user = {};
-
   let errors = [];
 
   const login = async (user) => {
+    errors = [];
     try {
       let res = await fetch("https://portal.iotmanager.org/api/auth/login", {
         mode: "cors",
@@ -20,16 +20,20 @@
         body: JSON.stringify(user),
       });
       const content = await res.json();
-      console.log(content);
+      //console.log(content);
       if (res.ok) {
-        //
+        errors = [{ msg: "ok_success_login" }];
+        saveToken(content.message);
       } else {
         errors = content.message;
       }
     } catch (e) {
-      //console.log("er");
-      //errors = e;
+      console.log(e);
     }
+  };
+
+  const saveToken = async (token) => {
+    console.log("token to be saved: ", token);
   };
 </script>
 
@@ -50,7 +54,7 @@
           <input bind:value={user.password} class="shadow appearance-none border rounded w-full h-10 px-3 text-gray-700 mb-0 leading-tight focus:outline-none focus:shadow-outline" id="password" type="password" placeholder="**********" />
         </div>
         {#each errors as e, i}
-          <p class="text-red-500 p-0 m-0 font-bold text-xs italic">{e.msg}</p>
+          <p class="text-red-500 p-0 m-0 font-bold text-xs italic">{$t(e.msg)}</p>
         {/each}
         <button class="btn-lg mt-6" on:click={() => login(user)}>{$t("login.login")}</button>
       </form>
