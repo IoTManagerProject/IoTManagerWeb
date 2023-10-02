@@ -7,6 +7,9 @@
   */
 
   //6+49 кб 09/06/2023
+  //6+51 кб 02/09/2023
+  //6+64 кб 02/10/2023 + axios
+  //6+53 кб 03/10/2023 + fetch
 
   //******************************************************import section*********************************************************/
   //*****************************************************************************************************************************/
@@ -24,7 +27,8 @@
   import ConnectionPage from "./pages/Connection.svelte";
   import ListPage from "./pages/List.svelte";
   import SystemPage from "./pages/System.svelte";
-  import DevPage from "./pages/Dev.svelte";
+  import Login from "./pages/Login.svelte";
+  import { t, locale, locales } from "./i18n";
 
   //import UtilitiesPage from "./pages/Utilities.svelte";
   //import LogPage from "./pages/Log.svelte";
@@ -141,9 +145,9 @@
     console.log("[i]", "user on page:", currentPageName);
 
     //не нужно очищать переменные когда переходим на страницу разработчика
-    if (currentPageName != "/dev|") {
-      clearData();
-    }
+    // if (currentPageName != "/dev|") {
+    clearData();
+    //}
 
     //если мы на странице dashboard то рассылаем всем устройствам запрос данных
     if (currentPageName === "/|") {
@@ -592,12 +596,6 @@
       getVersionsList();
       if (debug) console.log("✔✔", "system page parced");
       pageReady.system = true;
-    }
-
-    if (currentPageName === "/dev|" && parsed.errorsJson && parsed.settingsJson && parsed.configJson && parsed.itemsJson) {
-      clearParcedFlags();
-      if (debug) console.log("✔✔", "dev page parced");
-      pageReady.dev = true;
     }
   }
 
@@ -1399,11 +1397,16 @@
       <li>
         <a class="menu__item" href="/list">{"Устройства"}</a>
       </li>
-      {#if devMode}
-        <!--<li>
-          <a class="menu__item" href="/dev">{"Разработчик"}</a>
-        </li>-->
-      {/if}
+      <li>
+        <a class="menu__item" href="/login">{"Вход"}</a>
+      </li>
+      <li class="flex flex-col pl-6 pt-3 w-full h-screen">
+        <select class="border border-indigo-500 border-1 h-6 w-12" bind:value={$locale}>
+          {#each locales as l}
+            <option value={l}>{l}</option>
+          {/each}
+        </select>
+      </li>
     </ul>
   </nav>
 
@@ -1428,14 +1431,10 @@
           <Route path="/system">
             <SystemPage show={pageReady.system} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion={choosingVersion} startUpdate={(all) => startUpdate(all)} coreMessages={coreMessages} />
           </Route>
-          {#if devMode}
-            <Route path="/dev">
-              <!--<Card title="Кнопка">
-                <button class="btn-lg" on:click={() => test()}>{"Тест"}</button>
-              </Card>-->
-              <DevPage show={pageReady.dev} layoutJson={layoutJson} errorsJson={errorsJson} settingsJson={settingsJson} configJson={configJson} itemsJson={itemsJson} paramsJson={paramsJson} />
-            </Route>
-          {/if}
+
+          <Route path="/login">
+            <Login show={true} />
+          </Route>
         {/if}
       </div>
     </ul>
