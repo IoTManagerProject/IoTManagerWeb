@@ -2,6 +2,8 @@
   import Card from "../components/Card.svelte";
   import Alarm from "../components/Alarm.svelte";
   import { t, locale, locales } from "../i18n";
+  import { router } from "tinro";
+  import Cookies from "js-cookie";
   export let show = true;
 
   let user = {};
@@ -20,7 +22,6 @@
         body: JSON.stringify(user),
       });
       const content = await res.json();
-      //console.log(content);
       if (res.ok) {
         errors = [{ msg: "ok_success_login" }];
         saveToken(content.message);
@@ -33,7 +34,10 @@
   };
 
   const saveToken = async (token) => {
+    Cookies.set("token_iotm2", token);
     console.log("token to be saved: ", token);
+    router.goto("/profile");
+    location.reload();
   };
 </script>
 

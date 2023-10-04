@@ -27,9 +27,10 @@
   import ConnectionPage from "./pages/Connection.svelte";
   import ListPage from "./pages/List.svelte";
   import SystemPage from "./pages/System.svelte";
-  //import Login from "./pages/Login.svelte";
+  import Login from "./pages/Login.svelte";
   import Profile from "./pages/Profile.svelte";
   import { t, locale, locales } from "./i18n";
+  import Cookies from "js-cookie";
 
   //import UtilitiesPage from "./pages/Utilities.svelte";
   //import LogPage from "./pages/Log.svelte";
@@ -109,6 +110,8 @@
   let layoutJson = [];
   let paramsJson = {};
 
+  let userdata = null;
+
   let parsed = {
     itemsJson: false,
     widgetsJson: false,
@@ -178,6 +181,7 @@
   //*******************************************************initialisation********************************************************************/
   onMount(async () => {
     console.log("[i]", "mounted");
+    await getUser();
     selectedDeviceDataRefresh();
     //флаг первого запроса списка устройств
     firstDevListRequest = true;
@@ -186,6 +190,27 @@
     wsTestMsgTask();
     //sortingLayout();
   });
+
+  const getUser = async () => {
+    try {
+      const JWT = Cookies.get("token_iotm2");
+      let res = await fetch("https://portal.iotmanager.org/api/user/email", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${JWT}`,
+        },
+        mode: "cors",
+        method: "GET",
+      });
+      if (res.ok) {
+        userdata = await res.json();
+      } else {
+        console.log("error", res.statusText);
+      }
+    } catch (e) {
+      console.log("error", e);
+    }
+  };
 
   //****************************************************web sockets section******************************************************/
   function connectToAllDevices() {
@@ -198,13 +223,6 @@
       }
     }
   }
-
-  //function closeAllConnection() {
-  //  let s;
-  //  for (s in socket) {
-  //    socket[s].close();
-  //  }
-  //}
 
   function printAllCreatedWs() {
     if (socket) {
@@ -1111,8 +1129,10 @@
     //console.log("width", width);
     if (width < 900) {
       preventMove = true;
+      //opened = false;
     } else {
       preventMove = false;
+      //opened = true;
     }
   }
 
@@ -1212,21 +1232,6 @@
     }
   }
 
-  //function selectToMarker(str, found) {
-  //  let p = str.indexOf(found);
-  //  return str.substring(0, p);
-  //}
-
-  //function deleteBeforeDelimiter(str, found) {
-  //  let p = str.indexOf(found) + found.length;
-  //  return str.substring(p);
-  //}
-
-  //function getMillis() {
-  //  const d = new Date();
-  //  return d.getMilliseconds();
-  //}
-
   function moduleOrder(id, key, value) {
     console.log("order: ", id, key, value);
     let json = {
@@ -1237,14 +1242,6 @@
     console.log(json);
     wsSendMsg(selectedWs, "/order|" + JSON.stringify(json));
   }
-
-  //function checkPassword(pass) {
-  //  if (pass === settingsJson.passw) {
-  //    settingsJson.pass = false;
-  //    authorization = false;
-  //    saveSett();
-  //  }
-  //}
 </script>
 
 <div class="flex flex-col h-screen bg-gray-50">
@@ -1302,9 +1299,15 @@
       <li>
         <a class="menu__item" href="/list">{"Устройства"}</a>
       </li>
-      <li>
-        <a class="menu__item" href="/profile">{"Модули"}</a>
-      </li>
+      {#if userdata}
+        <li>
+          <a class="menu__item" href="/profile">{"Модули"}</a>
+        </li>
+      {:else}
+        <li>
+          <a class="menu__item" href="/login">{"Вход"}</a>
+        </li>
+      {/if}
       <li class="flex flex-col pl-6 pt-3 w-full h-screen">
         <!--<select class="border border-indigo-500 border-1 h-6 w-12" bind:value={$locale}>
           {#each locales as l}
@@ -1338,7 +1341,10 @@
           </Route>
 
           <Route path="/profile">
-            <Profile show={pageReady.profile} myProfileJson={myProfileJson} />
+            <Profile show={pageReady.profile} myProfileJson={myProfileJson} userdata={userdata} />
+          </Route>
+          <Route path="/login">
+            <Login show={true} />
           </Route>
         {/if}
       </div>
