@@ -7,6 +7,7 @@
   export let myProfileJson;
 
   let errors = [];
+
   let allmodeinfo = null;
 
   onMount(async () => {
@@ -30,23 +31,22 @@
     }
   };
 
-  const post = async (user) => {
-    errors = [];
+  const update = async () => {
     try {
-      let res = await fetch("https://portal.iotmanager.org/api/auth/login", {
+      let res = await fetch("https://portal.iotmanager.org/compiler/esporder", {
         mode: "cors",
         method: "POST",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(user),
+        body: JSON.stringify(myProfileJson),
       });
       const content = await res.json();
       //console.log(content);
       if (res.ok) {
-        errors = [{ msg: "ok_success_login" }];
-        saveToken(content.message);
+        errors = [{ msg: "ok_success" }];
+        console.log(content.message);
       } else {
         errors = content.message;
       }
@@ -54,57 +54,70 @@
       console.log(e);
     }
   };
-
-  const saveToken = async (token) => {
-    console.log("token to be saved: ", token);
-  };
 </script>
 
 {#if show}
-  {#if allmodeinfo && myProfileJson}
-    <div class="my-4">
-      <div class="grd-1col1">
-        <Card title={myProfileJson.projectProp.platformio.default_envs}>
-          <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12 2xl:grid-cols-12 gap-4">
-            {#each myProfileJson.modules.virtual_elments as m, i}
-              {#if allmodeinfo[m.path]?.usedLibs[myProfileJson.projectProp.platformio.default_envs]}
-                <div>
-                  <!-- svelte-ignore a11y-click-events-have-key-events -->
-                  <p on:click={() => (m.active = !m.active)} class="{m.active ? 'bg-green-100' : ''} cursor-pointer select-none text-black text-xs font-medium mr-2 px-0.5 py-0.5 rounded text-center">{m.path.substring(m.path.lastIndexOf("/") + 1, m.path.length)}</p>
-                </div>
-              {/if}
+  {#if myProfileJson.username}
+    {#if allmodeinfo && myProfileJson}
+      <div class="my-4">
+        <div class="grd-1col1">
+          <Card title="">
+            <div class="grid grid-cols-2">
+              <p class="text-center">{myProfileJson.projectProp.platformio.default_envs}</p>
+              <p class="text-center">{myProfileJson.username}</p>
+            </div>
+            <div class="grid my-4 grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12 2xl:grid-cols-12 gap-4">
+              {#each myProfileJson.modules.virtual_elments as m, i}
+                {#if allmodeinfo[m.path]?.usedLibs[myProfileJson.projectProp.platformio.default_envs]}
+                  <div>
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <p on:click={() => ((m.active = !m.active), (m.touched = true))} class="{m.active ? 'bg-green-100' : ''} cursor-pointer select-none {m.touched ? 'border border-gray-400' : 'border border-green-100'} text-black text-xs font-medium mr-2 px-0.5 py-0.5 rounded text-center">{m.path.substring(m.path.lastIndexOf("/") + 1, m.path.length)}</p>
+                  </div>
+                {/if}
+              {/each}
+              {#each myProfileJson.modules.sensors as m, i}
+                {#if allmodeinfo[m.path]?.usedLibs[myProfileJson.projectProp.platformio.default_envs]}
+                  <div>
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <p on:click={() => ((m.active = !m.active), (m.touched = true))} class="{m.active ? 'bg-green-100' : ''} cursor-pointer select-none {m.touched ? 'border border-gray-400' : 'border border-green-100'} text-black text-xs font-medium mr-2 px-0.5 py-0.5 rounded text-center">{m.path.substring(m.path.lastIndexOf("/") + 1, m.path.length)}</p>
+                  </div>
+                {/if}
+              {/each}
+              {#each myProfileJson.modules.executive_devices as m, i}
+                {#if allmodeinfo[m.path]?.usedLibs[myProfileJson.projectProp.platformio.default_envs]}
+                  <div>
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <p on:click={() => ((m.active = !m.active), (m.touched = true))} class="{m.active ? 'bg-green-100' : ''} cursor-pointer select-none {m.touched ? 'border border-gray-400' : 'border border-green-100'} text-black text-xs font-medium mr-2 px-0.5 py-0.5 rounded text-center">{m.path.substring(m.path.lastIndexOf("/") + 1, m.path.length)}</p>
+                  </div>
+                {/if}
+              {/each}
+              {#each myProfileJson.modules.screens as m, i}
+                {#if allmodeinfo[m.path]?.usedLibs[myProfileJson.projectProp.platformio.default_envs]}
+                  <div>
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <p on:click={() => ((m.active = !m.active), (m.touched = true))} class="{m.active ? 'bg-green-100' : ''} cursor-pointer select-none {m.touched ? 'border border-gray-400' : 'border border-green-100'} text-black text-xs font-medium mr-2 px-0.5 py-0.5 rounded text-center">{m.path.substring(m.path.lastIndexOf("/") + 1, m.path.length)}</p>
+                  </div>
+                {/if}
+              {/each}
+            </div>
+            {#each errors as e, i}
+              <p class="text-red-500 p-0 m-0 font-bold text-xs italic">{$t(e.msg)}</p>
             {/each}
-            {#each myProfileJson.modules.sensors as m, i}
-              {#if allmodeinfo[m.path]?.usedLibs[myProfileJson.projectProp.platformio.default_envs]}
-                <div>
-                  <!-- svelte-ignore a11y-click-events-have-key-events -->
-                  <p on:click={() => (m.active = !m.active)} class="{m.active ? 'bg-green-100' : ''} cursor-pointer select-none text-black text-xs font-medium mr-2 px-0.5 py-0.5 rounded text-center">{m.path.substring(m.path.lastIndexOf("/") + 1, m.path.length)}</p>
-                </div>
-              {/if}
-            {/each}
-            {#each myProfileJson.modules.executive_devices as m, i}
-              {#if allmodeinfo[m.path]?.usedLibs[myProfileJson.projectProp.platformio.default_envs]}
-                <div>
-                  <!-- svelte-ignore a11y-click-events-have-key-events -->
-                  <p on:click={() => (m.active = !m.active)} class="{m.active ? 'bg-green-100' : ''} cursor-pointer select-none text-black text-xs font-medium mr-2 px-0.5 py-0.5 rounded text-center">{m.path.substring(m.path.lastIndexOf("/") + 1, m.path.length)}</p>
-                </div>
-              {/if}
-            {/each}
-            {#each myProfileJson.modules.screens as m, i}
-              {#if allmodeinfo[m.path]?.usedLibs[myProfileJson.projectProp.platformio.default_envs]}
-                <div>
-                  <!-- svelte-ignore a11y-click-events-have-key-events -->
-                  <p on:click={() => (m.active = !m.active)} class="{m.active ? 'bg-green-100' : ''} cursor-pointer select-none text-black text-xs font-medium mr-2 px-0.5 py-0.5 rounded text-center">{m.path.substring(m.path.lastIndexOf("/") + 1, m.path.length)}</p>
-                </div>
-              {/if}
-            {/each}
-          </div></Card>
+            <button class="btn-lg mt-6" on:click={() => update()}>{$t("profile.update")}</button>
+          </Card>
+        </div>
       </div>
-    </div>
+    {:else}
+      <div class="my-4">
+        <div class="grd-1col1">
+          <Card title="Сервер недоступен" />
+        </div>
+      </div>
+    {/if}
   {:else}
     <div class="my-4">
       <div class="grd-1col1">
-        <Card title="Сервер недоступен" />
+        <Card title="Укажите Ваш email который вы использовали при регистрации" />
       </div>
     </div>
   {/if}
