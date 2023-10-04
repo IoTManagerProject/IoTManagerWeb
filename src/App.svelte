@@ -19,15 +19,16 @@
 
   import Alarm from "./components/Alarm.svelte";
   import Progress from "./components/Progress.svelte";
-  import Card from "./components/Card.svelte";
+  //import Card from "./components/Card.svelte";
 
-  import ModalPass from "./components/ModalPass.svelte";
+  //import ModalPass from "./components/ModalPass.svelte";
   import DashboardPage from "./pages/Dashboard.svelte";
   import ConfigPage from "./pages/Config.svelte";
   import ConnectionPage from "./pages/Connection.svelte";
   import ListPage from "./pages/List.svelte";
   import SystemPage from "./pages/System.svelte";
-  import Login from "./pages/Login.svelte";
+  //import Login from "./pages/Login.svelte";
+  import Profile from "./pages/Profile.svelte";
   import { t, locale, locales } from "./i18n";
 
   //import UtilitiesPage from "./pages/Utilities.svelte";
@@ -57,7 +58,7 @@
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.1.247";
+  if (devMode) myip = "192.168.1.232";
 
   //Flags
   let firstDevListRequest = true;
@@ -92,6 +93,7 @@
   let settingsJson = {};
   let ssidJson = {};
   let errorsJson = {};
+  let myProfileJson = {};
   let deviceList = [];
   deviceList = [
     {
@@ -119,6 +121,7 @@
     errorsJson: false,
     statusJson: false,
     paramsJson: false,
+    myProfileJson: false,
   };
 
   //===============================================
@@ -196,12 +199,12 @@
     }
   }
 
-  function closeAllConnection() {
-    let s;
-    for (s in socket) {
-      socket[s].close();
-    }
-  }
+  //function closeAllConnection() {
+  //  let s;
+  //  for (s in socket) {
+  //    socket[s].close();
+  //  }
+  //}
 
   function printAllCreatedWs() {
     if (socket) {
@@ -439,6 +442,19 @@
         if (blobDebug) console.log("[e]", "incDeviceList parse error");
       }
     }
+    //приход профиля
+    if (header === "prfile") {
+      let out = {};
+      if (await getPayloadAsJson(blob, size, out)) {
+        myProfileJson = out.json;
+        parsed.myProfileJson = true;
+        if (blobDebug) console.log("[✔]", "myProfileJson: ", myProfileJson);
+      } else {
+        parsed.myProfileJson = false;
+        if (blobDebug) console.log("[e]", "myProfileJson parse error");
+      }
+    }
+
     if (header === "corelg") {
       let txt = await getPayloadAsTxt(blob, size);
       //console.log("[--]", ws, txt);
@@ -596,6 +612,12 @@
       getVersionsList();
       if (debug) console.log("✔✔", "system page parced");
       pageReady.system = true;
+    }
+
+    if (currentPageName === "/profile|" && parsed.myProfileJson) {
+      clearParcedFlags();
+      if (debug) console.log("✔✔", "profile page parced");
+      pageReady.profile = true;
     }
   }
 
@@ -1071,67 +1093,6 @@
     }
   }
 
-  function updateThisDeviceInList() {
-    for (let i = 0; i < deviceList.length; i++) {
-      let device = deviceList[i];
-      if (device.ip === myip) {
-        device.name = settingsJson.name;
-        device.id = settingsJson.id;
-        settingsJson = settingsJson;
-        break;
-      }
-    }
-  }
-
-  //****************************************************************json******************************************************************/
-  function getJsonObject(array, number) {
-    let num = 0;
-    let out = {};
-    array.forEach((object) => {
-      if (num === number) {
-        out = object;
-      }
-      num++;
-    });
-    return out;
-  }
-
-  const syntaxHighlight = (json) => {
-    try {
-      json = JSON.stringify(JSON.parse(json), null, 4);
-    } catch (e) {
-      return json;
-    }
-    json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    json = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-      return match;
-    });
-    return json;
-  };
-
-  function IsJsonParse(str) {
-    try {
-      JSON.parse(str);
-    } catch (e) {
-      if (debug) console.log("[e]", "json parce error: ", str);
-      return false;
-    }
-    return true;
-  }
-
-  //пример как формировать массив json
-  function createWidgetsDropdown() {
-    let widgetsDropdown = [];
-    widgetsJson.forEach((widget) => {
-      widgetsDropdown.push({
-        id: widget.name,
-        val: widget.rus,
-      });
-    });
-    widgetsDropdown = widgetsDropdown;
-    if (debug) console.log("[i]", widgetsDropdown);
-  }
-
   function jsonArrWrite(jsonArr, idKey, idValue, paramKey, paramValue) {
     for (let i = 0; i < jsonArr.length; i++) {
       let obj = jsonArr[i];
@@ -1141,62 +1102,6 @@
           break;
         }
       }
-    }
-  }
-
-  //**********************************************************post and get*****************************************************************/
-  //editRequest("192.168.88.235", "data data data data", "file.json")
-
-  function editRequest(url, data, filename) {
-    if (debug) console.log("[i]", "request for edit file");
-    var xmlHttp = new XMLHttpRequest();
-    var formData = new FormData();
-    formData.append(
-      "data",
-      new Blob([data], {
-        type: "text/json",
-      }),
-      "/" + filename
-    );
-    xmlHttp.open("POST", "http://" + url + "/edit");
-    xmlHttp.onload = function () {
-      //во время загрузки
-    };
-    xmlHttp.send(formData);
-  }
-
-  async function handleSubmit(url) {
-    try {
-      console.log(url);
-      let res = await fetch(url, {
-        mode: "no-cors",
-        method: "GET",
-      });
-      if (res.ok) {
-        console.log("OK", res.status);
-        //console.log(url);
-      } else {
-        console.log("error", res.status);
-        //console.log(url);
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
-  async function getRequestJson(url) {
-    try {
-      let res = await fetch(url, {
-        mode: "no-cors",
-        method: "GET",
-      });
-      if (res.ok) {
-        configSetupJson = await res.json();
-      } else {
-        console.log("error", res.status);
-      }
-    } catch (e) {
-      console.log(e);
     }
   }
 
@@ -1307,20 +1212,20 @@
     }
   }
 
-  function selectToMarker(str, found) {
-    let p = str.indexOf(found);
-    return str.substring(0, p);
-  }
+  //function selectToMarker(str, found) {
+  //  let p = str.indexOf(found);
+  //  return str.substring(0, p);
+  //}
 
-  function deleteBeforeDelimiter(str, found) {
-    let p = str.indexOf(found) + found.length;
-    return str.substring(p);
-  }
+  //function deleteBeforeDelimiter(str, found) {
+  //  let p = str.indexOf(found) + found.length;
+  //  return str.substring(p);
+  //}
 
-  function getMillis() {
-    const d = new Date();
-    return d.getMilliseconds();
-  }
+  //function getMillis() {
+  //  const d = new Date();
+  //  return d.getMilliseconds();
+  //}
 
   function moduleOrder(id, key, value) {
     console.log("order: ", id, key, value);
@@ -1333,13 +1238,13 @@
     wsSendMsg(selectedWs, "/order|" + JSON.stringify(json));
   }
 
-  function checkPassword(pass) {
-    if (pass === settingsJson.passw) {
-      settingsJson.pass = false;
-      authorization = false;
-      saveSett();
-    }
-  }
+  //function checkPassword(pass) {
+  //  if (pass === settingsJson.passw) {
+  //    settingsJson.pass = false;
+  //    authorization = false;
+  //    saveSett();
+  //  }
+  //}
 </script>
 
 <div class="flex flex-col h-screen bg-gray-50">
@@ -1398,7 +1303,7 @@
         <a class="menu__item" href="/list">{"Устройства"}</a>
       </li>
       <li>
-        <a class="menu__item" href="/login">{"Вход"}</a>
+        <a class="menu__item" href="/profile">{"Модули"}</a>
       </li>
       <li class="flex flex-col pl-6 pt-3 w-full h-screen">
         <!--<select class="border border-indigo-500 border-1 h-6 w-12" bind:value={$locale}>
@@ -1432,8 +1337,8 @@
             <SystemPage show={pageReady.system} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion={choosingVersion} startUpdate={(all) => startUpdate(all)} coreMessages={coreMessages} />
           </Route>
 
-          <Route path="/login">
-            <Login show={true} />
+          <Route path="/profile">
+            <Profile show={pageReady.profile} myProfileJson={myProfileJson} />
           </Route>
         {/if}
       </div>
