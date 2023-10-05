@@ -42,7 +42,10 @@
   //******************************************************************************************************************************/
   const debug = true;
   const LOG_MAX_MESSAGES = 100;
-  const reconnectTimeout = 60000; //период проверки соединения с устройством
+  let reconnectTimeout = 60; //период проверки соединения с устройством
+  let remainingTimeout = reconnectTimeout;
+  let connecting = true;
+  let tickerTask;
   let preventReconnect = false;
   const waitingAckTimeout = 18000; //время ожидания ответа от устройства
   const rebootingTimeout = 30000;
@@ -54,13 +57,12 @@
   const blobDebug = false;
   const devMode = true;
 
-  let timeout = reconnectTimeout / 1000;
   let percent;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.87.242";
+  if (devMode) myip = "192.168.1.232";
 
   //Flags
   let firstDevListRequest = true;
@@ -106,6 +108,10 @@
       status: false,
     },
   ];
+
+  var ackTimeoutsArr = [];
+  var startMillis = [];
+  var ping = [];
 
   let incDeviceList = [];
   let layoutJson = [];
@@ -184,7 +190,6 @@
     console.log("[i]", "mounted");
     await getUser();
     onCheck();
-
     opened = screenSize > 900 ? true : false;
     selectedDeviceDataRefresh();
     //флаг первого запроса списка устройств
@@ -236,32 +241,6 @@
     }
   }
 
-  var ackTimeoutsArr = [];
-  var startMillis = [];
-  var ping = [];
-
-  function ack(ws, st) {
-    if (!st) {
-      startMillis[ws] = Date.now();
-      ackTimeoutsArr[ws] = setTimeout(function () {
-        markDeviceStatus(ws, false);
-      }, waitingAckTimeout);
-    } else {
-      if (ackTimeoutsArr[ws]) clearTimeout(ackTimeoutsArr[ws]);
-      if (startMillis[ws]) {
-        ping[ws] = Date.now() - startMillis[ws];
-      }
-
-      for (let i = 0; i < deviceList.length; i++) {
-        if (deviceList[i].ws === ws) {
-          deviceList[i].ping = ping[ws];
-        }
-      }
-
-      deviceList = deviceList;
-    }
-  }
-
   function markDeviceStatus(ws, status) {
     deviceList.forEach((device) => {
       if (device.ws === ws) {
@@ -310,6 +289,7 @@
       let ip = getIP(ws);
       socket[ws].addEventListener("open", function (event) {
         //if (debug) console.log("[i]", ip, ws, "completed connecting");
+
         markDeviceStatus(ws, true);
         //при первом подключении запросим список устройств
         if (firstDevListRequest && ws === 0) wsSendMsg(ws, "/devlist|");
@@ -331,6 +311,7 @@
           let data = event.data;
           if (data === "/tstr|") {
             //прилетело подтверждение значит устройство онлайн
+
             ack(ws, true);
           }
         }
@@ -436,14 +417,14 @@
         errorsJson = out.json;
         parsed.errorsJson = true;
         //когда запустили обновление предотвращаем попытки проверки связи
-        if (errorsJson.upd === 1) {
-          preventReconnect = true;
-        }
+        //if (errorsJson.upd === 1) {
+        //  preventReconnect = true;
+        //}
         //когда устройство обновилось переподключимся через 5ть секунд
-        if (errorsJson.upd === 5) {
-          preventReconnect = false;
-          timeout = 20;
-        }
+        //if (errorsJson.upd === 5) {
+        //  preventReconnect = false;
+        //  reconnectTimeout = 20;
+        //}
         if (blobDebug) console.log("[✔]", "errorsJson: ", errorsJson);
       } else {
         parsed.errorsJson = false;
@@ -993,24 +974,49 @@
 
   //тикер который тикает каждую секунду и на каждую 0 секунду запускает проверку соединения
   function wsTestMsgTask() {
-    setTimeout(wsTestMsgTask, 1000);
+    tickerTask = setTimeout(wsTestMsgTask, 1000);
     if (!preventReconnect) {
-      timeout--;
-      percent = scale(timeout, reconnectTimeout / 1000, 0, 0, 100);
-      if (timeout <= 0) {
+      remainingTimeout--;
+      if (socketConnected) showAwaitingCircle = false;
+      percent = scale(remainingTimeout, reconnectTimeout, 0, 0, 100);
+      if (remainingTimeout <= 0) {
         if (debug) console.log("[i]", "----timer tick----");
         printAllCreatedWs();
-        timeout = reconnectTimeout / 1000;
+        remainingTimeout = reconnectTimeout;
         deviceList.forEach((device) => {
           if (device.status === false || device.status === undefined) {
             wsConnect(device.ws);
             wsEventAdd(device.ws);
           } else {
+            if (device.ws === selectedWs) {
+              //clearInterval(tickerTask);
+              connecting = true;
+            }
             wsSendMsg(device.ws, "/tst|");
             ack(device.ws, false);
           }
         });
       }
+    }
+  }
+
+  function ack(ws, st) {
+    if (!st) {
+      startMillis[ws] = Date.now();
+      ackTimeoutsArr[ws] = setTimeout(function () {
+        markDeviceStatus(ws, false);
+      }, waitingAckTimeout);
+    } else {
+      if (ackTimeoutsArr[ws]) clearTimeout(ackTimeoutsArr[ws]);
+      if (startMillis[ws]) {
+        ping[ws] = Date.now() - startMillis[ws];
+      }
+      for (let i = 0; i < deviceList.length; i++) {
+        if (deviceList[i].ws === ws) {
+          deviceList[i].ping = ping[ws];
+        }
+      }
+      deviceList = deviceList;
     }
   }
 
@@ -1147,7 +1153,9 @@
     wsSendMsg(selectedWs, "/reboot|");
     markDeviceStatus(selectedWs, false);
     showAwaitingCircle = true;
-    rebootTimer = setTimeout(rebootingTask, rebootingTimeout);
+    socketConnected = false;
+    reconnectTimeout = 10;
+    remainingTimeout = reconnectTimeout;
   }
 
   function applicationReboot() {
@@ -1162,8 +1170,6 @@
   }
 
   function rebootingTask() {
-    //перезапуск приложения
-    //location.reload();
     clearTimeout(rebootTimer);
     clearData();
     connectToAllDevices();
@@ -1208,33 +1214,12 @@
   }
 
   function updateBuild(path) {
+    console.log(path);
     wsSendMsg(selectedWs, "/update|" + path);
-  }
-
-  //depricated
-  function startUpdate(all) {
-    if (choosingVersion !== undefined) {
-      //if (choosingVersion === errorsJson.bver) {
-      //  window.alert("Эта версия уже установленна");
-      //} else {
-      if (confirm("После обновления устройство перезагрузится. Запустить обновление?")) {
-        console.log("start update...");
-        if (all) {
-          sendToAllDevices('/rorre|{"chver":' + choosingVersion + "}");
-          sendToAllDevices("/update|");
-        } else {
-          wsSendMsg(selectedWs, '/rorre|{"chver":' + choosingVersion + "}");
-          wsSendMsg(selectedWs, "/update|");
-        }
-        //showAwaitingCircle = true;
-        //rebootTimer = setTimeout(rebootingTask, updatingTimeout);
-      } else {
-        console.log("update canceled");
-      }
-      //}
-    } else {
-      window.alert("Версия не выбрана или сервер недоступен");
-    }
+    showAwaitingCircle = true;
+    socketConnected = false;
+    reconnectTimeout = 10;
+    //rebootTimer = setTimeout(rebootingTask, updatingTimeout);
   }
 
   function moduleOrder(id, key, value) {
@@ -1329,7 +1314,7 @@
     <ul class="menu__main">
       <div class="bg-cover pt-0 px-4">
         {#if !socketConnected && currentPageName != "/|"}
-          <Alarm title="Подключение через {timeout} сек." />
+          <Alarm title="Подключение через {remainingTimeout} сек." />
         {:else}
           <Route path="/">
             <DashboardPage show={pageReady.dash} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
@@ -1344,7 +1329,7 @@
             <ListPage show={pageReady.list} deviceList={deviceList} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} saveList={() => saveList()} percent={percent} devListOverride={() => devListOverride()} applicationReboot={() => applicationReboot()} />
           </Route>
           <Route path="/system">
-            <SystemPage show={pageReady.system} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion={choosingVersion} startUpdate={(all) => startUpdate(all)} coreMessages={coreMessages} />
+            <SystemPage show={pageReady.system} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion={choosingVersion} coreMessages={coreMessages} />
           </Route>
 
           <Route path="/profile">

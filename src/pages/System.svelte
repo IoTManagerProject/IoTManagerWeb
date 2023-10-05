@@ -131,12 +131,12 @@
 
   export let errorsJson;
 
-  export let versionsList;
-  export let choosingVersion;
+  //export let versionsList;
+  //export let choosingVersion;
   export let coreMessages;
   export let settingsJson;
 
-  export let startUpdate = (all) => {};
+  //export let startUpdate = (all) => {};
   export let saveSett = () => {};
   export let cleanLogs = () => {};
   export let rebootEsp = () => {};
@@ -171,7 +171,7 @@
             <p class="text-gray-500 font-bold text-sm text-center truncate">{errorsJson.bt ? errorsJson.bt : "-"}</p>
           </div>
         </div>
-        <div class="flex mb-2 h-6 items-center">
+        <!--<div class="flex mb-2 h-6 items-center">
           <div class="w-2/3">
             <p class="pr-4 text-gray-500 font-bold text-sm truncate">Доступные версии</p>
           </div>
@@ -186,7 +186,7 @@
               {/if}
             </select>
           </div>
-        </div>
+        </div>-->
 
         <div class="flex mb-2 h-6 items-center">
           <div class="w-2/3">
@@ -332,7 +332,7 @@
             <p class="text-red-500 mb-2 font-bold text-sm text-center truncate">Ошибка пути обновления</p>
           {/if}
         </div>-->
-        <button class="btn-lg mb-2" on:click={() => startUpdate(false)}>{"Обновить прошивку"}</button>
+        <!--<button class="btn-lg mb-2" on:click={() => startUpdate(false)}>{"Обновить прошивку"}</button>-->
         <!--<button class="btn-lg mb-2" on:click={() => startUpdate(true)}>{"Обновить прошивку на всех устройствах"}</button>-->
         <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить устройство"}</button>
       </Card>
