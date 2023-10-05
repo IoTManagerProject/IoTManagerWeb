@@ -48,8 +48,9 @@
   const rebootingTimeout = 30000;
   const updatingTimeout = 130000;
   let rebootTimer;
-  let opened = false;
+  let opened = true;
   let preventMove = false;
+  let screenSize;
   const blobDebug = false;
   const devMode = true;
 
@@ -182,6 +183,9 @@
   onMount(async () => {
     console.log("[i]", "mounted");
     await getUser();
+    onCheck();
+
+    opened = screenSize > 900 ? true : false;
     selectedDeviceDataRefresh();
     //флаг первого запроса списка устройств
     firstDevListRequest = true;
@@ -1125,14 +1129,10 @@
 
   //**********************************************************modal*************************************************************************/
   function onCheck() {
-    let width = screen.width;
-    //console.log("width", width);
-    if (width < 900) {
+    if (screenSize < 900) {
       preventMove = true;
-      //opened = false;
     } else {
       preventMove = false;
-      //opened = true;
     }
   }
 
@@ -1243,6 +1243,8 @@
     wsSendMsg(selectedWs, "/order|" + JSON.stringify(json));
   }
 </script>
+
+<svelte:window bind:innerWidth={screenSize} />
 
 <div class="flex flex-col h-screen bg-gray-50">
   {#if showAwaitingCircle}

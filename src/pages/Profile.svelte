@@ -8,14 +8,39 @@
   export let show;
   export let myProfileJson;
   export let userdata;
-
   let errors = [];
-
   let allmodeinfo = null;
+  let userBuilds = null;
+  var updateInterval;
 
   onMount(async () => {
     await getModInfo();
+    await getUserBuilds();
   });
+
+  const st = {
+    0: "",
+    1: "В процессе",
+    2: "Ок",
+    3: "Ошибка",
+  };
+
+  function checkStatus(userBuilds) {
+    if (userBuilds[0].processed) {
+      clearInterval(updateInterval);
+      console.log("no interval - all task done");
+    } else {
+      console.log("non completed task exist!");
+      if (!updateInterval) {
+        console.log("interval checking started");
+        updateInterval = setInterval(periodicTask, 10000);
+      }
+    }
+  }
+
+  const periodicTask = async () => {
+    await getUserBuilds();
+  };
 
   const getModInfo = async () => {
     try {
@@ -26,6 +51,28 @@
       if (res.ok) {
         allmodeinfo = await res.json();
         allmodeinfo = allmodeinfo.message;
+      } else {
+        console.log("error", res.statusText);
+      }
+    } catch (e) {
+      console.log("error", e);
+    }
+  };
+
+  const getUserBuilds = async () => {
+    try {
+      const JWT = Cookies.get("token_iotm2");
+      let res = await fetch("https://portal.iotmanager.org/compiler/userorders", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${JWT}`,
+        },
+        mode: "cors",
+        method: "GET",
+      });
+      if (res.ok) {
+        userBuilds = await res.json();
+        checkStatus(userBuilds);
       } else {
         console.log("error", res.statusText);
       }
@@ -49,6 +96,7 @@
       //console.log(content);
       if (res.ok) {
         errors = [{ msg: "ok_success" }];
+        await getUserBuilds();
         console.log(content.message);
       } else {
         errors = content.message;
@@ -63,6 +111,8 @@
     router.goto("/login");
     location.reload();
   };
+
+  const showLog = async (ord, file) => {};
 </script>
 
 {#if show}
@@ -71,8 +121,8 @@
       <div class="grd-1col1">
         <Card title="">
           <div class="grid grid-cols-2">
-            <p class="text-center">{myProfileJson.projectProp.platformio.default_envs}</p>
-            <p class="text-center">{userdata.username}</p>
+            <p class="text-center text-gray-500 font-bold">{myProfileJson.projectProp.platformio.default_envs}</p>
+            <p class="text-center text-gray-500 font-bold">{userdata.username}</p>
           </div>
           <div class="grid my-4 grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12 2xl:grid-cols-12 gap-4">
             {#each myProfileJson.modules.virtual_elments as m, i}
@@ -112,6 +162,51 @@
             <p class="text-red-500 p-0 m-0 font-bold text-xs italic">{$t(e.msg)}</p>
           {/each}
           <button class="btn-lg mt-6" on:click={() => update()}>{$t("profile.update")}</button>
+          {#if userBuilds}
+            <table class="tbl mt-6 mb-0">
+              <thead class="bg-gray-100">
+                <tr class="txt-sz txt-pad">
+                  <th class="tbl-hd">Название</th>
+                  <th class="tbl-hd">Версия</th>
+                  <th class="tbl-hd">Время</th>
+
+                  <th class="tbl-hd">Подготовка</th>
+                  <th class="tbl-hd">Сборка build</th>
+                  <th class="tbl-hd">Сборка fs</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white">
+                {#each userBuilds as build, i}
+                  {#if build.projectProp.platformio.default_envs === myProfileJson.projectProp.platformio.default_envs}
+                    <tr class="txt-sz txt-pad">
+                      <td class="tbl-bdy-lg ipt-lg w-full">{build.projectProp.platformio.default_envs}</td>
+                      <td class="tbl-bdy-lg ipt-lg w-full">{build.ver}</td>
+                      <td class="tbl-bdy-lg ipt-lg w-full">{new Date(build.dateAdded).toLocaleString("ru", { timeZone: "Europe/Vienna" })}</td>
+                      {#if build.status.preparation === 0 && build.status.build === 0 && build.status.fs === 0}
+                        <td class="tbl-bdy-lg ipt-lg w-full">
+                          <p class="text-green-700">{"Ожидание очереди..."}</p>
+                        </td>
+                      {:else}
+                        <td class="tbl-bdy-lg ipt-lg w-full">
+                          <div onClick={() => showLog(build, "py.txt")}>
+                            {st[build.status.preparation]}
+                          </div>
+                        </td>
+                        <td class="tbl-bdy-lg ipt-lg w-full">
+                          <div onClick={() => showLog(build, "build.txt")}>
+                            {st[build.status.build]}
+                          </div>
+                        </td>
+                        <td class="tbl-bdy-lg ipt-lg w-full">
+                          <div onClick={() => showLog(build, "fs.txt")}>{st[build.status.fs]}</div>
+                        </td>
+                      {/if}
+                    </tr>
+                  {/if}
+                {/each}
+              </tbody>
+            </table>
+          {/if}
           <button class="btn-lg mt-6" on:click={() => exit()}>{$t("profile.exit")}</button>
         </Card>
       </div>
