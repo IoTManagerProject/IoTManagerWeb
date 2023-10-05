@@ -8,6 +8,7 @@
   export let show;
   export let myProfileJson;
   export let userdata;
+  export let updateBuild = (path) => {};
   import CrossIcon from "../svg/Cross.svelte";
   let errors = [];
   let allmodeinfo = null;
@@ -228,7 +229,7 @@
                           <div onClick={() => showLog(build, "fs.txt")}>{st[build.status.fs]}</div>
                         </td>
                         {#if build.status.build === 2 && build.status.preparation === 2 && build.status.fs === 2}
-                          <td onClick={() => showLog(build, "fs.txt")} class="tbl-bdy-lg ipt-lg w-full cursor-pointer select-none bg-green-100 hover:bg-green-200">
+                          <td onClick={() => updateBuild("123")} class="tbl-bdy-lg ipt-lg w-full cursor-pointer select-none bg-green-100 hover:bg-green-200">
                             <p class="w-fill">Установить</p>
                           </td>
                         {:else}

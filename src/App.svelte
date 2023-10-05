@@ -1207,6 +1207,11 @@
     }
   }
 
+  function updateBuild(path) {
+    wsSendMsg(selectedWs, "/update|" + path);
+  }
+
+  //depricated
   function startUpdate(all) {
     if (choosingVersion !== undefined) {
       //if (choosingVersion === errorsJson.bver) {
@@ -1343,7 +1348,7 @@
           </Route>
 
           <Route path="/profile">
-            <Profile show={pageReady.profile} myProfileJson={myProfileJson} userdata={userdata} />
+            <Profile show={pageReady.profile} myProfileJson={myProfileJson} userdata={userdata} updateBuild={(path) => updateBuild(path)} />
           </Route>
           <Route path="/login">
             <Login show={true} />
