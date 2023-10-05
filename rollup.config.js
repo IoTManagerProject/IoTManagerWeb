@@ -49,7 +49,7 @@ export default {
         module: true,
         toplevel: true,
         unsafe_arrows: true,
-        drop_console: false,
+        drop_console: true,
         drop_debugger: true,
       },
       output: { quote_style: 1 },

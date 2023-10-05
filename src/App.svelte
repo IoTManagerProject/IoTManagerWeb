@@ -44,18 +44,15 @@
   const LOG_MAX_MESSAGES = 100;
   let reconnectTimeout = 60; //период проверки соединения с устройством
   let remainingTimeout = reconnectTimeout;
-  let connecting = true;
-  let tickerTask;
   let preventReconnect = false;
   const waitingAckTimeout = 18000; //время ожидания ответа от устройства
-  const rebootingTimeout = 30000;
-  const updatingTimeout = 130000;
+  let rebootOrUpdateProcess = false;
   let rebootTimer;
   let opened = true;
   let preventMove = false;
   let screenSize;
   const blobDebug = false;
-  const devMode = true;
+  const devMode = false;
 
   let percent;
 
@@ -977,7 +974,12 @@
     tickerTask = setTimeout(wsTestMsgTask, 1000);
     if (!preventReconnect) {
       remainingTimeout--;
-      if (socketConnected) showAwaitingCircle = false;
+      if (rebootOrUpdateProcess && socketConnected) {
+        rebootOrUpdateProcess = false;
+        showAwaitingCircle = false;
+        reconnectTimeout = 60;
+        remainingTimeout = reconnectTimeout;
+      }
       percent = scale(remainingTimeout, reconnectTimeout, 0, 0, 100);
       if (remainingTimeout <= 0) {
         if (debug) console.log("[i]", "----timer tick----");
@@ -988,10 +990,6 @@
             wsConnect(device.ws);
             wsEventAdd(device.ws);
           } else {
-            if (device.ws === selectedWs) {
-              //clearInterval(tickerTask);
-              connecting = true;
-            }
             wsSendMsg(device.ws, "/tst|");
             ack(device.ws, false);
           }
@@ -1149,12 +1147,23 @@
   }
 
   function rebootEsp() {
+    rebootOrUpdateProcess = true;
     if (debug) console.log("[i]", "reboot...");
     wsSendMsg(selectedWs, "/reboot|");
     markDeviceStatus(selectedWs, false);
     showAwaitingCircle = true;
     socketConnected = false;
     reconnectTimeout = 10;
+    remainingTimeout = reconnectTimeout;
+  }
+
+  function updateBuild(path) {
+    rebootOrUpdateProcess = true;
+    console.log(path);
+    wsSendMsg(selectedWs, "/update|" + path);
+    showAwaitingCircle = true;
+    socketConnected = false;
+    reconnectTimeout = 20;
     remainingTimeout = reconnectTimeout;
   }
 
@@ -1167,13 +1176,6 @@
     setTimeout(() => {
       location.reload();
     }, 1000);
-  }
-
-  function rebootingTask() {
-    clearTimeout(rebootTimer);
-    clearData();
-    connectToAllDevices();
-    showAwaitingCircle = false;
   }
 
   function cancelAlarm(alarmKey) {
@@ -1211,15 +1213,6 @@
     } else {
       console.log("error, server missing");
     }
-  }
-
-  function updateBuild(path) {
-    console.log(path);
-    wsSendMsg(selectedWs, "/update|" + path);
-    showAwaitingCircle = true;
-    socketConnected = false;
-    reconnectTimeout = 10;
-    //rebootTimer = setTimeout(rebootingTask, updatingTimeout);
   }
 
   function moduleOrder(id, key, value) {
