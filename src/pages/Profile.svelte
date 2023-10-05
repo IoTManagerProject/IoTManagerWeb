@@ -8,6 +8,7 @@
   export let show;
   export let myProfileJson;
   export let userdata;
+  import CrossIcon from "../svg/Cross.svelte";
   let errors = [];
   let allmodeinfo = null;
   let userBuilds = null;
@@ -81,7 +82,29 @@
     }
   };
 
-  const update = async () => {
+  const delBuild = async (ord) => {
+    try {
+      const JWT = Cookies.get("token_iotm2");
+      let res = await fetch("https://portal.iotmanager.org/compiler/delete/builds/" + ord.orderId, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${JWT}`,
+        },
+        mode: "cors",
+        method: "GET",
+      });
+      if (res.ok) {
+        await getUserBuilds();
+      } else {
+        console.log("error", res.statusText);
+      }
+    } catch (e) {
+      console.log("error", e);
+    }
+  };
+
+  const placeOrder = async () => {
+    delete myProfileJson["_id"];
     const JWT = Cookies.get("token_iotm2");
     try {
       let res = await fetch("https://portal.iotmanager.org/compiler/order", {
@@ -93,7 +116,6 @@
         body: JSON.stringify(myProfileJson),
       });
       const content = await res.json();
-      //console.log(content);
       if (res.ok) {
         errors = [{ msg: "ok_success" }];
         await getUserBuilds();
@@ -161,7 +183,7 @@
           {#each errors as e, i}
             <p class="text-red-500 p-0 m-0 font-bold text-xs italic">{$t(e.msg)}</p>
           {/each}
-          <button class="btn-lg mt-6" on:click={() => update()}>{$t("profile.update")}</button>
+          <button class="btn-lg mt-4" on:click={() => placeOrder()}>{$t("profile.update")}</button>
           {#if userBuilds}
             <table class="tbl mt-6 mb-0">
               <thead class="bg-gray-100">
@@ -173,6 +195,8 @@
                   <th class="tbl-hd">Подготовка</th>
                   <th class="tbl-hd">Сборка build</th>
                   <th class="tbl-hd">Сборка fs</th>
+                  <th class="tbl-hd" />
+                  <th class="tbl-hd w-7" />
                 </tr>
               </thead>
               <tbody class="bg-white">
@@ -184,8 +208,11 @@
                       <td class="tbl-bdy-lg ipt-lg w-full">{new Date(build.dateAdded).toLocaleString("ru", { timeZone: "Europe/Vienna" })}</td>
                       {#if build.status.preparation === 0 && build.status.build === 0 && build.status.fs === 0}
                         <td class="tbl-bdy-lg ipt-lg w-full">
-                          <p class="text-green-700">{"Ожидание очереди..."}</p>
+                          <p class="text-green-500 font-bold truncate">{"Ожидание очереди..."}</p>
                         </td>
+                        <td class="tbl-bdy-lg ipt-lg w-full" />
+                        <td class="tbl-bdy-lg ipt-lg w-full" />
+                        <td class="tbl-bdy-lg ipt-lg w-full" />
                       {:else}
                         <td class="tbl-bdy-lg ipt-lg w-full">
                           <div onClick={() => showLog(build, "py.txt")}>
@@ -200,6 +227,21 @@
                         <td class="tbl-bdy-lg ipt-lg w-full">
                           <div onClick={() => showLog(build, "fs.txt")}>{st[build.status.fs]}</div>
                         </td>
+                        {#if build.status.build === 2 && build.status.preparation === 2 && build.status.fs === 2}
+                          <td onClick={() => showLog(build, "fs.txt")} class="tbl-bdy-lg ipt-lg w-full cursor-pointer select-none bg-green-100 hover:bg-green-200">
+                            <p class="w-fill">Установить</p>
+                          </td>
+                        {:else}
+                          <td class="tbl-bdy-lg ipt-lg w-full" />
+                        {/if}
+
+                        {#if build.processed}
+                          <td class="tbl-bdy-lg ipt-lg w-full">
+                            <CrossIcon click={() => delBuild(build)} />
+                          </td>
+                        {:else}
+                          <td class="tbl-bdy-lg ipt-lg w-full" />
+                        {/if}
                       {/if}
                     </tr>
                   {/if}

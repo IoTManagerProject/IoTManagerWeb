@@ -1,130 +1,130 @@
 <script>
-  const wifiState = {
-    0: "не подключено",
-    1: "нет сигнала",
-    2: "очень низкий",
-    3: "низкий",
-    4: "хороший",
-    5: "очень хороший",
-    6: "отличный",
-  };
+  //const wifiState = {
+  //  0: "не подключено",
+  //  1: "нет сигнала",
+  //  2: "очень низкий",
+  //  3: "низкий",
+  //  4: "хороший",
+  //  5: "очень хороший",
+  //  6: "отличный",
+  //};
 
-  const systemErrorsRus = {
-    mqtt: {
-      e1: {
-        descr: "Ошибка mqtt",
-        color: "text-red-500",
-        txt: "Нет ответа от сервера",
-        cancel: false,
-      },
-      e2: {
-        descr: "Ошибка mqtt",
-        color: "text-red-500",
-        txt: "Соединение было разорвано",
-        cancel: false,
-      },
-      e3: {
-        descr: "Ошибка mqtt",
-        color: "text-red-500",
-        txt: "Ошибка соединения. Обычно возникает когда неверно указано название сервера MQTT",
-        cancel: false,
-      },
-      e4: {
-        descr: "Ошибка mqtt",
-        color: "text-red-500",
-        txt: "Клиент был отключен",
-        cancel: false,
-      },
-      e6: {
-        descr: "Ошибка mqtt",
-        color: "text-red-500",
-        txt: "Ошибка версии",
-        cancel: false,
-      },
-      e7: {
-        descr: "Ошибка mqtt",
-        color: "text-red-500",
-        txt: "Отклонен идентификатор",
-        cancel: false,
-      },
-      e8: {
-        descr: "Ошибка mqtt",
-        color: "text-red-500",
-        txt: "Не могу установить соединение",
-        cancel: false,
-      },
-      e9: {
-        descr: "Ошибка mqtt",
-        color: "text-red-500",
-        txt: "Неправильное имя пользователя/пароль",
-      },
-      e10: {
-        descr: "Ошибка mqtt",
-        color: "text-red-500",
-        txt: "Не авторизован для подключения",
-        cancel: false,
-      },
-      e11: {
-        descr: "Ошибка mqtt",
-        color: "text-red-500",
-        txt: "Название сервера пустое",
-        cancel: false,
-      },
-      e12: {
-        descr: "Ошибка mqtt",
-        color: "text-red-500",
-        txt: "Имя пользователя или пароль пустые",
-        cancel: false,
-      },
-      e13: {
-        descr: "Mqtt",
-        color: "text-red-500",
-        txt: "Подключение в процессе",
-        cancel: false,
-      },
-    },
-    wse1: {
-      1: {
-        descr: "Ошибка веб сокетов",
-        color: "text-red-500",
-        txt: "Слишком много клиентов было открыто. Допускается не более четырех.",
-        cancel: true,
-      },
-    },
-    jse1: {
-      1: {
-        descr: "Ошибка json",
-        color: "text-red-500",
-        txt: "Недостаточный размер буфера библиотеки Arduino Json. Устройство может вести себя непредсказуемо. Обратитесь к разработчику.",
-        cancel: true,
-      },
-    },
-    jse2: {
-      1: {
-        descr: "Ошибка json",
-        color: "text-red-500",
-        txt: "Ошибка записи/чтения json.",
-        cancel: true,
-        num: true,
-      },
-    },
-    jse3: {
-      1: {
-        descr: "Ошибка json",
-        color: "text-red-500",
-        txt: "Ошибка чтения json файла с виджетами при отправки в mqtt",
-        cancel: true,
-      },
-    },
-    tme1: {
-      1: {
-        descr: "Ошибка времени",
-        color: "text-red-500",
-        txt: "Ошибка синхронизации времени с NTP сервером",
-        cancel: false,
-      },
-    },
-  };
+  //const systemErrorsRus = {
+  //  mqtt: {
+  //    e1: {
+  //      descr: "Ошибка mqtt",
+  //      color: "text-red-500",
+  //      txt: "Нет ответа от сервера",
+  //      cancel: false,
+  //    },
+  //    e2: {
+  //      descr: "Ошибка mqtt",
+  //      color: "text-red-500",
+  //      txt: "Соединение было разорвано",
+  //      cancel: false,
+  //    },
+  //    e3: {
+  //      descr: "Ошибка mqtt",
+  //      color: "text-red-500",
+  //      txt: "Ошибка соединения. Обычно возникает когда неверно указано название сервера MQTT",
+  //      cancel: false,
+  //    },
+  //    e4: {
+  //      descr: "Ошибка mqtt",
+  //      color: "text-red-500",
+  //      txt: "Клиент был отключен",
+  //      cancel: false,
+  //    },
+  //    e6: {
+  //      descr: "Ошибка mqtt",
+  //      color: "text-red-500",
+  //      txt: "Ошибка версии",
+  //      cancel: false,
+  //    },
+  //    e7: {
+  //      descr: "Ошибка mqtt",
+  //      color: "text-red-500",
+  //      txt: "Отклонен идентификатор",
+  //      cancel: false,
+  //    },
+  //    e8: {
+  //      descr: "Ошибка mqtt",
+  //      color: "text-red-500",
+  //      txt: "Не могу установить соединение",
+  //      cancel: false,
+  //    },
+  //    e9: {
+  //      descr: "Ошибка mqtt",
+  //      color: "text-red-500",
+  //      txt: "Неправильное имя пользователя/пароль",
+  //    },
+  //    e10: {
+  //      descr: "Ошибка mqtt",
+  //      color: "text-red-500",
+  //      txt: "Не авторизован для подключения",
+  //      cancel: false,
+  //    },
+  //    e11: {
+  //      descr: "Ошибка mqtt",
+  //      color: "text-red-500",
+  //      txt: "Название сервера пустое",
+  //      cancel: false,
+  //    },
+  //    e12: {
+  //      descr: "Ошибка mqtt",
+  //      color: "text-red-500",
+  //      txt: "Имя пользователя или пароль пустые",
+  //      cancel: false,
+  //    },
+  //    e13: {
+  //      descr: "Mqtt",
+  //      color: "text-red-500",
+  //      txt: "Подключение в процессе",
+  //      cancel: false,
+  //    },
+  //  },
+  //  wse1: {
+  //    1: {
+  //      descr: "Ошибка веб сокетов",
+  //      color: "text-red-500",
+  //      txt: "Слишком много клиентов было открыто. Допускается не более четырех.",
+  //      cancel: true,
+  //    },
+  //  },
+  //  jse1: {
+  //    1: {
+  //      descr: "Ошибка json",
+  //      color: "text-red-500",
+  //      txt: "Недостаточный размер буфера библиотеки Arduino Json. Устройство может вести себя непредсказуемо. Обратитесь к разработчику.",
+  //      cancel: true,
+  //    },
+  //  },
+  //  jse2: {
+  //    1: {
+  //      descr: "Ошибка json",
+  //      color: "text-red-500",
+  //      txt: "Ошибка записи/чтения json.",
+  //      cancel: true,
+  //      num: true,
+  //    },
+  //  },
+  //  jse3: {
+  //    1: {
+  //      descr: "Ошибка json",
+  //      color: "text-red-500",
+  //      txt: "Ошибка чтения json файла с виджетами при отправки в mqtt",
+  //      cancel: true,
+  //    },
+  //  },
+  //  tme1: {
+  //    1: {
+  //      descr: "Ошибка времени",
+  //      color: "text-red-500",
+  //      txt: "Ошибка синхронизации времени с NTP сервером",
+  //      cancel: false,
+  //    },
+  //  },
+  //};
 
   import Card from "../components/Card.svelte";
   import Alarm from "../components/Alarm.svelte";
@@ -147,7 +147,7 @@
 
   let reboot = false;
 
-  export let cancelAlarm = (alarmKey) => {};
+  //export let cancelAlarm = (alarmKey) => {};
 </script>
 
 {#if show}
@@ -309,7 +309,7 @@
         UPDATE_BUILD_FAILED
         PATH_ERROR
         -->
-        <div class="flex justify-center text-xs sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base break-words">
+        <!--<div class="flex justify-center text-xs sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base break-words">
           {#if errorsJson.upd === 1}
             <p class="text-green-500 mb-2 font-bold text-sm text-center truncate">Обновление FS в процессе...</p>
           {/if}
@@ -331,9 +331,9 @@
           {#if errorsJson.upd === 7}
             <p class="text-red-500 mb-2 font-bold text-sm text-center truncate">Ошибка пути обновления</p>
           {/if}
-        </div>
+        </div>-->
         <button class="btn-lg mb-2" on:click={() => startUpdate(false)}>{"Обновить прошивку"}</button>
-        <button class="btn-lg mb-2" on:click={() => startUpdate(true)}>{"Обновить прошивку на всех устройствах"}</button>
+        <!--<button class="btn-lg mb-2" on:click={() => startUpdate(true)}>{"Обновить прошивку на всех устройствах"}</button>-->
         <button class="btn-lg" on:click={() => rebootEsp()}>{"Перезагрузить устройство"}</button>
       </Card>
       <!--SETTINGS-->
@@ -492,7 +492,7 @@
     </div>
   </div>
   <!--ERRORS-->
-  <div class="grd-1col1">
+  <!--<div class="grd-1col1">
     <Card title="Системные ошибки">
       {#each Object.entries(errorsJson) as [key, param], i}
         {#if key in systemErrorsRus && param in systemErrorsRus[key]}
@@ -507,7 +507,7 @@
         {/if}
       {/each}
     </Card>
-  </div>
+  </div>-->
 {:else}
   <Alarm title="Загрузка..." />
 {/if}
