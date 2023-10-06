@@ -104,16 +104,42 @@
     }
   };
 
+  //иногда не отправляет токен - непонятно почему
+  //const placeOrder = async () => {
+  //  delete myProfileJson["_id"];
+  //  const JWT = Cookies.get("token_iotm2");
+  //  try {
+  //    let res = await fetch("https://portal.iotmanager.org/compiler/order", {
+  //      mode: "cors",
+  //      method: "POST",
+  //      headers: {
+  //        "Content-Type": "application/json",
+  //        Authorization: `Bearer ${JWT}`,
+  //      },
+  //      body: JSON.stringify(myProfileJson),
+  //    });
+  //    const content = await res.json();
+  //    if (res.ok) {
+  //      errors = [{ msg: "ok_success" }];
+  //      await getUserBuilds();
+  //      console.log(content.message);
+  //    } else {
+  //      errors = content.message;
+  //    }
+  //  } catch (e) {
+  //    console.log(e);
+  //  }
+  //};
+
+  //временно используем без jwt
   const placeOrder = async () => {
     delete myProfileJson["_id"];
-    const JWT = Cookies.get("token_iotm2");
     try {
-      let res = await fetch("https://portal.iotmanager.org/compiler/order", {
+      let res = await fetch("https://portal.iotmanager.org/compiler/esporder", {
         mode: "cors",
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${JWT}`,
         },
         body: JSON.stringify(myProfileJson),
       });
