@@ -109,6 +109,7 @@
     const JWT = Cookies.get("token_iotm2");
     try {
       let res = await fetch("https://portal.iotmanager.org/compiler/order", {
+        mode: "cors",
         method: "POST",
         headers: {
           "Content-Type": "application/json",
