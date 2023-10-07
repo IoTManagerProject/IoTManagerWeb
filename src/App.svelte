@@ -59,7 +59,7 @@
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.1.232";
+  if (devMode) myip = "192.168.1.228";
 
   //Flags
   let firstDevListRequest = true;
@@ -154,10 +154,7 @@
 
     console.log("[i]", "user on page:", currentPageName);
 
-    //не нужно очищать переменные когда переходим на страницу разработчика
-    // if (currentPageName != "/dev|") {
     clearData();
-    //}
 
     //если мы на странице dashboard то рассылаем всем устройствам запрос данных
     if (currentPageName === "/|") {
@@ -413,15 +410,6 @@
       if (await getPayloadAsJson(blob, size, out)) {
         errorsJson = out.json;
         parsed.errorsJson = true;
-        //когда запустили обновление предотвращаем попытки проверки связи
-        //if (errorsJson.upd === 1) {
-        //  preventReconnect = true;
-        //}
-        //когда устройство обновилось переподключимся через 5ть секунд
-        //if (errorsJson.upd === 5) {
-        //  preventReconnect = false;
-        //  reconnectTimeout = 20;
-        //}
         if (blobDebug) console.log("[✔]", "errorsJson: ", errorsJson);
       } else {
         parsed.errorsJson = false;
@@ -595,6 +583,8 @@
       pageReady.config = true;
       if (debug) console.log("✔✔", "config page parced");
     }
+
+    //&& parsed.widgetsJson && parsed.configJson - добавить когда 451 прошивка уйдет в прошлое
     if (currentPageName === "/connection|" && parsed.ssidJson && parsed.settingsJson && parsed.errorsJson) {
       clearParcedFlags();
       if (debug) console.log("✔✔", "connection page parced");
@@ -840,7 +830,7 @@
 
   function saveMqtt() {
     var size = Object.keys(settingsJson).length;
-    //console.log("[i]", "settingsJson length: " + size);
+    wsSendMsg(selectedWs, "/tuoyal|" + JSON.stringify(generateLayout()));
     if (size > 5) {
       wsSendMsg(selectedWs, "/sgnittes|" + JSON.stringify(settingsJson));
     } else {
@@ -881,14 +871,13 @@
           let widget = Object.assign({}, widgetsJson[w]);
           widget.page = config.page;
           widget.descr = config.descr;
-
-          widget.topic = settingsJson.root + "/" + config.id;
+          widget.topic = settingsJson.mqttPrefix + "/" + settingsJson.id + "/" + config.id;
           if (setWidget !== "nil") layout.push(widget);
           //создаем графики с окнами ввода
           if (widget.widget === "chart" && widget.type !== "bar") {
             let input = getInput();
             input.page = config.page;
-            input.topic = settingsJson.root + "/" + config.id + "-date";
+            widget.topic = settingsJson.mqttPrefix + "/" + settingsJson.id + "/" + config.id + "-date";
             input.descr = config.descr;
             //console.log("[i]", "topic ", widget.topic);
             layout.push(input);
@@ -947,14 +936,6 @@
     for (const [key, value] of Object.entries(parsed)) {
       parsed[key] = false;
     }
-    clearFlags();
-  }
-
-  function clearFlags() {
-    //for (let i = 0; i < deviceList.length; i++) {
-    //deviceList[i].pp = false;
-    //deviceList[i].lp = false;
-    //}
   }
 
   function wsPush(ws, topic, status) {
