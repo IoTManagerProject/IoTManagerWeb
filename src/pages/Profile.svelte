@@ -13,9 +13,11 @@
   let errors = [];
   let allmodeinfo = null;
   let userBuilds = null;
+  let profile = null;
   var updateInterval;
 
   onMount(async () => {
+    await getProfile();
     await getModInfo();
     await getUserBuilds();
   });
@@ -83,6 +85,28 @@
     }
   };
 
+  const getProfile = async () => {
+    try {
+      const JWT = Cookies.get("token_iotm2");
+      let res = await fetch("https://portal.iotmanager.org/compiler/profile", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${JWT}`,
+        },
+        mode: "cors",
+        method: "GET",
+      });
+      if (res.ok) {
+        profile = await res.json();
+        profile = profile.message;
+      } else {
+        console.log("error", res.statusText);
+      }
+    } catch (e) {
+      console.log("error", e);
+    }
+  };
+
   const delBuild = async (ord) => {
     try {
       const JWT = Cookies.get("token_iotm2");
@@ -142,7 +166,7 @@
 </script>
 
 {#if show}
-  {#if allmodeinfo && myProfileJson}
+  {#if allmodeinfo && myProfileJson && profile}
     <div class="my-4">
       <div class="grd-1col1">
         <Card title="">
@@ -151,32 +175,39 @@
             <p class="text-center text-gray-500 font-bold">{userdata.username}</p>
           </div>
           <div class="grid my-4 grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12 2xl:grid-cols-12 gap-4">
-            {#each myProfileJson.modules.virtual_elments as m, i}
-              {#if allmodeinfo[m.path]?.usedLibs[myProfileJson.projectProp.platformio.default_envs]}
+            <!--{#each Object.entries(allmodeinfo) as [key, param]}
+              <div>
+               
+                <p class="cursor-pointer select-none text-black text-xs font-medium mr-2 px-0.5 py-0.5 rounded text-center">{key.substring(key.lastIndexOf("/") + 1, key.length)}</p>
+              </div>
+            {/each}-->
+
+            {#each profile.modules.virtual_elments as m, i}
+              {#if allmodeinfo[m.path]?.usedLibs[profile.projectProp.platformio.default_envs]}
                 <div>
                   <!-- svelte-ignore a11y-click-events-have-key-events -->
                   <p on:click={() => (m.active = !m.active)} class="{m.active ? 'bg-green-100' : ''} cursor-pointer select-none text-black text-xs font-medium mr-2 px-0.5 py-0.5 rounded text-center">{m.path.substring(m.path.lastIndexOf("/") + 1, m.path.length)}</p>
                 </div>
               {/if}
             {/each}
-            {#each myProfileJson.modules.sensors as m, i}
-              {#if allmodeinfo[m.path]?.usedLibs[myProfileJson.projectProp.platformio.default_envs]}
+            {#each profile.modules.sensors as m, i}
+              {#if allmodeinfo[m.path]?.usedLibs[profile.projectProp.platformio.default_envs]}
                 <div>
                   <!-- svelte-ignore a11y-click-events-have-key-events -->
                   <p on:click={() => (m.active = !m.active)} class="{m.active ? 'bg-green-100' : ''} cursor-pointer select-none text-black text-xs font-medium mr-2 px-0.5 py-0.5 rounded text-center">{m.path.substring(m.path.lastIndexOf("/") + 1, m.path.length)}</p>
                 </div>
               {/if}
             {/each}
-            {#each myProfileJson.modules.executive_devices as m, i}
-              {#if allmodeinfo[m.path]?.usedLibs[myProfileJson.projectProp.platformio.default_envs]}
+            {#each profile.modules.executive_devices as m, i}
+              {#if allmodeinfo[m.path]?.usedLibs[profile.projectProp.platformio.default_envs]}
                 <div>
                   <!-- svelte-ignore a11y-click-events-have-key-events -->
                   <p on:click={() => (m.active = !m.active)} class="{m.active ? 'bg-green-100' : ''} cursor-pointer select-none text-black text-xs font-medium mr-2 px-0.5 py-0.5 rounded text-center">{m.path.substring(m.path.lastIndexOf("/") + 1, m.path.length)}</p>
                 </div>
               {/if}
             {/each}
-            {#each myProfileJson.modules.screens as m, i}
-              {#if allmodeinfo[m.path]?.usedLibs[myProfileJson.projectProp.platformio.default_envs]}
+            {#each profile.modules.screens as m, i}
+              {#if allmodeinfo[m.path]?.usedLibs[profile.projectProp.platformio.default_envs]}
                 <div>
                   <!-- svelte-ignore a11y-click-events-have-key-events -->
                   <p on:click={() => (m.active = !m.active)} class="{m.active ? 'bg-green-100' : ''} cursor-pointer select-none text-black text-xs font-medium mr-2 px-0.5 py-0.5 rounded text-center">{m.path.substring(m.path.lastIndexOf("/") + 1, m.path.length)}</p>
