@@ -6,7 +6,8 @@
   import { t, locale, locales } from "../i18n";
   import Cookies from "js-cookie";
   export let show;
-  export let myProfileJson;
+  export let flashProfileJson;
+  export let otaJson;
   export let allmodeinfo;
   export let profile;
 
@@ -131,12 +132,12 @@
 
 {#if show}
   {#if serverOnline}
-    {#if allmodeinfo && myProfileJson && profile}
+    {#if allmodeinfo && flashProfileJson && profile}
       <div class="my-4">
         <div class="grd-1col1">
           <Card title="">
             <div class="grid grid-cols-2">
-              <p class="text-center text-gray-500 font-bold">{myProfileJson.projectProp.platformio.default_envs}</p>
+              <p class="text-center text-gray-500 font-bold">{flashProfileJson.projectProp.platformio.default_envs}</p>
               <p class="text-center text-gray-500 font-bold">{userdata.username}</p>
             </div>
             <div class="grid my-4 grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12 2xl:grid-cols-12 gap-4">
@@ -183,9 +184,15 @@
             {#each errors as e, i}
               <p class="text-red-500 p-0 m-0 font-bold text-xs italic">{$t(e.msg)}</p>
             {/each}
-            <button class="btn-lg mt-4" on:click={() => placeOrder()}>{$t("profile.update")}</button>
+            <button class="btn-lg mt-4 mb-4" on:click={() => placeOrder()}>{$t("profile.update")}</button>
+            {#if Object.keys(otaJson).length !== 0}
+              <div class="grid grid-cols-2 mb-4">
+                <p class="text-center text-gray-500 font-bold truncate">Статус последнего обновления:</p>
+                <p class="{otaJson.build === 0 && otaJson.fs === 0 ? 'text-green-500' : 'text-red-500'} text-center font-bold truncate">{otaJson.build === 0 && otaJson.fs === 0 ? "успешно" : "ошибка"}</p>
+              </div>
+            {/if}
             {#if userBuilds}
-              <table class="tbl mt-6 mb-0">
+              <table class="tbl mb-0">
                 <thead class="bg-gray-100">
                   <tr class="txt-sz txt-pad">
                     <th class="tbl-hd">Название</th>
@@ -201,7 +208,7 @@
                 </thead>
                 <tbody class="bg-white">
                   {#each userBuilds as build, i}
-                    {#if build.projectProp.platformio.default_envs === myProfileJson.projectProp.platformio.default_envs}
+                    {#if build.projectProp.platformio.default_envs === flashProfileJson.projectProp.platformio.default_envs}
                       <tr class="txt-sz txt-pad">
                         <td class="tbl-bdy-lg ipt-lg w-full">{build.projectProp.platformio.default_envs}</td>
                         <td class="tbl-bdy-lg ipt-lg w-full">{build.ver}</td>
@@ -250,7 +257,7 @@
                 </tbody>
               </table>
             {/if}
-            <button class="btn-lg mt-6" on:click={() => exit()}>{$t("profile.exit")}</button>
+            <button class="btn-lg mt-4" on:click={() => exit()}>{$t("profile.exit")}</button>
           </Card>
         </div>
       </div>

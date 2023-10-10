@@ -59,7 +59,7 @@
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.1.228";
+  if (devMode) myip = "192.168.1.235";
 
   //Flags
   let firstDevListRequest = true;
@@ -94,7 +94,8 @@
   let settingsJson = {};
   let ssidJson = {};
   let errorsJson = {};
-  let myProfileJson = {};
+  let flashProfileJson = {};
+  let otaJson = {};
   let deviceList = [];
   deviceList = [
     {
@@ -132,7 +133,8 @@
     errorsJson: false,
     statusJson: false,
     paramsJson: false,
-    myProfileJson: false,
+    flashProfileJson: false,
+    otaJson: false,
   };
 
   //===============================================
@@ -441,12 +443,24 @@
     if (header === "prfile") {
       let out = {};
       if (await getPayloadAsJson(blob, size, out)) {
-        myProfileJson = out.json;
-        parsed.myProfileJson = true;
-        if (blobDebug) console.log("[✔]", "myProfileJson: ", myProfileJson);
+        flashProfileJson = out.json;
+        parsed.flashProfileJson = true;
+        if (blobDebug) console.log("[✔]", "flashProfileJson: ", flashProfileJson);
       } else {
-        parsed.myProfileJson = false;
-        if (blobDebug) console.log("[e]", "myProfileJson parse error");
+        parsed.flashProfileJson = false;
+        if (blobDebug) console.log("[e]", "flashProfileJson parse error");
+      }
+    }
+
+    if (header === "otaupd") {
+      let out = {};
+      if (await getPayloadAsJson(blob, size, out)) {
+        otaJson = out.json;
+        parsed.otaJson = true;
+        if (blobDebug) console.log("[✔]", "otaJson: ", otaJson);
+      } else {
+        parsed.otaJson = false;
+        if (blobDebug) console.log("[e]", "otaJson parse error");
       }
     }
 
@@ -611,7 +625,8 @@
       pageReady.system = true;
     }
 
-    if (currentPageName === "/profile|" && parsed.myProfileJson) {
+    //&& parsed.otaJson
+    if (currentPageName === "/profile|" && parsed.flashProfileJson) {
       clearParcedFlags();
       if (debug) console.log("✔✔", "profile page parced");
       pageReady.profile = true;
@@ -661,8 +676,9 @@
   };
 
   const markProfileAsPerThisDevProfile = async () => {
+    profile.projectProp.platformio.default_envs = flashProfileJson.projectProp.platformio.default_envs;
     for (const [compilerCategory, compilerCategoryModules] of Object.entries(profile.modules)) {
-      let devCategoryModules = myProfileJson.modules[compilerCategory];
+      let devCategoryModules = flashProfileJson.modules[compilerCategory];
       compilerCategoryModules.forEach((compilerModule) => {
         compilerModule.active = false;
         if (devCategoryModules) {
@@ -942,7 +958,7 @@
           if (widget.widget === "chart" && widget.type !== "bar") {
             let input = getInput();
             input.page = config.page;
-            widget.topic = settingsJson.mqttPrefix + "/" + settingsJson.id + "/" + config.id + "-date";
+            input.topic = settingsJson.mqttPrefix + "/" + settingsJson.id + "/" + config.id + "-date";
             input.descr = config.descr;
             //console.log("[i]", "topic ", widget.topic);
             layout.push(input);
@@ -1372,7 +1388,7 @@
           </Route>
 
           <Route path="/profile">
-            <Profile show={pageReady.profile} myProfileJson={myProfileJson} userdata={userdata} updateBuild={(path) => updateBuild(path)} allmodeinfo={allmodeinfo} profile={profile} serverOnline={serverOnline} />
+            <Profile show={pageReady.profile} flashProfileJson={flashProfileJson} userdata={userdata} updateBuild={(path) => updateBuild(path)} allmodeinfo={allmodeinfo} profile={profile} serverOnline={serverOnline} otaJson={otaJson} />
           </Route>
           <Route path="/login">
             <Login show={true} serverOnline={serverOnline} />
