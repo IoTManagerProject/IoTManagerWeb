@@ -52,7 +52,7 @@
   let preventMove = false;
   let screenSize;
   const blobDebug = false;
-  const devMode = true;
+  const devMode = false;
 
   let percent;
 
@@ -115,6 +115,10 @@
   let paramsJson = {};
 
   let userdata = null;
+  let allmodeinfo = null;
+  let profile = null;
+
+  let serverOnline = false;
 
   let parsed = {
     itemsJson: false,
@@ -207,11 +211,14 @@
       });
       if (res.ok) {
         userdata = await res.json();
+        serverOnline = true;
       } else {
         console.log("error", res.statusText);
+        serverOnline = true;
       }
     } catch (e) {
       console.log("error", e);
+      serverOnline = false;
     }
   };
 
@@ -608,8 +615,66 @@
       clearParcedFlags();
       if (debug) console.log("✔✔", "profile page parced");
       pageReady.profile = true;
+      await getModInfo();
+      await getProfile();
     }
   }
+
+  const getModInfo = async () => {
+    try {
+      let res = await fetch("https://portal.iotmanager.org/compiler/allmodinfo", {
+        mode: "cors",
+        method: "GET",
+      });
+      if (res.ok) {
+        allmodeinfo = await res.json();
+        allmodeinfo = allmodeinfo.message;
+      } else {
+        console.log("error", res.statusText);
+      }
+    } catch (e) {
+      console.log("error", e);
+    }
+  };
+
+  const getProfile = async () => {
+    try {
+      const JWT = Cookies.get("token_iotm2");
+      let res = await fetch("https://portal.iotmanager.org/compiler/profile", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${JWT}`,
+        },
+        mode: "cors",
+        method: "GET",
+      });
+      if (res.ok) {
+        profile = await res.json();
+        profile = profile.message;
+        await markProfileAsPerThisDevProfile();
+      } else {
+        console.log("error", res.statusText);
+      }
+    } catch (e) {
+      console.log("error", e);
+    }
+  };
+
+  const markProfileAsPerThisDevProfile = async () => {
+    for (const [compilerCategory, compilerCategoryModules] of Object.entries(profile.modules)) {
+      let devCategoryModules = myProfileJson.modules[compilerCategory];
+      compilerCategoryModules.forEach((compilerModule) => {
+        compilerModule.active = false;
+        if (devCategoryModules) {
+          devCategoryModules.forEach((devModule) => {
+            if (devModule.path === compilerModule.path) {
+              compilerModule.active = devModule.active;
+            }
+          });
+        }
+      });
+    }
+  };
 
   async function initDevList() {
     if (firstDevListRequest) {
@@ -1307,10 +1372,10 @@
           </Route>
 
           <Route path="/profile">
-            <Profile show={pageReady.profile} myProfileJson={myProfileJson} userdata={userdata} updateBuild={(path) => updateBuild(path)} />
+            <Profile show={pageReady.profile} myProfileJson={myProfileJson} userdata={userdata} updateBuild={(path) => updateBuild(path)} allmodeinfo={allmodeinfo} profile={profile} serverOnline={serverOnline} />
           </Route>
           <Route path="/login">
-            <Login show={true} />
+            <Login show={true} serverOnline={serverOnline} />
           </Route>
         {/if}
       </div>
