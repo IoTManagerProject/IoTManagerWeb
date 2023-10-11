@@ -59,7 +59,7 @@
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.1.235";
+  if (devMode) myip = "192.168.1.228";
 
   //Flags
   let firstDevListRequest = true;
@@ -999,7 +999,9 @@
     //ssidJson = {};
     errorsJson = {};
     layoutJson = [];
-    paramsJson = {}; //?
+    paramsJson = {};
+    otaJson = {};
+    flashProfileJson = {};
 
     //incDeviceList = [];
 
