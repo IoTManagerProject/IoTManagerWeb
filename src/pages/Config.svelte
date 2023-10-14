@@ -4,6 +4,8 @@
   import OpenIcon from "../svg/Open.svelte";
   import Alarm from "../components/Alarm.svelte";
 
+  import Cookies from "js-cookie";
+
   export let configJson;
   export let widgetsJson;
   export let itemsJson;
@@ -193,6 +195,49 @@
   }
 
   export let moduleOrder = (id, key, value) => {};
+
+  const makePost = async () => {
+    let iotmpostDefault = {
+      category: "",
+      topic: {
+        ru: "",
+        en: "",
+      },
+      text: {
+        ru: "",
+        en: "",
+      },
+      config: configJson,
+      scenario: scenarioTxt,
+      gallery: [],
+      type: "iotmpost",
+    };
+    const JWT = Cookies.get("token_iotm2");
+    try {
+      let res = await fetch("https://portal.iotmanager.org/api/configurations/add", {
+        mode: "cors",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${JWT}`,
+        },
+        body: JSON.stringify(iotmpostDefault),
+      });
+      const content = await res.json();
+      if (res.ok) {
+        console.log(content.result);
+        if (content.result.acknowledged) {
+          window.open("http://localhost:4000/configs", "_blank");
+          //insertedId
+        }
+        errors = [{ msg: "ok_success" }];
+      } else {
+        errors = content.message;
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
 </script>
 
 {#if show}
@@ -295,6 +340,7 @@
           {"Импорт конфигурации"}
         </label>
       </div>
+      <button class="btn-lg mt-4" on:click={() => makePost()}>{"Опубликовать конфигурацию на портале"}</button>
     </Card>
   </div>
 {:else}
