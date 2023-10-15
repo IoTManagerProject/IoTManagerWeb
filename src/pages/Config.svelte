@@ -10,6 +10,7 @@
   export let widgetsJson;
   export let itemsJson;
   export let scenarioTxt;
+  export let userdata;
 
   export let show;
 
@@ -211,6 +212,7 @@
       scenario: scenarioTxt,
       gallery: [],
       type: "iotmpost",
+      username: userdata.username,
     };
     const JWT = Cookies.get("token_iotm2");
     try {
@@ -227,8 +229,7 @@
       if (res.ok) {
         console.log(content.result);
         if (content.result.acknowledged) {
-          window.open("http://localhost:4000/configs", "_blank");
-          //insertedId
+          window.open("http://localhost:4000/configs?username=" + userdata.username + "&id=" + content.result.insertedId, "_blank");
         }
         errors = [{ msg: "ok_success" }];
       } else {
