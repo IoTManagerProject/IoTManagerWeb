@@ -52,7 +52,7 @@
   let preventMove = false;
   let screenSize;
   const blobDebug = false;
-  const devMode = true;
+  const devMode = false;
 
   let percent;
 
