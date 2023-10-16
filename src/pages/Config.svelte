@@ -3,6 +3,7 @@
   import CrossIcon from "../svg/Cross.svelte";
   import OpenIcon from "../svg/Open.svelte";
   import Alarm from "../components/Alarm.svelte";
+  import { onMount } from "svelte";
 
   import Cookies from "js-cookie";
 
@@ -15,13 +16,20 @@
   export let show;
 
   let itemsJsonBind = 0;
+  let configsBind = 0;
   let debug = false;
+
+  let configurations = null;
 
   export let saveConfig = () => {};
   export let rebootEsp = () => {};
   //export let cleanLogs = () => {};
 
   let exportJson = {};
+
+  onMount(async () => {
+    await getConfigs();
+  });
 
   function elementsDropdownChange() {
     for (let i = 0; i < itemsJson.length; i++) {
@@ -229,7 +237,7 @@
       if (res.ok) {
         console.log(content.result);
         if (content.result.acknowledged) {
-          window.open("http://localhost:4000/configs?username=" + userdata.username + "&id=" + content.result.insertedId, "_blank");
+          window.open("https://portal.iotmanager.org/configs?username=" + userdata.username + "&id=" + content.result.insertedId, "_blank");
         }
         errors = [{ msg: "ok_success" }];
       } else {
@@ -239,6 +247,34 @@
       console.log(e);
     }
   };
+
+  const getConfigs = async () => {
+    try {
+      const JWT = Cookies.get("token_iotm2");
+      let res = await fetch("https://portal.iotmanager.org/api/configurations/get", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${JWT}`,
+        },
+        mode: "cors",
+        method: "GET",
+      });
+      if (res.ok) {
+        configurations = await res.json();
+        //configurations.push({ topic: { ru: "123" } });
+        console.log("error", configurations);
+      } else {
+        console.log("error", res.statusText);
+      }
+    } catch (e) {
+      console.log("error", e);
+    }
+  };
+
+  function setConfScen() {
+    configJson = configurations[configsBind].config;
+    scenarioTxt = configurations[configsBind].scenario;
+  }
 </script>
 
 {#if show}
@@ -258,7 +294,15 @@
               {/if}
             {/each}
           </select>
-          <select class="slct-lg"><option>{"Выберите пресет"}</option></select>
+          <select class="slct-lg" bind:value={configsBind} on:change={() => setConfScen()}>
+            {#if configurations}
+              {#each configurations as config, i}
+                <option value={i}>
+                  {config.topic["ru"]}
+                </option>
+              {/each}
+            {/if}
+          </select>
         </div>
         <table class="tbl">
           <thead class="bg-gray-100">
@@ -341,7 +385,9 @@
           {"Импорт конфигурации"}
         </label>
       </div>
-      <button class="btn-lg mt-4" on:click={() => makePost()}>{"Опубликовать конфигурацию на портале"}</button>
+      {#if userdata}
+        <button class="btn-lg mt-4" on:click={() => makePost()}>{"Опубликовать конфигурацию на портале"}</button>
+      {/if}
     </Card>
   </div>
 {:else}
