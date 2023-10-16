@@ -237,7 +237,7 @@
       if (res.ok) {
         console.log(content.result);
         if (content.result.acknowledged) {
-          window.open("http://localhost:4000/configs?id=" + content.result.insertedId + "&token=" + Cookies.get("token_iotm2"), "_blank");
+          window.open("https://portal.iotmanager.org/configs?id=" + content.result.insertedId + "&token=" + Cookies.get("token_iotm2"), "_blank");
         }
         errors = [{ msg: "ok_success" }];
       } else {
