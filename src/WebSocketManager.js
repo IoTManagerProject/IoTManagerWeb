@@ -542,7 +542,7 @@ class WebSocketManager {
     //формируем json всех карточек
     this.pages = [];
     const newPage = Array.from(new Set(Array.from(this.layoutJson, ({ page }) => page)));
-    newPage.forEach(function (item, i, arr) {
+    newPage.forEach((item, i, arr) => {
       this.pages = [
         ...this.pages,
         JSON.parse(
