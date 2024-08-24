@@ -7,7 +7,7 @@
   import Anydata from "../widgets/Anydata.svelte";
   import Alarm from "../components/Alarm.svelte";
 
-  export let layoutJson;
+  export let layoutJson = [];
 
   $: layoutJson.length, timeOut();
 
