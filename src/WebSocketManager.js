@@ -346,6 +346,10 @@ class WebSocketManager {
 
   sortingLayout(ws) {
     this.layoutJson.sort((a, b) => a.descr.localeCompare(b.descr));
+    this.pages = Array.from(new Set(this.layoutJson.map(({ page }) => page)))
+      .map((page) => ({ page }))
+      .sort((a, b) => a.page.localeCompare(b.page));
+    console.log("[3]", ws, "layout sort, requested params...");
     this.wsSendMsg(ws, "/params|");
   }
 
@@ -500,11 +504,8 @@ class WebSocketManager {
     });
   }
 
-  //слияние layout-ов всех устройств в общий layout
   async combineLayoutsInOne(ws, devLayout) {
-    for (let i = 0; i < devLayout.length; i++) {
-      devLayout[i].ws = ws;
-    }
+    devLayout.forEach((item) => (item.ws = ws));
     this.layoutJson = this.layoutJson.concat(devLayout);
     console.log("[2]", ws, "devLayout pushed to layout");
     this.sortingLayout(ws);
@@ -512,60 +513,18 @@ class WebSocketManager {
 
   updateAllStatuses(ws) {
     for (const [key, value] of Object.entries(this.paramsJson)) {
-      for (let i = 0; i < this.layoutJson.length; i++) {
-        let topic = this.layoutJson[i].topic;
+      this.layoutJson.forEach((item) => {
+        let topic = item.topic;
         if (topic) {
-          //this.layoutJson[i].ws = ws;
-          topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
+          topic = topic.substring(topic.lastIndexOf("/") + 1);
           if (key === topic) {
             console.log("[i]", "updated =>" + topic, value);
-            this.layoutJson[i].status = value;
-            break;
+            item.status = value;
           }
         }
-      }
+      });
     }
     this.wsSendMsg(ws, "/charts|");
-  }
-
-  sortingLayout(ws) {
-    //сортируем весь layout по алфавиту
-    this.layoutJson.sort(function (a, b) {
-      if (a.descr < b.descr) {
-        return -1;
-      }
-      if (a.descr > b.descr) {
-        return 1;
-      }
-      return 0;
-    });
-    //формируем json всех карточек
-    this.pages = [];
-    const newPage = Array.from(new Set(Array.from(this.layoutJson, ({ page }) => page)));
-    newPage.forEach((item, i, arr) => {
-      this.pages = [
-        ...this.pages,
-        JSON.parse(
-          JSON.stringify({
-            page: item,
-          })
-        ),
-      ];
-    });
-    //сортируем карточки по алфавиту
-    this.pages.sort(function (a, b) {
-      if (a.page < b.page) {
-        return -1;
-      }
-      if (a.page > b.page) {
-        return 1;
-      }
-      return 0;
-    });
-
-    this.layoutJson = this.layoutJson;
-    console.log("[3]", ws, "layout sort, requested params...");
-    this.wsSendMsg(ws, "/params|");
   }
 }
 

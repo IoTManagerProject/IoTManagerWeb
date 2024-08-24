@@ -38,6 +38,9 @@
 
   const wsManager = new WebSocketManager(deviceList, debug);
 
+  let layoutJson = wsManager.layoutJson;
+  $: layoutJson = wsManager.layoutJson;
+
   router.subscribe(handleNavigation);
 
   function handleNavigation() {
@@ -283,7 +286,7 @@
           <Alarm title="Подключение через {wsManager.remainingTimeout} сек." />
         {:else}
           <Route path="/">
-            <DashboardPage show={wsManager.pageReady.dash} layoutJson={wsManager.layoutJson} pages={wsManager.pages} wsPush={(ws, topic, status) => wsManager.wsPush(ws, topic, status)} />
+            <DashboardPage show={wsManager.pageReady.dash} layoutJson={layoutJson} pages={wsManager.pages} wsPush={(ws, topic, status) => wsManager.wsPush(ws, topic, status)} />
           </Route>
           <!--<Route path="/config">
             <ConfigPage show={pageReady.config} bind:configJson={configJson} bind:scenarioTxt={scenarioTxt} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} cleanLogs={() => cleanLogs()} rebootEsp={() => rebootEsp()} moduleOrder={(id, key, value) => moduleOrder(id, key, value)} userdata={userdata} />
