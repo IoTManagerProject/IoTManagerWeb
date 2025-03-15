@@ -12,6 +12,8 @@
   import CloudIcon from "./svg/Cloud.svelte";
   import WebSocketManager from "./WebSocketManager";
 
+  import { eventEmitter } from "../eventEmitter";
+
   router.mode.hash();
 
   let opened = true;
@@ -39,7 +41,6 @@
   const wsManager = new WebSocketManager(deviceList, debug);
 
   let layoutJson = wsManager.layoutJson;
-  $: layoutJson = wsManager.layoutJson;
 
   router.subscribe(handleNavigation);
 
@@ -71,6 +72,18 @@
     wsManager.selectedDeviceDataRefresh();
     wsManager.connectToAllDevices();
     wsManager.wsTestMsgTask();
+
+    const updateLayoutJson = (newLayoutJson) => {
+      layoutJson = newLayoutJson;
+    };
+
+    // Add event listener when component is mounted
+    eventEmitter.on("layoutJsonUpdated", updateLayoutJson);
+
+    // Remove event listener when component is destroyed
+    return () => {
+      eventEmitter.off("layoutJsonUpdated", updateLayoutJson);
+    };
   });
 
   const getUser = async () => {

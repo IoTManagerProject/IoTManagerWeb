@@ -26,6 +26,7 @@
     "tinro": "^0.6.12"
   },
   "dependencies": {
+    "events": "^3.3.0",
     "js-cookie": "^3.0.5",
     "sirv-cli": "^2.0.2",
     "svelte-frappe-charts": "^1.10.0"

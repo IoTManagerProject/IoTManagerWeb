@@ -1,3 +1,5 @@
+import { eventEmitter } from "../eventEmitter";
+
 class WebSocketManager {
   constructor(deviceList, debug = true) {
     this.deviceList = deviceList;
@@ -349,6 +351,9 @@ class WebSocketManager {
     this.pages = Array.from(new Set(this.layoutJson.map(({ page }) => page)))
       .map((page) => ({ page }))
       .sort((a, b) => a.page.localeCompare(b.page));
+
+    eventEmitter.emit("layoutJsonUpdated", this.layoutJson);
+
     console.log("[3]", ws, "layout sort, requested params...");
     this.wsSendMsg(ws, "/params|");
   }
