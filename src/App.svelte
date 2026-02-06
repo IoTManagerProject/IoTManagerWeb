@@ -52,14 +52,14 @@
   let preventMove = false;
   let screenSize;
   const blobDebug = false;
-  const devMode = false;
+  const devMode = true;
 
   let percent;
 
   //****************************************************variable section**********************************************************/
   //******************************************************************************************************************************/
   let myip = document.location.hostname;
-  if (devMode) myip = "192.168.1.247";
+  if (devMode) myip = "127.0.0.1";
 
   //Flags
   let firstDevListRequest = true;
