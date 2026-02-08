@@ -1,5 +1,5 @@
 /**
- * Portal API: https://portal.iotmanager.org
+ * Portal API: https://cloud.iotmanager.org/portal
  * Auth/user, configurations, compiler (profile, orders, etc.).
  *
  * CORS: If you see "Redirect is not allowed for a preflight request", the server
@@ -10,7 +10,7 @@
 import { get, post } from "./http.js";
 
 /** Portal base URL; export for building links in UI (e.g. configs, build install). */
-export const BASE = "https://portal.iotmanager.org";
+export const BASE = "https://cloud.iotmanager.org/portal";
 
 function authHeaders(token) {
   return {
