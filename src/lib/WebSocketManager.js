@@ -149,7 +149,13 @@ export default class WebSocketManager {
       setRemainingTimeout: (v) => (this.remainingTimeout = v),
       reconnectTimeout: this.reconnectTimeout,
       getPreventReconnect: () => this.preventReconnect,
-      setPercent: (v) => (this.percent = v),
+      setPercent: (v) => {
+        this.percent = v;
+        eventEmitter.emit("reconnectTick", {
+          percent: this.percent,
+          remainingTimeout: this.remainingTimeout,
+        });
+      },
       getRebootOrUpdateProcess: () => this.rebootOrUpdateProcess,
       setRebootOrUpdateProcess: (v) => (this.rebootOrUpdateProcess = v),
       getSocketConnected: () => this.socketConnected,
@@ -321,6 +327,8 @@ export default class WebSocketManager {
       layoutJson: this.layoutJson,
       pages: this.pages,
       pageReady: { ...this.pageReady },
+      configJson: this.configJson,
+      scenarioTxt: this.scenarioTxt,
     });
   }
 

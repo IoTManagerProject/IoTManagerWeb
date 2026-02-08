@@ -60,6 +60,9 @@
   let versionsList = {};
   let choosingVersion = undefined;
   let selectedWs = 0;
+  let socketConnected = false;
+  let percent = 0;
+  let remainingTimeout = 60;
 
   let opened = true;
   let preventMove = false;
@@ -67,7 +70,6 @@
   let showInput = false;
 
   $: currentPageName = wsManager.currentPageName;
-  $: remainingTimeout = wsManager.remainingTimeout;
   $: wsManager.choosingVersion = choosingVersion;
 
   router.subscribe(handleNavigation);
@@ -148,6 +150,9 @@
     opened = screenSize > 900;
     wsManager.firstDevListRequest = true;
     wsManager.selectedDeviceDataRefresh();
+    socketConnected = wsManager.socketConnected;
+    percent = wsManager.percent;
+    remainingTimeout = wsManager.remainingTimeout;
     wsManager.connectToAllDevices();
     wsManager.startReconnectTask();
 
@@ -155,9 +160,16 @@
       layoutJson = data.layoutJson || [];
       pages = data.pages || [];
       if (data.pageReady) pageReady = data.pageReady;
+      if (data.configJson !== undefined) configJson = data.configJson;
+      if (data.scenarioTxt !== undefined) scenarioTxt = data.scenarioTxt;
     });
     eventEmitter.on("deviceListUpdated", () => {
-      deviceList = wsManager.deviceList;
+      deviceList = [...wsManager.deviceList];
+      socketConnected = wsManager.socketConnected;
+    });
+    eventEmitter.on("reconnectTick", (data) => {
+      percent = data.percent;
+      remainingTimeout = data.remainingTimeout;
     });
     eventEmitter.on("configUpdated", (data) => {
       configJson = data.configJson || [];
@@ -190,7 +202,7 @@
     {deviceList}
     bind:selectedWs
     showDropdown={wsManager.currentPageName !== "/|" && wsManager.currentPageName !== "/list|"}
-    socketConnected={wsManager.socketConnected}
+    {socketConnected}
     {devicesDropdownChange}
   />
   <AppNav bind:opened onCheck={() => onCheck()} userdata={wsManager.userdata} />
@@ -198,7 +210,7 @@
   <main class="flex-1 overflow-y-auto p-0 {opened === true && !preventMove ? 'ml-36' : 'ml-0'}">
     <ul class="menu__main">
       <div class="bg-cover pt-0 px-4">
-        {#if !wsManager.socketConnected && wsManager.currentPageName !== "/|"}
+        {#if !socketConnected && wsManager.currentPageName !== "/|"}
           <Alarm title="Подключение через {remainingTimeout} сек." />
         {:else}
           <Route path="/">
@@ -211,7 +223,7 @@
             <ConnectionPage show={pageReady.connection} rebootEsp={() => wsManager.rebootEsp()} ssidClick={() => wsManager.ssidClick()} saveSett={() => { wsManager.settingsJson = settingsJson; wsManager.saveSett(); }} saveMqtt={() => { wsManager.settingsJson = settingsJson; wsManager.saveMqtt(); }} {settingsJson} {errorsJson} {ssidJson} />
           </Route>
           <Route path="/list">
-            <ListPage show={pageReady.list} deviceList={deviceList} settingsJson={wsManager.settingsJson} saveSett={() => wsManager.saveSett()} rebootEsp={() => wsManager.rebootEsp()} showInput={showInput} addDevInList={() => wsManager.addDevInList()} newDevice={wsManager.newDevice} sendToAllDevices={(msg) => wsManager.sendToAllDevices(msg)} saveList={() => wsManager.saveList()} percent={wsManager.percent} devListOverride={() => wsManager.devListOverride()} applicationReboot={() => wsManager.applicationReboot()} />
+            <ListPage show={pageReady.list} deviceList={deviceList} settingsJson={wsManager.settingsJson} saveSett={() => wsManager.saveSett()} rebootEsp={() => wsManager.rebootEsp()} showInput={showInput} addDevInList={() => wsManager.addDevInList()} newDevice={wsManager.newDevice} sendToAllDevices={(msg) => wsManager.sendToAllDevices(msg)} saveList={() => wsManager.saveList()} {percent} devListOverride={() => wsManager.devListOverride()} applicationReboot={() => wsManager.applicationReboot()} />
           </Route>
           <Route path="/system">
             <SystemPage show={pageReady.system} errorsJson={wsManager.errorsJson} settingsJson={wsManager.settingsJson} saveSett={() => wsManager.saveSett()} rebootEsp={() => wsManager.rebootEsp()} cleanLogs={() => wsManager.cleanLogs()} cancelAlarm={(alarmKey) => wsManager.cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion coreMessages={wsManager.coreMessages} />
