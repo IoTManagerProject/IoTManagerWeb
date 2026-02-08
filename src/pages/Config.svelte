@@ -221,7 +221,7 @@
     if (res.ok && res.data && res.data.result) {
       console.log(res.data.result);
       if (res.data.result.acknowledged) {
-        window.open("https://portal.iotmanager.org/configs?id=" + res.data.result.insertedId + "&token=" + JWT, "_blank");
+        window.open(portal.BASE + "/configs?id=" + res.data.result.insertedId + "&token=" + JWT, "_blank");
       }
       errors = [{ msg: "ok_success" }];
     } else if (res.errors) {

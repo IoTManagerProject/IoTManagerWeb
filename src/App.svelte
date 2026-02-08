@@ -6,22 +6,12 @@
    +43 67761588253
   */
 
-  //6+49 кб 09/06/2023
-  //6+51 кб 02/09/2023
-  //6+64 кб 02/10/2023 + axios
-  //6+53 кб 03/10/2023 + fetch
-
-  //******************************************************import section*********************************************************/
-  //*****************************************************************************************************************************/
   import { onMount } from "svelte";
-  import { Route, router, active } from "tinro";
+  import { Route, router } from "tinro";
   router.mode.hash();
 
   import Alarm from "./components/Alarm.svelte";
   import Progress from "./components/Progress.svelte";
-  //import Card from "./components/Card.svelte";
-
-  //import ModalPass from "./components/ModalPass.svelte";
   import DashboardPage from "./pages/Dashboard.svelte";
   import ConfigPage from "./pages/Config.svelte";
   import ConnectionPage from "./pages/Connection.svelte";
@@ -29,59 +19,28 @@
   import SystemPage from "./pages/System.svelte";
   import Login from "./pages/Login.svelte";
   import Profile from "./pages/Profile.svelte";
-  import { t, locale, locales } from "./i18n";
   import Cookies from "js-cookie";
-
-  //import UtilitiesPage from "./pages/Utilities.svelte";
-  //import LogPage from "./pages/Log.svelte";
-  //import AboutPage from "./pages/About.svelte";
 
   import * as portal from "./api/portal.js";
   import * as firmware from "./api/firmware.js";
-  import * as deviceSocket from "./api/deviceSocket.js";
-  import * as deviceConnection from "./lib/deviceConnection.js";
-  import * as deviceListManager from "./lib/deviceListManager.js";
-  import * as blobProtocol from "./lib/blobProtocol.js";
-  import * as wsReconnect from "./lib/wsReconnect.js";
+  import WebSocketManager from "./lib/WebSocketManager.js";
+  import { eventEmitter } from "./eventEmitter.js";
   import AppHeader from "./components/layout/AppHeader.svelte";
   import AppNav from "./components/layout/AppNav.svelte";
   import AppFooter from "./components/layout/AppFooter.svelte";
 
-  //****************************************************constants section*********************************************************/
-  //******************************************************************************************************************************/
-  const debug = true;
-  const LOG_MAX_MESSAGES = 100;
-  let reconnectTimeout = 60; //период проверки соединения с устройством
-  let remainingTimeout = reconnectTimeout;
-  let preventReconnect = false;
-  const waitingAckTimeout = 18000; //время ожидания ответа от устройства
-  let rebootOrUpdateProcess = false;
-  let rebootTimer;
-  let opened = true;
-  let preventMove = false;
-  let screenSize;
-  const blobDebug = false;
   const devMode = true;
+  const myip = devMode ? "127.0.0.1" : document.location.hostname;
+  const initialDeviceList = [
+    { name: "--", id: "--", ip: myip, ws: 0, status: false },
+  ];
 
-  let percent;
+  const wsManager = new WebSocketManager(initialDeviceList, { debug: true });
 
-  //****************************************************variable section**********************************************************/
-  //******************************************************************************************************************************/
-  let myip = document.location.hostname;
-  if (devMode) myip = "127.0.0.1";
-
-  //Flags
-  let firstDevListRequest = true;
-  let showInput = false;
-  let authorization = false;
-  let showDropdown = true;
-
-  let showAwaitingCircle = false;
-
-  //dashboard
+  // Local reactive state (synced from wsManager via events)
+  let layoutJson = [];
   let pages = [];
-
-  //ready
+  let deviceList = [...initialDeviceList];
   let pageReady = {
     dash: false,
     config: false,
@@ -89,897 +48,180 @@
     list: false,
     system: false,
     dev: false,
+    profile: false,
   };
-
-  //update esp
-  let versionsList = {};
-  let choosingVersion = undefined;
-
-  //JSON Files====================================
-  let itemsJson = [];
-  let widgetsJson = [];
   let configJson = [];
   let scenarioTxt = " ";
+  let widgetsJson = [];
+  let itemsJson = [];
   let settingsJson = {};
-  let ssidJson = {};
   let errorsJson = {};
-  let flashProfileJson = {};
-  let otaJson = {};
-  let deviceList = [];
-  deviceList = [
-    {
-      name: "--",
-      id: "--",
-      ip: myip,
-      ws: 0,
-      status: false,
-    },
-  ];
-
-  // ack state lives in wsReconnect.createAck
-
-  let incDeviceList = [];
-  let layoutJson = [];
-  let paramsJson = {};
-
-  let userdata = null;
-  let allmodeinfo = null;
-  let profile = null;
-
-  let serverOnline = false;
-
-  let parsed = {
-    itemsJson: false,
-    widgetsJson: false,
-    configJson: false,
-    scenarioTxt: false,
-    settingsJson: false,
-    ssidJson: false,
-    incDeviceList: false,
-    deviceListJson: false,
-    errorsJson: false,
-    statusJson: false,
-    paramsJson: false,
-    flashProfileJson: false,
-    otaJson: false,
-  };
-
-  //===============================================
-
-  // web sockets: pool in api/deviceSocket.js
-  let socketConnected = false;
-  let selectedDeviceData = undefined;
+  let ssidJson = {};
+  let versionsList = {};
+  let choosingVersion = undefined;
   let selectedWs = 0;
-  let originalWs = 0;
 
-  let newDevice = {};
-  let coreMessages = [];
+  let opened = true;
+  let preventMove = false;
+  let screenSize;
+  let showInput = false;
 
-  //***********************************************************navigation********************************************************/
-  let currentPageName = undefined;
+  $: currentPageName = wsManager.currentPageName;
+  $: remainingTimeout = wsManager.remainingTimeout;
+  $: wsManager.choosingVersion = choosingVersion;
 
   router.subscribe(handleNavigation);
 
   function handleNavigation() {
-    currentPageName = $router.path.toString();
-    currentPageName = currentPageName + "|";
-
-    console.log("[i]", "user on page:", currentPageName);
-
-    clearData();
-
-    //если мы на странице dashboard то рассылаем всем устройствам запрос данных
-    if (currentPageName === "/|") {
-      sendToAllDevices(currentPageName);
-      showDropdown = false;
-      //в остальных случаях шлем только выбранному устройству запрос данных
+    wsManager.currentPageName = $router.path.toString() + "|";
+    console.log("[i]", "user on page:", wsManager.currentPageName);
+    wsManager.clearData();
+    if (wsManager.currentPageName === "/|") {
+      wsManager.sendToAllDevices(wsManager.currentPageName);
     } else {
-      if (currentPageName === "/list|") {
-        //если мы перешли на страницу списка устройств отключаем выпадающий список
-        showDropdown = false;
-      } else {
-        showDropdown = true;
-      }
-      //если мы на любой другой странице то запрашиваем данные
-      sendCurrentPageNameToSelectedWs();
+      wsManager.sendCurrentPageNameToSelectedWs();
     }
-  }
-
-  function sendCurrentPageNameToSelectedWs() {
-    if (selectedWs !== undefined) {
-      wsSendMsg(selectedWs, currentPageName);
-    }
-  }
-
-  //*******************************************************initialisation********************************************************************/
-  onMount(async () => {
-    console.log("[i]", "mounted");
-    await getUser();
-    onCheck();
-    opened = screenSize > 900 ? true : false;
-    selectedDeviceDataRefresh();
-    //флаг первого запроса списка устройств
-    firstDevListRequest = true;
-    //вначале подключимся к известному нам ip этого устройства
-    connectToAllDevices();
-    wsTestMsgTask();
-    //sortingLayout();
-  });
-
-  const getUser = async () => {
-    const JWT = Cookies.get("token_iotm2");
-    const res = await portal.getUser(JWT);
-    if (res.ok) {
-      userdata = res.userdata;
-      serverOnline = true;
-    } else {
-      if (!res.serverOnline) serverOnline = false;
-      else {
-        console.log("error", "getUser");
-        serverOnline = true;
-      }
-    }
-  };
-
-  //****************************************************web sockets section******************************************************/
-  function getIP(ws) {
-    return deviceConnection.getIP(ws, deviceList);
-  }
-
-  function wsSendMsg(ws, msg) {
-    if (deviceSocket.send(ws, msg)) {
-      if (debug) console.log("[i]", getIP(ws), ws, "msg send success", msg);
-    } else {
-      if (debug) console.log("[e]", getIP(ws), ws, "msg not send");
-    }
-  }
-
-  const openHandler = () =>
-    deviceConnection.createOpenHandler({
-      markDeviceStatus,
-      sendMsg: wsSendMsg,
-      firstDevListRequest,
-      currentPageName,
-      selectedWs,
-      sendCurrentPageNameToSelectedWs,
-    });
-
-  function messageHandler(ws, data) {
-    if (typeof data === "string") {
-      if (data === "/tstr|") ack(ws, true);
-      return;
-    }
-    if (data instanceof Blob) {
-      if (ws === selectedWs) parseBlob(data, ws);
-      if (currentPageName === "/|") parseAllBlob(data, ws);
-    }
-  }
-
-  function createConnection(wsIndex, ip) {
-    if (ip === "error") {
-      if (debug) console.log("[e]", "device list wrong");
-      return;
-    }
-    if (debug) console.log("[i]", ip, wsIndex, "started connecting...");
-    deviceSocket.createConnection(wsIndex, ip, {
-      onOpen: (ws) => openHandler()(ws),
-      onMessage: messageHandler,
-      onClose: (ws) => markDeviceStatus(ws, false),
-      onError: (ws) => markDeviceStatus(ws, false),
-    });
-  }
-
-  function connectToAllDevices() {
-    deviceConnection.connectToAllDevices(deviceList, getSelectedDeviceData, selectedWs, createConnection);
-  }
-
-  function printAllCreatedWs() {
-    if (debug) console.log("[i]", "[ws]", "device count:", deviceList.length);
-  }
-
-  function markDeviceStatus(ws, status) {
-    deviceList.forEach((device) => {
-      if (device.ws === ws) {
-        device.status = status;
-        device.ping = 0;
-        if (device.status === true) {
-          console.log("[i]", device.ip, ws, "status online");
-        } else {
-          console.log("[i]", device.ip, ws, "status offline");
-          deleteWidget(ws);
-          sortingLayout(ws);
-        }
-      }
-    });
-    selectedDeviceDataRefresh();
-    deviceList = deviceList;
-  }
-
-  function deleteWidget(ws) {
-    layoutJson = layoutJson.filter((item) => item.ws !== ws);
-  }
-
-  const blobHandlers = {
-    setItemsJson: (v) => (itemsJson = v),
-    setParsedItemsJson: (v) => (parsed.itemsJson = v),
-    setWidgetsJson: (v) => (widgetsJson = v),
-    setParsedWidgetsJson: (v) => (parsed.widgetsJson = v),
-    setConfigJson: (v) => (configJson = v),
-    setParsedConfigJson: (v) => (parsed.configJson = v),
-    setScenarioTxt: (v) => (scenarioTxt = v),
-    setSettingsJson: (v) => (settingsJson = v),
-    setParsedSettingsJson: (v) => (parsed.settingsJson = v),
-    setSsidJson: (v) => (ssidJson = v),
-    setParsedSsidJson: (v) => (parsed.ssidJson = v),
-    setErrorsJson: (v) => (errorsJson = v),
-    setParsedErrorsJson: (v) => (parsed.errorsJson = v),
-    setParsedIncDeviceList: (v) => (parsed.incDeviceList = v),
-    onDevlis: async (json) => {
-      incDeviceList = json;
-      deviceConnection.handleDevListReceived(incDeviceList, deviceList, firstDevListRequest, {
-        setDeviceList: (list) => (deviceList = list),
-        setFirstDevListRequest: (v) => (firstDevListRequest = v),
-        setParsedDeviceListJson: (v) => (parsed.deviceListJson = v),
-        onParced,
-        selectedDeviceDataRefresh,
-        connectToAllDevices,
-      });
-    },
-    setFlashProfileJson: (v) => (flashProfileJson = v),
-    setParsedFlashProfileJson: (v) => (parsed.flashProfileJson = v),
-    setOtaJson: (v) => (otaJson = v),
-    setParsedOtaJson: (v) => (parsed.otaJson = v),
-    addCoreMsg: (msg) => addCoreMsg(msg),
-    onParced: () => onParced(),
-  };
-
-  async function parseBlob(blob, ws) {
-    await blobProtocol.parseBlob(blob, ws, blobHandlers);
-  }
-
-  const allBlobHandlers = {
-    updateWidget: (v) => updateWidget(v),
-    combineLayoutsInOne: (ws, layout) => combineLayoutsInOne(ws, layout),
-    mergeParams: (devParams) => {
-      paramsJson = { ...paramsJson, ...devParams };
-      paramsJson = paramsJson;
-    },
-    updateAllStatuses: (ws) => updateAllStatuses(ws),
-    onParced: () => onParced(),
-    apdateWidgetByArray: (v) => apdateWidgetByArray(v),
-  };
-
-  async function parseAllBlob(blob, ws) {
-    await blobProtocol.parseAllBlob(blob, ws, allBlobHandlers);
-  }
-
-  async function onParced() {
-    if (currentPageName === "/|") {
-      pageReady.dash = true;
-    }
-
-    if (currentPageName === "/config|" && parsed.itemsJson && parsed.widgetsJson && parsed.configJson && parsed.settingsJson) {
-      clearParcedFlags();
-      pageReady.config = true;
-      if (debug) console.log("✔✔", "config page parced");
-    }
-
-    //&& parsed.widgetsJson && parsed.configJson - добавить когда 451 прошивка уйдет в прошлое
-    if (currentPageName === "/connection|" && parsed.ssidJson && parsed.settingsJson && parsed.errorsJson) {
-      clearParcedFlags();
-      if (debug) console.log("✔✔", "connection page parced");
-      pageReady.connection = true;
-    }
-
-    if (currentPageName === "/list|" && parsed.settingsJson) {
-      clearParcedFlags();
-      if (debug) console.log("✔✔", "list page parced");
-      pageReady.list = true;
-    }
-
-    if (currentPageName === "/system|" && parsed.errorsJson && parsed.settingsJson) {
-      clearParcedFlags();
-      getVersionsList();
-      if (debug) console.log("✔✔", "system page parced");
-      pageReady.system = true;
-    }
-
-    //&& parsed.otaJson
-    if (currentPageName === "/profile|" && parsed.flashProfileJson) {
-      clearParcedFlags();
-      if (debug) console.log("✔✔", "profile page parced");
-      pageReady.profile = true;
-      await getModInfo();
-      await getProfile();
-    }
-  }
-
-  const getModInfo = async () => {
-    const res = await portal.getModInfo();
-    if (res.ok) allmodeinfo = res.allmodeinfo;
-    else console.log("error", "getModInfo");
-  };
-
-  const getProfile = async () => {
-    const JWT = Cookies.get("token_iotm2");
-    const res = await portal.getProfile(JWT);
-    if (res.ok) {
-      profile = res.profile;
-      await markProfileAsPerThisDevProfile();
-    } else console.log("error", "getProfile");
-  };
-
-  const markProfileAsPerThisDevProfile = async () => {
-    profile.projectProp.platformio.default_envs = flashProfileJson.projectProp.platformio.default_envs;
-    for (const [compilerCategory, compilerCategoryModules] of Object.entries(profile.modules)) {
-      let devCategoryModules = flashProfileJson.modules[compilerCategory];
-      compilerCategoryModules.forEach((compilerModule) => {
-        compilerModule.active = false;
-        if (devCategoryModules) {
-          devCategoryModules.forEach((devModule) => {
-            if (devModule.path === compilerModule.path) {
-              compilerModule.active = devModule.active;
-            }
-          });
-        }
-      });
-    }
-  };
-
-  function devListOverride() {
-    deviceList = deviceListManager.devListOverride(incDeviceList);
-    console.log("[i]", "[devlist]", "devlist overrided");
-  }
-
-  function devListCombine() {
-    deviceList = deviceListManager.devListCombine(deviceList, incDeviceList);
-    console.log("[i]", "[devlist]", "devlist combined");
-  }
-
-  function combineArrays(A, B) {
-    return deviceListManager.combineArrays(A, B);
-  }
-
-  //***********************************************************dashboard***************************************************************/
-
-  //слияние layout-ов всех устройств в общий layout
-  async function combineLayoutsInOne(ws, devLayout) {
-    for (let i = 0; i < devLayout.length; i++) {
-      devLayout[i].ws = ws;
-    }
-    layoutJson = layoutJson.concat(devLayout);
-    console.log("[2]", ws, "devLayout pushed to layout");
-    sortingLayout(ws);
-  }
-
-  function sortingLayout(ws) {
-    //сортируем весь layout по алфавиту
-    layoutJson.sort(function (a, b) {
-      if (a.descr < b.descr) {
-        return -1;
-      }
-      if (a.descr > b.descr) {
-        return 1;
-      }
-      return 0;
-    });
-    //формируем json всех карточек
-    pages = [];
-    const newPage = Array.from(new Set(Array.from(layoutJson, ({ page }) => page)));
-    newPage.forEach(function (item, i, arr) {
-      pages = [
-        ...pages,
-        JSON.parse(
-          JSON.stringify({
-            page: item,
-          })
-        ),
-      ];
-    });
-    //сортируем карточки по алфавиту
-    pages.sort(function (a, b) {
-      if (a.page < b.page) {
-        return -1;
-      }
-      if (a.page > b.page) {
-        return 1;
-      }
-      return 0;
-    });
-
-    layoutJson = layoutJson;
-    console.log("[3]", ws, "layout sort, requested params...");
-    wsSendMsg(ws, "/params|");
-  }
-
-  function updateAllStatuses(ws) {
-    for (const [key, value] of Object.entries(paramsJson)) {
-      for (let i = 0; i < layoutJson.length; i++) {
-        let topic = layoutJson[i].topic;
-        if (topic) {
-          //layoutJson[i].ws = ws;
-          topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
-          if (key === topic) {
-            console.log("[i]", "updated =>" + topic, value);
-            layoutJson[i].status = value;
-            break;
-          }
-        }
-      }
-    }
-    wsSendMsg(ws, "/charts|");
-  }
-
-  //обработка интервально прилетающих статусов
-  function updateWidget(newStatusJson) {
-    for (let i = 0; i < layoutJson.length; i++) {
-      let topic = layoutJson[i].topic;
-      if (topic === newStatusJson.topic) {
-        layoutJson[i] = jsonConcat(layoutJson[i], newStatusJson);
-        //получен ответ - выключаем красный цвет
-        layoutJson[i].sent = false;
-        break;
-      }
-    }
-  }
-
-  //если статус виджета это массив и его нужно накопить
-  //должна вызываться когда весь layout в сборе
-  async function apdateWidgetByArray(newStatusJson) {
-    console.log("[i]", "collecting arrays");
-    let error = true;
-    if (layoutJson.length > 0) {
-      for (let i = 0; i < layoutJson.length; i++) {
-        let topic = layoutJson[i].topic;
-        if (topic === newStatusJson.topic) {
-          error = false;
-          layoutJson[i] = jsonConcatEx(layoutJson[i], newStatusJson);
-          let prevArr = layoutJson[i].status; //который был в layout
-          let newArr = newStatusJson.status; //тот что получили
-          if (prevArr) {
-            //если что то было в layout то делаем слияние
-            prevArr = [...prevArr, ...newArr];
-            layoutJson[i].status = prevArr;
-          } else {
-            //если ничего не было то просто запишем новый
-            layoutJson[i].status = newArr;
-          }
-          //получен ответ - выключаем красный цвет
-          layoutJson[i].sent = false;
-        }
-      }
-    } else {
-      console.log("[E]", "layoutJson missing");
-    }
-    if (error) console.log("[E]", "topic not found ", newStatusJson.topic);
-  }
-
-  function jsonConcat(o1, o2) {
-    for (var key in o2) {
-      o1[key] = o2[key];
-    }
-    return o1;
-  }
-
-  //объединяем исклчая статус так как статус в данном случае накопительная переменная
-  function jsonConcatEx(o1, o2) {
-    for (var key in o2) {
-      if (key !== "status") {
-        o1[key] = o2[key];
-      }
-    }
-    return o1;
-  }
-
-  function saveConfig() {
-    wsSendMsg(selectedWs, "/tuoyal|" + JSON.stringify(generateLayout()));
-    modify();
-    wsSendMsg(selectedWs, "/gifnoc|" + JSON.stringify(configJson));
-
-    wsSendMsg(selectedWs, "/oiranecs|" + scenarioTxt);
-    clearData();
-    sendCurrentPageNameToSelectedWs();
-  }
-
-  function saveSett() {
-    var size = Object.keys(settingsJson).length;
-    console.log("[i]", "settingsJson length: " + size);
-    if (size > 5) {
-      jsonArrWrite(deviceList, "ip", getIP(selectedWs), "name", settingsJson.name);
-      deviceList = deviceList;
-      wsSendMsg(selectedWs, "/sgnittes|" + JSON.stringify(settingsJson));
-    } else {
-      window.alert("Ошибка размера settingsJson (возможно не был передан странице)");
-    }
-    clearData();
-    sendCurrentPageNameToSelectedWs();
-  }
-
-  function saveList() {
-    //при сохранении списка в память необходимо удалить все статусы
-    let devListForSave = Object.assign([], deviceList);
-    for (let i = 0; i < devListForSave.length; i++) {
-      //delete devListForSave[i].status;
-      devListForSave[i].status = false;
-    }
-    wsSendMsg(selectedWs, "/tsil|" + JSON.stringify(devListForSave));
-  }
-
-  function cleanLogs() {
-    wsSendMsg(selectedWs, "/clean|");
-  }
-
-  function saveMqtt() {
-    var size = Object.keys(settingsJson).length;
-    wsSendMsg(selectedWs, "/tuoyal|" + JSON.stringify(generateLayout()));
-    if (size > 5) {
-      wsSendMsg(selectedWs, "/sgnittes|" + JSON.stringify(settingsJson));
-    } else {
-      window.alert("Ошибка");
-    }
-    clearData();
-    wsSendMsg(selectedWs, "/mqtt|");
-  }
-
-  function getInput() {
-    let input = {
-      name: "inputDate",
-      //descr: "Выберите дату",
-      widget: "input",
-      size: "small",
-      color: "orange",
-      type: "date",
-    };
-    return input;
-  }
-
-  function modify() {
-    for (let i = 0; i < configJson.length; i++) {
-      let config = configJson[i];
-      delete config["show"];
-    }
-  }
-
-  //по конфигу делаем виджеты
-  function generateLayout() {
-    let layout = [];
-    for (let i = 0; i < configJson.length; i++) {
-      let config = Object.assign({}, configJson[i]);
-      let setWidget = config.widget;
-      let error = true;
-      for (let w = 0; w < widgetsJson.length; w++) {
-        if (setWidget === widgetsJson[w].name) {
-          let widget = Object.assign({}, widgetsJson[w]);
-          widget.page = config.page;
-          widget.descr = config.descr;
-          widget.topic = settingsJson.mqttPrefix + "/" + settingsJson.id + "/" + config.id;
-          if (setWidget !== "nil") layout.push(widget);
-          //создаем графики с окнами ввода
-          if (widget.widget === "chart" && widget.type !== "bar") {
-            let input = getInput();
-            input.page = config.page;
-            input.topic = settingsJson.mqttPrefix + "/" + settingsJson.id + "/" + config.id + "-date";
-            input.descr = config.descr;
-            //console.log("[i]", "topic ", widget.topic);
-            layout.push(input);
-          }
-          error = false;
-          break;
-        } else {
-          error = true;
-        }
-      }
-      if (error) console.log("[E]", "error, widget not found: " + setWidget);
-    }
-
-    //сортируем весь layout по алфавиту
-    layout.sort(function (a, b) {
-      if (a.descr < b.descr) {
-        return -1;
-      }
-      if (a.descr > b.descr) {
-        return 1;
-      }
-      return 0;
-    });
-
-    for (let i = 0; i < layout.length; i++) {
-      layout[i].order = i;
-    }
-
-    return layout;
-  }
-
-  function clearData() {
-    itemsJson = [];
-    widgetsJson = [];
-    configJson = [];
-    scenarioTxt = " ";
-    settingsJson = {};
-    //ssidJson = {};
-    errorsJson = {};
-    layoutJson = [];
-    paramsJson = {};
-    otaJson = {};
-    flashProfileJson = {};
-
-    //incDeviceList = [];
-
-    for (const [key, value] of Object.entries(pageReady)) {
-      pageReady[key] = false;
-    }
-
-    clearParcedFlags();
-
-    if (debug) console.log("[i]", "all json files cleared");
-  }
-
-  function clearParcedFlags() {
-    console.log("[i]", "parced flags cleared");
-    for (const [key, value] of Object.entries(parsed)) {
-      parsed[key] = false;
-    }
-  }
-
-  function wsPush(ws, topic, status) {
-    let msg = topic + " " + status;
-    if (debug) console.log("[i]", "ws: ", ws, msg);
-    //layoutJson = layoutJson;
-    let key = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
-    wsSendMsg(ws, "/control|" + key + "/" + status);
-  }
-
-  const ack = wsReconnect.createAck({
-    markDeviceStatus,
-    getDeviceList: () => deviceList,
-    setDeviceList: (list) => (deviceList = list),
-    waitingAckTimeout,
-  });
-
-  const wsTestMsgTask = wsReconnect.createWsTestMsgTask({
-    getDeviceList: () => deviceList,
-    send: wsSendMsg,
-    markDeviceStatus,
-    connectDevice: (ws) => createConnection(ws, getIP(ws)),
-    ack,
-    getRemainingTimeout: () => remainingTimeout,
-    setRemainingTimeout: (v) => (remainingTimeout = v),
-    reconnectTimeout,
-    getPreventReconnect: () => preventReconnect,
-    setPercent: (v) => (percent = v),
-    getRebootOrUpdateProcess: () => rebootOrUpdateProcess,
-    setRebootOrUpdateProcess: (v) => (rebootOrUpdateProcess = v),
-    getSocketConnected: () => socketConnected,
-    setShowAwaitingCircle: (v) => (showAwaitingCircle = v),
-    setReconnectTimeout: (v) => (reconnectTimeout = v),
-    printAllCreatedWs,
-  });
-
-  function sendToAllDevices(msg) {
-    deviceList.forEach((device) => {
-      if (device.status === true) {
-        wsSendMsg(device.ws, msg);
-      }
-    });
-  }
-
-  //***********************************************************logging******************************************************************/
-  const addCoreMsg = (msg) => {
-    if (coreMessages.length >= LOG_MAX_MESSAGES) {
-      coreMessages.shift();
-    }
-    //const time = new Date().getTime();
-    coreMessages = [
-      ...coreMessages,
-      {
-        msg,
-      },
-    ];
-    coreMessages.sort(function (a, b) {
-      if (a.time > b.time) {
-        return -1;
-      }
-      if (a.time < b.time) {
-        return 1;
-      }
-      return 0;
-    });
-  };
-
-  //***********************************************************dev list******************************************************************/
-
-  //всякий раз когда список устройств был обновлен
-  function selectedDeviceDataRefresh() {
-    //запишем в переменную selectedDeviceData выбранное устройство, что бы в коде было известно выбранное устройство
-    getSelectedDeviceData(selectedWs);
-    socketConnected = selectedDeviceData.status;
   }
 
   function devicesDropdownChange() {
+    wsManager.selectedWs = selectedWs;
     if (currentPageName === "/list|") {
       console.log("[i]", "user change dropdown on list page!!!");
     } else {
-      selectedDeviceDataRefresh();
-      clearData();
-      //запускаем навигацию что дать контроллеру запрос данных
+      wsManager.selectedDeviceDataRefresh();
+      wsManager.clearData();
       handleNavigation();
-      if (debug) console.log("[i]", "user selected device:", selectedDeviceData.name);
-      if (selectedDeviceData.ip === myip) {
-        originalWs = selectedWs;
-        if (debug) console.log("[i]", "user selected original device", selectedDeviceData.name);
-      }
+      console.log("[i]", "user selected device:", wsManager.selectedDeviceData?.name);
     }
   }
 
-  //функция которая записывает в переменную данные выбранного юзером устройства
-  function getSelectedDeviceData(ws) {
-    for (let i = 0; i < deviceList.length; i++) {
-      let device = deviceList[i];
-      if (device.ws === ws) {
-        selectedDeviceData = device;
-        break;
-      }
-    }
+  function onCheck() {
+    preventMove = screenSize < 900;
   }
 
-  function addDevInList() {
-    if (!showInput) {
-      if (newDevice.name !== undefined && newDevice.ip !== undefined && newDevice.id !== undefined) {
-        newDevice.status = false;
-        newDevice.ws = deviceList.length;
-        incDeviceList.push(newDevice);
-        devListCombine();
-        //onParced();
-        //selectedDeviceDataRefresh();
-        connectToAllDevices();
-        if (debug) console.log("[i]", "selected device: ", selectedDeviceData);
-        return true;
+  onMount(async () => {
+    console.log("[i]", "mounted");
+    const JWT = Cookies.get("token_iotm2");
+    const res = await portal.getUser(JWT);
+    if (res.ok) {
+      wsManager.userdata = res.userdata;
+      wsManager.serverOnline = true;
+    } else {
+      wsManager.serverOnline = res.serverOnline !== false;
+    }
+
+    wsManager.options.onSystemParsed = async () => {
+      const r = await firmware.getVersionsList(wsManager.settingsJson.serverip);
+      if (r.ok && r.data) {
+        wsManager.versionsList = r.data[wsManager.errorsJson.bn] || {};
+        wsManager.choosingVersion = wsManager.errorsJson.bver;
       } else {
-        if (debug) console.log("[e]", "wrong data");
-        return false;
+        wsManager.choosingVersion = undefined;
       }
-    }
-  }
+    };
 
-  function jsonArrWrite(jsonArr, idKey, idValue, paramKey, paramValue) {
-    for (let i = 0; i < jsonArr.length; i++) {
-      let obj = jsonArr[i];
-      for (const [key, value] of Object.entries(obj)) {
-        if (key == idKey && value == idValue) {
-          obj[paramKey] = paramValue;
-          break;
+    wsManager.options.onProfileParsed = async () => {
+      const modRes = await portal.getModInfo();
+      if (modRes.ok) wsManager.allmodeinfo = modRes.allmodeinfo;
+      const JWT2 = Cookies.get("token_iotm2");
+      const profRes = await portal.getProfile(JWT2);
+      if (profRes.ok) {
+        wsManager.profile = profRes.profile;
+        const p = wsManager.profile;
+        const fp = wsManager.flashProfileJson;
+        if (p && fp) {
+          p.projectProp.platformio.default_envs = fp.projectProp?.platformio?.default_envs;
+          for (const [compilerCategory, compilerCategoryModules] of Object.entries(p.modules || {})) {
+            const devCategoryModules = fp.modules?.[compilerCategory];
+            compilerCategoryModules.forEach((compilerModule) => {
+              compilerModule.active = false;
+              (devCategoryModules || []).forEach((devModule) => {
+                if (devModule.path === compilerModule.path) compilerModule.active = devModule.active;
+              });
+            });
+          }
         }
       }
-    }
-  }
-
-  //**********************************************************modal*************************************************************************/
-  function onCheck() {
-    if (screenSize < 900) {
-      preventMove = true;
-    } else {
-      preventMove = false;
-    }
-  }
-
-  //************************************************elements and presets dropdown************************************************************/
-
-  function ssidClick() {
-    wsSendMsg(selectedWs, "/scan|");
-  }
-
-  function rebootEsp() {
-    rebootOrUpdateProcess = true;
-    if (debug) console.log("[i]", "reboot...");
-    wsSendMsg(selectedWs, "/reboot|");
-    markDeviceStatus(selectedWs, false);
-    showAwaitingCircle = true;
-    socketConnected = false;
-    reconnectTimeout = 10;
-    remainingTimeout = reconnectTimeout;
-  }
-
-  function updateBuild(path) {
-    rebootOrUpdateProcess = true;
-    console.log(path);
-    wsSendMsg(selectedWs, "/update|" + path);
-    showAwaitingCircle = true;
-    socketConnected = false;
-    reconnectTimeout = 20;
-    remainingTimeout = reconnectTimeout;
-  }
-
-  function applicationReboot() {
-    console.log("[i]", "reboot svelte...");
-    for (const [key, value] of Object.entries(pageReady)) {
-      pageReady[key] = false;
-    }
-    showAwaitingCircle = true;
-    setTimeout(() => {
-      location.reload();
-    }, 1000);
-  }
-
-  function cancelAlarm(alarmKey) {
-    console.log("[x]", alarmKey);
-    errorsJson[alarmKey] = 0;
-    wsSendMsg(selectedWs, '/rorre|{"' + alarmKey + '":0}');
-  }
-
-  //************************************************update esp firm************************************************************//
-
-  async function getVersionsList() {
-    versionsList = {};
-    const res = await firmware.getVersionsList(settingsJson.serverip);
-    if (res.ok && res.data) {
-      versionsList = res.data[errorsJson.bn];
-      choosingVersion = errorsJson.bver;
-      console.log(JSON.stringify(versionsList));
-    } else {
-      choosingVersion = undefined;
-      if (settingsJson.serverip) console.log("error, versions list not received");
-    }
-  }
-
-  function moduleOrder(id, key, value) {
-    console.log("order: ", id, key, value);
-    let json = {
-      id: id,
-      key: key,
-      value: value,
     };
-    console.log(json);
-    wsSendMsg(selectedWs, "/order|" + JSON.stringify(json));
-  }
+
+    onCheck();
+    opened = screenSize > 900;
+    wsManager.firstDevListRequest = true;
+    wsManager.selectedDeviceDataRefresh();
+    wsManager.connectToAllDevices();
+    wsManager.startReconnectTask();
+
+    eventEmitter.on("layoutJsonUpdated", (data) => {
+      layoutJson = data.layoutJson || [];
+      pages = data.pages || [];
+      if (data.pageReady) pageReady = data.pageReady;
+    });
+    eventEmitter.on("deviceListUpdated", () => {
+      deviceList = wsManager.deviceList;
+    });
+    eventEmitter.on("configUpdated", (data) => {
+      configJson = data.configJson || [];
+      scenarioTxt = data.scenarioTxt ?? " ";
+      if (data.widgetsJson) widgetsJson = data.widgetsJson;
+      if (data.itemsJson) itemsJson = data.itemsJson;
+    });
+    eventEmitter.on("connectionUpdated", (data) => {
+      if (data.settingsJson) settingsJson = data.settingsJson;
+      if (data.errorsJson) errorsJson = data.errorsJson;
+      if (data.ssidJson) ssidJson = data.ssidJson;
+    });
+    eventEmitter.on("systemUpdated", () => {
+      versionsList = wsManager.versionsList || {};
+      choosingVersion = wsManager.choosingVersion;
+    });
+
+    handleNavigation();
+  });
 </script>
 
 <svelte:window bind:innerWidth={screenSize} />
 
 <div class="flex flex-col h-screen bg-gray-50">
-  {#if showAwaitingCircle}
+  {#if wsManager.showAwaitingCircle}
     <Progress />
   {/if}
-
-  <!--{#if authorization}
-    <ModalPass checkPassword={(pass) => checkPassword(pass)} />
-  {/if}-->
 
   <AppHeader
     {deviceList}
     bind:selectedWs
-    {showDropdown}
-    {socketConnected}
+    showDropdown={wsManager.currentPageName !== "/|" && wsManager.currentPageName !== "/list|"}
+    socketConnected={wsManager.socketConnected}
     {devicesDropdownChange}
   />
-  <AppNav bind:opened onCheck={() => onCheck()} {userdata} />
+  <AppNav bind:opened onCheck={() => onCheck()} userdata={wsManager.userdata} />
 
   <main class="flex-1 overflow-y-auto p-0 {opened === true && !preventMove ? 'ml-36' : 'ml-0'}">
     <ul class="menu__main">
       <div class="bg-cover pt-0 px-4">
-        {#if !socketConnected && currentPageName != "/|"}
+        {#if !wsManager.socketConnected && wsManager.currentPageName !== "/|"}
           <Alarm title="Подключение через {remainingTimeout} сек." />
         {:else}
           <Route path="/">
-            <DashboardPage show={pageReady.dash} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
+            <DashboardPage show={pageReady.dash} layoutJson={layoutJson} pages={pages} wsPush={(ws, topic, status) => wsManager.wsPush(ws, topic, status)} />
           </Route>
           <Route path="/config">
-            <ConfigPage show={pageReady.config} bind:configJson={configJson} bind:scenarioTxt={scenarioTxt} widgetsJson={widgetsJson} itemsJson={itemsJson} saveConfig={() => saveConfig()} cleanLogs={() => cleanLogs()} rebootEsp={() => rebootEsp()} moduleOrder={(id, key, value) => moduleOrder(id, key, value)} userdata={userdata} />
+            <ConfigPage show={pageReady.config} bind:configJson bind:scenarioTxt {widgetsJson} {itemsJson} saveConfig={() => { wsManager.configJson = configJson; wsManager.scenarioTxt = scenarioTxt; wsManager.saveConfig(); }} cleanLogs={() => wsManager.cleanLogs()} rebootEsp={() => wsManager.rebootEsp()} moduleOrder={(id, key, value) => wsManager.moduleOrder(id, key, value)} userdata={wsManager.userdata} />
           </Route>
           <Route path="/connection">
-            <ConnectionPage show={pageReady.connection} rebootEsp={() => rebootEsp()} ssidClick={() => ssidClick()} saveSett={() => saveSett()} saveMqtt={() => saveMqtt()} settingsJson={settingsJson} errorsJson={errorsJson} ssidJson={ssidJson} />
+            <ConnectionPage show={pageReady.connection} rebootEsp={() => wsManager.rebootEsp()} ssidClick={() => wsManager.ssidClick()} saveSett={() => { wsManager.settingsJson = settingsJson; wsManager.saveSett(); }} saveMqtt={() => { wsManager.settingsJson = settingsJson; wsManager.saveMqtt(); }} {settingsJson} {errorsJson} {ssidJson} />
           </Route>
           <Route path="/list">
-            <ListPage show={pageReady.list} deviceList={deviceList} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} showInput={showInput} addDevInList={() => addDevInList()} newDevice={newDevice} sendToAllDevices={(msg) => sendToAllDevices(msg)} saveList={() => saveList()} percent={percent} devListOverride={() => devListOverride()} applicationReboot={() => applicationReboot()} />
+            <ListPage show={pageReady.list} deviceList={deviceList} settingsJson={wsManager.settingsJson} saveSett={() => wsManager.saveSett()} rebootEsp={() => wsManager.rebootEsp()} showInput={showInput} addDevInList={() => wsManager.addDevInList()} newDevice={wsManager.newDevice} sendToAllDevices={(msg) => wsManager.sendToAllDevices(msg)} saveList={() => wsManager.saveList()} percent={wsManager.percent} devListOverride={() => wsManager.devListOverride()} applicationReboot={() => wsManager.applicationReboot()} />
           </Route>
           <Route path="/system">
-            <SystemPage show={pageReady.system} errorsJson={errorsJson} settingsJson={settingsJson} saveSett={() => saveSett()} rebootEsp={() => rebootEsp()} cleanLogs={() => cleanLogs()} cancelAlarm={(alarmKey) => cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion={choosingVersion} coreMessages={coreMessages} />
+            <SystemPage show={pageReady.system} errorsJson={wsManager.errorsJson} settingsJson={wsManager.settingsJson} saveSett={() => wsManager.saveSett()} rebootEsp={() => wsManager.rebootEsp()} cleanLogs={() => wsManager.cleanLogs()} cancelAlarm={(alarmKey) => wsManager.cancelAlarm(alarmKey)} versionsList={versionsList} bind:choosingVersion coreMessages={wsManager.coreMessages} />
           </Route>
 
           <Route path="/profile">
-            <Profile show={pageReady.profile} flashProfileJson={flashProfileJson} userdata={userdata} updateBuild={(path) => updateBuild(path)} allmodeinfo={allmodeinfo} profile={profile} serverOnline={serverOnline} otaJson={otaJson} />
+            <Profile show={pageReady.profile} flashProfileJson={wsManager.flashProfileJson} userdata={wsManager.userdata} updateBuild={(path) => wsManager.updateBuild(path)} allmodeinfo={wsManager.allmodeinfo} profile={wsManager.profile} serverOnline={wsManager.serverOnline} otaJson={wsManager.otaJson} />
           </Route>
           <Route path="/login">
-            <Login show={true} serverOnline={serverOnline} />
+            <Login show={true} serverOnline={wsManager.serverOnline} />
           </Route>
         {/if}
       </div>

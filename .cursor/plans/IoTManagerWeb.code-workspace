@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../../../IoTManager"
+		},
+		{
+			"path": "../../../IoTManagerWeb2"
 		}
 	],
 	"settings": {}

@@ -9,7 +9,8 @@
 
 import { get, post } from "./http.js";
 
-const BASE = "https://portal.iotmanager.org";
+/** Portal base URL; export for building links in UI (e.g. configs, build install). */
+export const BASE = "https://portal.iotmanager.org";
 
 function authHeaders(token) {
   return {

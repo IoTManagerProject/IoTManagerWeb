@@ -197,7 +197,7 @@
                           </td>
                           {#if build.status.build === 2 && build.status.preparation === 2 && build.status.fs === 2}
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <td on:click={() => updateBuild("http://portal.iotmanager.org/compiler/userdata/builds/" + build.orderId)} class="tbl-bdy-lg ipt-lg w-full cursor-pointer select-none bg-green-100 hover:bg-green-200">
+                            <td on:click={() => updateBuild(portal.BASE + "/compiler/userdata/builds/" + build.orderId)} class="tbl-bdy-lg ipt-lg w-full cursor-pointer select-none bg-green-100 hover:bg-green-200">
                               <p class="w-fill">Установить</p>
                             </td>
                           {:else}
