@@ -350,39 +350,25 @@ export default class WebSocketManager {
   }
 
   sortingLayout(ws) {
-    this.layoutJson.sort(function (a, b) {
-      if (a.descr < b.descr) return -1;
-      if (a.descr > b.descr) return 1;
-      return 0;
-    });
-    this.pages = [];
-    const newPage = Array.from(new Set(Array.from(this.layoutJson, ({ page }) => page)));
-    newPage.forEach(function (item) {
-      this.pages = [...this.pages, JSON.parse(JSON.stringify({ page: item }))];
-    }, this);
-    this.pages.sort(function (a, b) {
-      if (a.page < b.page) return -1;
-      if (a.page > b.page) return 1;
-      return 0;
-    });
-    this.layoutJson = this.layoutJson;
-    console.log("[3]", ws, "layout sort, requested params...");
+    this.layoutJson.sort((a, b) => (a.descr || "").localeCompare(b.descr || ""));
+    const pageSet = new Set(this.layoutJson.map((w) => w.page));
+    this.pages = [...pageSet].sort((a, b) => a.localeCompare(b)).map((page) => ({ page }));
+    if (this.debug) console.log("[3]", ws, "layout sort, requested params...");
     this.wsSendMsg(ws, "/params|");
     this._emitLayoutJsonUpdated();
   }
 
   updateAllStatuses(ws) {
+    const topicToIndex = new Map();
+    for (let i = 0; i < this.layoutJson.length; i++) {
+      const t = this.layoutJson[i].topic;
+      if (t) topicToIndex.set(t.slice(t.lastIndexOf("/") + 1), i);
+    }
     for (const [key, value] of Object.entries(this.paramsJson)) {
-      for (let i = 0; i < this.layoutJson.length; i++) {
-        let topic = this.layoutJson[i].topic;
-        if (topic) {
-          topic = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
-          if (key === topic) {
-            console.log("[i]", "updated =>" + topic, value);
-            this.layoutJson[i].status = value;
-            break;
-          }
-        }
+      const i = topicToIndex.get(key);
+      if (i !== undefined) {
+        if (this.debug) console.log("[i]", "updated =>" + key, value);
+        this.layoutJson[i].status = value;
       }
     }
     this.wsSendMsg(ws, "/charts|");
@@ -390,51 +376,35 @@ export default class WebSocketManager {
   }
 
   updateWidget(newStatusJson) {
-    for (let i = 0; i < this.layoutJson.length; i++) {
-      if (this.layoutJson[i].topic === newStatusJson.topic) {
-        this.layoutJson[i] = this.jsonConcat(this.layoutJson[i], newStatusJson);
-        this.layoutJson[i].sent = false;
-        break;
-      }
-    }
+    const i = this.layoutJson.findIndex((w) => w.topic === newStatusJson.topic);
+    if (i === -1) return;
+    this.jsonConcat(this.layoutJson[i], newStatusJson);
+    this.layoutJson[i].sent = false;
     this._emitLayoutJsonUpdated();
   }
 
-  async apdateWidgetByArray(newStatusJson) {
-    console.log("[i]", "collecting arrays");
-    let error = true;
-    if (this.layoutJson.length > 0) {
-      for (let i = 0; i < this.layoutJson.length; i++) {
-        if (this.layoutJson[i].topic === newStatusJson.topic) {
-          error = false;
-          this.layoutJson[i] = this.jsonConcatEx(this.layoutJson[i], newStatusJson);
-          let prevArr = this.layoutJson[i].status;
-          let newArr = newStatusJson.status;
-          if (prevArr) {
-            prevArr = [...prevArr, ...newArr];
-            this.layoutJson[i].status = prevArr;
-          } else {
-            this.layoutJson[i].status = newArr;
-          }
-          this.layoutJson[i].sent = false;
-        }
-      }
-    } else {
-      console.log("[E]", "layoutJson missing");
+  apdateWidgetByArray(newStatusJson) {
+    const i = this.layoutJson.findIndex((w) => w.topic === newStatusJson.topic);
+    if (i === -1) {
+      if (this.debug) console.log("[E]", "topic not found", newStatusJson.topic);
+      this._emitLayoutJsonUpdated();
+      return;
     }
-    if (error) console.log("[E]", "topic not found ", newStatusJson.topic);
+    this.jsonConcatEx(this.layoutJson[i], newStatusJson);
+    const prev = this.layoutJson[i].status;
+    const next = newStatusJson.status;
+    this.layoutJson[i].status = Array.isArray(prev) ? [...prev, ...(next || [])] : next || [];
+    this.layoutJson[i].sent = false;
     this._emitLayoutJsonUpdated();
   }
 
   jsonConcat(o1, o2) {
-    for (const key in o2) {
-      o1[key] = o2[key];
-    }
+    Object.assign(o1, o2);
     return o1;
   }
 
   jsonConcatEx(o1, o2) {
-    for (const key in o2) {
+    for (const key of Object.keys(o2)) {
       if (key !== "status") o1[key] = o2[key];
     }
     return o1;
@@ -479,12 +449,7 @@ export default class WebSocketManager {
   }
 
   getSelectedDeviceData(ws) {
-    for (let i = 0; i < this.deviceList.length; i++) {
-      if (this.deviceList[i].ws === ws) {
-        this.selectedDeviceData = this.deviceList[i];
-        break;
-      }
-    }
+    this.selectedDeviceData = this.deviceList.find((d) => d.ws === ws);
   }
 
   selectedDeviceDataRefresh() {
@@ -493,18 +458,14 @@ export default class WebSocketManager {
   }
 
   wsPush(ws, topic, status) {
-    const key = topic.substring(topic.lastIndexOf("/") + 1, topic.length);
+    const key = topic.slice(topic.lastIndexOf("/") + 1);
     this.wsSendMsg(ws, "/control|" + key + "/" + status);
   }
 
   addCoreMsg(msg) {
     if (this.coreMessages.length >= LOG_MAX_MESSAGES) this.coreMessages.shift();
-    this.coreMessages = [...this.coreMessages, { msg }];
-    this.coreMessages.sort(function (a, b) {
-      if (a.time > b.time) return -1;
-      if (a.time < b.time) return 1;
-      return 0;
-    });
+    this.coreMessages.push({ msg, time: Date.now() });
+    this.coreMessages.sort((a, b) => (b.time || 0) - (a.time || 0));
   }
 
   _getInput() {
@@ -524,48 +485,30 @@ export default class WebSocketManager {
   }
 
   generateLayout() {
+    const { mqttPrefix = "", id: settingsId = "" } = this.settingsJson;
+    const prefix = `${mqttPrefix}/${settingsId}/`;
     const layout = [];
-    for (let i = 0; i < this.configJson.length; i++) {
-      const config = Object.assign({}, this.configJson[i]);
-      const setWidget = config.widget;
-      let error = true;
-      for (let w = 0; w < this.widgetsJson.length; w++) {
-        if (setWidget === this.widgetsJson[w].name) {
-          const widget = Object.assign({}, this.widgetsJson[w]);
-          widget.page = config.page;
-          widget.descr = config.descr;
-          widget.topic =
-            this.settingsJson.mqttPrefix + "/" + this.settingsJson.id + "/" + config.id;
-          if (setWidget !== "nil") layout.push(widget);
-          if (widget.widget === "chart" && widget.type !== "bar") {
-            const input = this._getInput();
-            input.page = config.page;
-            input.topic =
-              this.settingsJson.mqttPrefix +
-              "/" +
-              this.settingsJson.id +
-              "/" +
-              config.id +
-              "-date";
-            input.descr = config.descr;
-            layout.push(input);
-          }
-          error = false;
-          break;
-        } else {
-          error = true;
+    for (const config of this.configJson) {
+      const widget = this.widgetsJson.find((w) => w.name === config.widget);
+      if (!widget) {
+        if (this.debug) console.log("[E]", "widget not found:", config.widget);
+        continue;
+      }
+      if (config.widget !== "nil") {
+        const item = { ...widget, page: config.page, descr: config.descr, topic: prefix + config.id };
+        layout.push(item);
+        if (item.widget === "chart" && item.type !== "bar") {
+          layout.push({
+            ...this._getInput(),
+            page: config.page,
+            descr: config.descr,
+            topic: prefix + config.id + "-date",
+          });
         }
       }
-      if (error) console.log("[E]", "error, widget not found: " + setWidget);
     }
-    layout.sort(function (a, b) {
-      if (a.descr < b.descr) return -1;
-      if (a.descr > b.descr) return 1;
-      return 0;
-    });
-    for (let i = 0; i < layout.length; i++) {
-      layout[i].order = i;
-    }
+    layout.sort((a, b) => (a.descr || "").localeCompare(b.descr || ""));
+    layout.forEach((item, i) => (item.order = i));
     return layout;
   }
 

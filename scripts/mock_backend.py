@@ -151,7 +151,7 @@ _settings_store: dict = {}  # slot -> dict
 def get_settings(http_host: str, http_port: int, slot: int = 0) -> dict:
     """Settings JSON; serverip must point to mock HTTP for ver.json. System page needs timezone, wg, log, mqttin, i2c, pinSCL, pinSDA, i2cFreq."""
     base = {
-        "name": "MockDevice",
+        "name": f"MockDevice-{slot}",
         "apssid": "IoTmanager",
         "appass": "",
         "routerssid": "",
@@ -182,23 +182,25 @@ def get_settings(http_host: str, http_port: int, slot: int = 0) -> dict:
     return base
 
 
-def get_errors() -> dict:
-    """Errors JSON for System page: bn, bt, bver, wver, timenow, upt, uptm, uptw, rssi, heap, freeBytes, fl, rst."""
+def get_errors(slot: int = 0) -> dict:
+    """Errors JSON for System page (per device): bn, bt, bver, wver, timenow, upt, uptm, uptw, rssi, heap, freeBytes, fl, rst."""
     import time
+    ts = int(time.time())
+    # Different system info per device slot so UI shows which device is selected
     return {
-        "bn": "esp32",
-        "bt": "2024-01-01 12:00",
-        "bver": "1.0.0",
-        "wver": "4.2.0",
-        "timenow": str(int(time.time())),
-        "upt": "1d 02:30",
-        "uptm": "1d 02:30",
-        "uptw": "1d 02:30",
-        "rssi": 5,
-        "heap": "120000",
-        "freeBytes": "2.1M",
-        "fl": "1024",
-        "rst": "Software reset",
+        "bn": f"esp32-d{slot}",
+        "bt": f"2024-0{1 + slot}-0{1 + slot} 12:00",
+        "bver": f"1.0.{slot}",
+        "wver": f"4.2.{slot}",
+        "timenow": str(ts),
+        "upt": f"{1 + slot}d 0{2 + slot}:{30 + slot * 5}",
+        "uptm": f"{1 + slot}d 0{2 + slot}:{30 + slot * 5}",
+        "uptw": f"{1 + slot}d 0{2 + slot}:{30 + slot * 5}",
+        "rssi": -65 + slot * 10,
+        "heap": str(120000 - slot * 10000),
+        "freeBytes": f"{2 - slot * 0.2:.1f}M",
+        "fl": str(1024 + slot * 512),
+        "rst": "Software reset" if slot == 0 else "Power-on reset",
     }
 
 
@@ -360,7 +362,7 @@ async def handle_ws_message(ws, message: str, slot: int) -> None:
         await send_bin("config", json.dumps(get_config_json()))
         await send_bin("settin", json.dumps(get_settings(HTTP_HOST, HTTP_PORT, slot)))
         await send_bin("ssidli", json.dumps(get_ssid_list()))
-        await send_bin("errors", json.dumps(get_errors()))
+        await send_bin("errors", json.dumps(get_errors(slot)))
         return
 
     if cmd == "/list|":
@@ -380,12 +382,12 @@ async def handle_ws_message(ws, message: str, slot: int) -> None:
         return
 
     if cmd == "/system|":
-        await send_bin("errors", json.dumps(get_errors()))
+        await send_bin("errors", json.dumps(get_errors(slot)))
         await send_bin("settin", json.dumps(get_settings(HTTP_HOST, HTTP_PORT, slot)))
         return
 
     if cmd == "/dev|":
-        await send_bin("errors", json.dumps(get_errors()))
+        await send_bin("errors", json.dumps(get_errors(slot)))
         await send_bin("settin", json.dumps(get_settings(HTTP_HOST, HTTP_PORT, slot)))
         await send_bin("config", json.dumps(get_config_json()))
         await send_bin("itemsj", json.dumps(get_items_json()))
@@ -414,7 +416,7 @@ async def handle_ws_message(ws, message: str, slot: int) -> None:
             try:
                 data = json.loads(payload)
                 _settings_store[slot] = data
-                await send_bin("errors", json.dumps(get_errors()))
+                await send_bin("errors", json.dumps(get_errors(slot)))
             except json.JSONDecodeError:
                 pass
         return
