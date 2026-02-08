@@ -4,8 +4,8 @@
   import OpenIcon from "../svg/Open.svelte";
   import Alarm from "../components/Alarm.svelte";
   import { onMount } from "svelte";
-
   import Cookies from "js-cookie";
+  import * as portal from "../api/portal.js";
 
   export let configJson;
   export let widgetsJson;
@@ -206,16 +206,10 @@
   export let moduleOrder = (id, key, value) => {};
 
   const makePost = async () => {
-    let iotmpostDefault = {
+    const body = {
       category: "",
-      topic: {
-        ru: "",
-        en: "",
-      },
-      text: {
-        ru: "",
-        en: "",
-      },
+      topic: { ru: "", en: "" },
+      text: { ru: "", en: "" },
       config: configJson,
       scenario: scenarioTxt,
       gallery: [],
@@ -223,51 +217,25 @@
       username: userdata.username,
     };
     const JWT = Cookies.get("token_iotm2");
-    try {
-      let res = await fetch("https://portal.iotmanager.org/api/configurations/add", {
-        mode: "cors",
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${JWT}`,
-        },
-        body: JSON.stringify(iotmpostDefault),
-      });
-      const content = await res.json();
-      if (res.ok) {
-        console.log(content.result);
-        if (content.result.acknowledged) {
-          window.open("https://portal.iotmanager.org/configs?id=" + content.result.insertedId + "&token=" + Cookies.get("token_iotm2"), "_blank");
-        }
-        errors = [{ msg: "ok_success" }];
-      } else {
-        errors = content.message;
+    const res = await portal.addConfiguration(JWT, body);
+    if (res.ok && res.data && res.data.result) {
+      console.log(res.data.result);
+      if (res.data.result.acknowledged) {
+        window.open("https://portal.iotmanager.org/configs?id=" + res.data.result.insertedId + "&token=" + JWT, "_blank");
       }
-    } catch (e) {
-      console.log(e);
+      errors = [{ msg: "ok_success" }];
+    } else if (res.errors) {
+      errors = res.errors;
     }
   };
 
   const getConfigs = async () => {
-    try {
-      const JWT = Cookies.get("token_iotm2");
-      let res = await fetch("https://portal.iotmanager.org/api/configurations/get", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${JWT}`,
-        },
-        mode: "cors",
-        method: "GET",
-      });
-      if (res.ok) {
-        configurations = await res.json();
-        //configurations.push({ topic: { ru: "123" } });
-        console.log("error", configurations);
-      } else {
-        console.log("error", res.statusText);
-      }
-    } catch (e) {
-      console.log("error", e);
+    const JWT = Cookies.get("token_iotm2");
+    const res = await portal.getConfigurations(JWT);
+    if (res.ok && res.configurations != null) {
+      configurations = res.configurations;
+    } else {
+      console.log("error", "getConfigurations");
     }
   };
 

@@ -5,6 +5,7 @@
   import { router } from "tinro";
   import { t, locale, locales } from "../i18n";
   import Cookies from "js-cookie";
+  import * as portal from "../api/portal.js";
   export let show;
   export let flashProfileJson;
   export let otaJson;
@@ -51,73 +52,33 @@
   };
 
   const getUserBuilds = async () => {
-    try {
-      const JWT = Cookies.get("token_iotm2");
-      let res = await fetch("https://portal.iotmanager.org/compiler/userorders", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${JWT}`,
-        },
-        mode: "cors",
-        method: "GET",
-      });
-      if (res.ok) {
-        userBuilds = await res.json();
-        checkStatus(userBuilds);
-      } else {
-        console.log("error", res.statusText);
-      }
-    } catch (e) {
-      console.log("error", e);
+    const JWT = Cookies.get("token_iotm2");
+    const res = await portal.getUserOrders(JWT);
+    if (res.ok && res.userBuilds != null) {
+      userBuilds = res.userBuilds;
+      checkStatus(userBuilds);
+    } else {
+      console.log("error", "getUserOrders");
     }
   };
 
   const delBuild = async (ord) => {
-    try {
-      const JWT = Cookies.get("token_iotm2");
-      let res = await fetch("https://portal.iotmanager.org/compiler/delete/builds/" + ord.orderId, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${JWT}`,
-        },
-        mode: "cors",
-        method: "GET",
-      });
-      if (res.ok) {
-        await getUserBuilds();
-      } else {
-        console.log("error", res.statusText);
-      }
-    } catch (e) {
-      console.log("error", e);
-    }
+    const JWT = Cookies.get("token_iotm2");
+    const res = await portal.deleteBuild(JWT, ord.orderId);
+    if (res.ok) await getUserBuilds();
+    else console.log("error", "deleteBuild");
   };
 
   const placeOrder = async () => {
     delete profile["_id"];
-    //добавим в тело имя пользователя
     profile.username = userdata.username;
     const JWT = Cookies.get("token_iotm2");
-    try {
-      let res = await fetch("https://portal.iotmanager.org/compiler/order", {
-        mode: "cors",
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${JWT}`,
-        },
-        body: JSON.stringify(profile),
-      });
-      const content = await res.json();
-      if (res.ok) {
-        errors = [{ msg: "ok_success" }];
-        await getUserBuilds();
-        console.log(content.message);
-      } else {
-        errors = content.message;
-      }
-    } catch (e) {
-      console.log(e);
+    const res = await portal.placeOrder(JWT, profile);
+    if (res.ok) {
+      errors = [{ msg: "ok_success" }];
+      await getUserBuilds();
+    } else if (res.errors) {
+      errors = res.errors;
     }
   };
 

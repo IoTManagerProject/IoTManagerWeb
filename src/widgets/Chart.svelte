@@ -3,10 +3,10 @@
   export let widget;
 
   let datachart = {
-    labels: [0, 0],
+    labels: ["0", "0"],
     datasets: [
       {
-        name: widget.descr,
+        name: (widget && widget.descr) ? widget.descr : "",
         values: [0, 0],
       },
     ],
@@ -36,33 +36,40 @@
 
   function collectDataToArr() {
     if (prevStatus !== widget.status && !firstTime) {
-      if (Array.isArray(widget.status)) {
-        //console.log("[i]", "=======================================================");
+      if (Array.isArray(widget.status) && widget.status.length > 0) {
         prevStatus = widget.status;
 
         if (widget.maxCount === 0) {
           clearCart();
           widget.status = [];
-          console.log("[i]", "clear cart data");
           return;
         }
 
+        const safeLabels = [];
+        const safeValues = [];
         for (let i = 0; i < widget.status.length; i++) {
+          const pt = widget.status[i];
+          const x = Number(pt?.x);
+          const y1 = Number(pt?.y1);
+          if (Number.isNaN(x) || Number.isNaN(y1)) continue;
           if (type === "bar") {
-            labels[i] = getDDMM(widget.status[i].x);
+            safeLabels.push(getDDMM(x));
           } else if (i === 0) {
-            labels[i] = getDDMM(widget.status[i].x);
+            safeLabels.push(getDDMM(x));
           } else {
-            labels[i] = getHHMM(widget.status[i].x);
+            safeLabels.push(getHHMM(x));
           }
-          values[i] = [widget.status[i].y1];
+          safeValues.push([y1]);
         }
+        if (safeLabels.length === 0 || safeValues.length === 0) return;
 
+        labels = safeLabels;
+        values = safeValues;
         datachart = {
           labels: labels,
           datasets: [
             {
-              name: widget.descr,
+              name: widget.descr || "",
               values: values,
             },
           ],
@@ -86,18 +93,13 @@
   }
 
   function clearCart() {
-    widget.status = [];
-
+    if (widget) widget.status = [];
     labels = [];
     values = [];
-
     datachart = {
-      labels: [0, 0],
+      labels: ["0", "0"],
       datasets: [
-        {
-          name: widget.descr,
-          values: [0, 0],
-        },
+        { name: (widget && widget.descr) ? widget.descr : "", values: [0, 0] },
       ],
     };
   }

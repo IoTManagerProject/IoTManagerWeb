@@ -36,7 +36,16 @@
   //import LogPage from "./pages/Log.svelte";
   //import AboutPage from "./pages/About.svelte";
 
-  import CloudIcon from "./svg/Cloud.svelte";
+  import * as portal from "./api/portal.js";
+  import * as firmware from "./api/firmware.js";
+  import * as deviceSocket from "./api/deviceSocket.js";
+  import * as deviceConnection from "./lib/deviceConnection.js";
+  import * as deviceListManager from "./lib/deviceListManager.js";
+  import * as blobProtocol from "./lib/blobProtocol.js";
+  import * as wsReconnect from "./lib/wsReconnect.js";
+  import AppHeader from "./components/layout/AppHeader.svelte";
+  import AppNav from "./components/layout/AppNav.svelte";
+  import AppFooter from "./components/layout/AppFooter.svelte";
 
   //****************************************************constants section*********************************************************/
   //******************************************************************************************************************************/
@@ -107,9 +116,7 @@
     },
   ];
 
-  var ackTimeoutsArr = [];
-  var startMillis = [];
-  var ping = [];
+  // ack state lives in wsReconnect.createAck
 
   let incDeviceList = [];
   let layoutJson = [];
@@ -139,8 +146,7 @@
 
   //===============================================
 
-  //web sockets
-  let socket = [];
+  // web sockets: pool in api/deviceSocket.js
   let socketConnected = false;
   let selectedDeviceData = undefined;
   let selectedWs = 0;
@@ -201,47 +207,74 @@
   });
 
   const getUser = async () => {
-    try {
-      const JWT = Cookies.get("token_iotm2");
-      let res = await fetch("https://portal.iotmanager.org/api/user/email", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${JWT}`,
-        },
-        mode: "cors",
-        method: "GET",
-      });
-      if (res.ok) {
-        userdata = await res.json();
-        serverOnline = true;
-      } else {
-        console.log("error", res.statusText);
+    const JWT = Cookies.get("token_iotm2");
+    const res = await portal.getUser(JWT);
+    if (res.ok) {
+      userdata = res.userdata;
+      serverOnline = true;
+    } else {
+      if (!res.serverOnline) serverOnline = false;
+      else {
+        console.log("error", "getUser");
         serverOnline = true;
       }
-    } catch (e) {
-      console.log("error", e);
-      serverOnline = false;
     }
   };
 
   //****************************************************web sockets section******************************************************/
-  function connectToAllDevices() {
-    getSelectedDeviceData(selectedWs);
-    for (let i = 0; i < deviceList.length; i++) {
-      deviceList[i].ws = i;
-      if (deviceList[i].status === false || deviceList[i].status === undefined) {
-        wsConnect(i);
-        wsEventAdd(i);
-      }
+  function getIP(ws) {
+    return deviceConnection.getIP(ws, deviceList);
+  }
+
+  function wsSendMsg(ws, msg) {
+    if (deviceSocket.send(ws, msg)) {
+      if (debug) console.log("[i]", getIP(ws), ws, "msg send success", msg);
+    } else {
+      if (debug) console.log("[e]", getIP(ws), ws, "msg not send");
     }
   }
 
-  function printAllCreatedWs() {
-    if (socket) {
-      for (let i = 0; i < socket.length; i++) {
-        if (debug) console.log("[i]", "[ws]", "WebSocket client No: ", i);
-      }
+  const openHandler = () =>
+    deviceConnection.createOpenHandler({
+      markDeviceStatus,
+      sendMsg: wsSendMsg,
+      firstDevListRequest,
+      currentPageName,
+      selectedWs,
+      sendCurrentPageNameToSelectedWs,
+    });
+
+  function messageHandler(ws, data) {
+    if (typeof data === "string") {
+      if (data === "/tstr|") ack(ws, true);
+      return;
     }
+    if (data instanceof Blob) {
+      if (ws === selectedWs) parseBlob(data, ws);
+      if (currentPageName === "/|") parseAllBlob(data, ws);
+    }
+  }
+
+  function createConnection(wsIndex, ip) {
+    if (ip === "error") {
+      if (debug) console.log("[e]", "device list wrong");
+      return;
+    }
+    if (debug) console.log("[i]", ip, wsIndex, "started connecting...");
+    deviceSocket.createConnection(wsIndex, ip, {
+      onOpen: (ws) => openHandler()(ws),
+      onMessage: messageHandler,
+      onClose: (ws) => markDeviceStatus(ws, false),
+      onError: (ws) => markDeviceStatus(ws, false),
+    });
+  }
+
+  function connectToAllDevices() {
+    deviceConnection.connectToAllDevices(deviceList, getSelectedDeviceData, selectedWs, createConnection);
+  }
+
+  function printAllCreatedWs() {
+    if (debug) console.log("[i]", "[ws]", "device count:", deviceList.length);
   }
 
   function markDeviceStatus(ws, status) {
@@ -266,332 +299,58 @@
     layoutJson = layoutJson.filter((item) => item.ws !== ws);
   }
 
-  function wsConnect(ws) {
-    let ip = getIP(ws);
-    if (ip === "error") {
-      if (debug) console.log("[e]", "device list wrong");
-    } else {
-      socket[ws] = new WebSocket("ws://" + ip + ":81");
-      socket.binaryType = "blob";
-      if (debug) console.log("[i]", ip, ws, "started connecting...");
-    }
-  }
-
-  function getIP(ws) {
-    let ret = "error";
-    deviceList.forEach((device) => {
-      if (ws === device.ws) {
-        ret = device.ip;
-      }
-    });
-    return ret;
-  }
-
-  function wsEventAdd(ws) {
-    if (socket[ws]) {
-      let ip = getIP(ws);
-      socket[ws].addEventListener("open", function (event) {
-        //if (debug) console.log("[i]", ip, ws, "completed connecting");
-
-        markDeviceStatus(ws, true);
-        //при первом подключении запросим список устройств
-        if (firstDevListRequest && ws === 0) wsSendMsg(ws, "/devlist|");
-        //при подключении отправляем название страницы
-        if (currentPageName === "/|") {
-          //всем устройствам
-          wsSendMsg(ws, currentPageName);
-        } else {
-          //только выбранному
-          if (ws === selectedWs) {
-            sendCurrentPageNameToSelectedWs();
-          }
-        }
+  const blobHandlers = {
+    setItemsJson: (v) => (itemsJson = v),
+    setParsedItemsJson: (v) => (parsed.itemsJson = v),
+    setWidgetsJson: (v) => (widgetsJson = v),
+    setParsedWidgetsJson: (v) => (parsed.widgetsJson = v),
+    setConfigJson: (v) => (configJson = v),
+    setParsedConfigJson: (v) => (parsed.configJson = v),
+    setScenarioTxt: (v) => (scenarioTxt = v),
+    setSettingsJson: (v) => (settingsJson = v),
+    setParsedSettingsJson: (v) => (parsed.settingsJson = v),
+    setSsidJson: (v) => (ssidJson = v),
+    setParsedSsidJson: (v) => (parsed.ssidJson = v),
+    setErrorsJson: (v) => (errorsJson = v),
+    setParsedErrorsJson: (v) => (parsed.errorsJson = v),
+    setParsedIncDeviceList: (v) => (parsed.incDeviceList = v),
+    onDevlis: async (json) => {
+      incDeviceList = json;
+      deviceConnection.handleDevListReceived(incDeviceList, deviceList, firstDevListRequest, {
+        setDeviceList: (list) => (deviceList = list),
+        setFirstDevListRequest: (v) => (firstDevListRequest = v),
+        setParsedDeviceListJson: (v) => (parsed.deviceListJson = v),
+        onParced,
+        selectedDeviceDataRefresh,
+        connectToAllDevices,
       });
-
-      //события веб сокетов
-      socket[ws].addEventListener("message", function (event) {
-        if (typeof event.data === "string") {
-          let data = event.data;
-          if (data === "/tstr|") {
-            //прилетело подтверждение значит устройство онлайн
-
-            ack(ws, true);
-          }
-        }
-        if (event.data instanceof Blob) {
-          //принимаем данные только для выбранного устройства
-          if (ws === selectedWs) {
-            parseBlob(event.data, ws);
-          }
-          //собираем данные со всех устройств только в случае если пользователь на dashboard
-          if (currentPageName === "/|") {
-            parseAllBlob(event.data, ws);
-          }
-        }
-      });
-      socket[ws].addEventListener("close", (event) => {
-        if (debug) console.log("[e]", ip, "connection closed");
-        //socket[ws].close();
-        markDeviceStatus(ws, false);
-      });
-      socket[ws].addEventListener("error", function (event) {
-        if (debug) console.log("[e]", ip, "connection error");
-        //socket[ws].close();
-        markDeviceStatus(ws, false);
-      });
-    } else {
-      if (debug) console.log("[e]", "socket not exist");
-    }
-  }
+    },
+    setFlashProfileJson: (v) => (flashProfileJson = v),
+    setParsedFlashProfileJson: (v) => (parsed.flashProfileJson = v),
+    setOtaJson: (v) => (otaJson = v),
+    setParsedOtaJson: (v) => (parsed.otaJson = v),
+    addCoreMsg: (msg) => addCoreMsg(msg),
+    onParced: () => onParced(),
+  };
 
   async function parseBlob(blob, ws) {
-    //получаем заголовок
-    var blobHeader = blob.slice(0, 6);
-    let header = await blobHeader.text();
-    //console.log("header: ", header);
-    //получаем размер
-    var blobSize = blob.slice(7, 11);
-    let size = await blobSize.text();
-    //console.log("size: ", size);
-
-    if (header === "itemsj") {
-      let out = {};
-      if (await getPayloadAsJson(blob, size, out)) {
-        itemsJson = out.json;
-        parsed.itemsJson = true;
-        if (blobDebug) console.log("[✔]", "itemsJson: ", itemsJson);
-      } else {
-        parsed.itemsJson = false;
-        if (blobDebug) console.log("[e]", "itemsJson parse error");
-      }
-    }
-    if (header === "widget") {
-      let out = {};
-      if (await getPayloadAsJson(blob, size, out)) {
-        widgetsJson = out.json;
-        parsed.widgetsJson = true;
-        if (blobDebug) console.log("[✔]", "widgetsJson: ", widgetsJson);
-      } else {
-        parsed.widgetsJson = false;
-        if (blobDebug) console.log("[e]", "widgetsJson parse error");
-      }
-    }
-    if (header === "config") {
-      let out = {};
-      if (await getPayloadAsJson(blob, size, out)) {
-        configJson = out.json;
-        parsed.configJson = true;
-        if (blobDebug) console.log("[✔]", "configJson: ", configJson);
-      } else {
-        parsed.configJson = false;
-        if (blobDebug) console.log("[e]", "configJson parse error");
-      }
-    }
-    if (header === "scenar") {
-      scenarioTxt = await getPayloadAsTxt(blob, size);
-      if (blobDebug) console.log("[i]", "scenarioTxt: ", scenarioTxt);
-    }
-    if (header === "settin") {
-      let out = {};
-      if (await getPayloadAsJson(blob, size, out)) {
-        settingsJson = out.json;
-        parsed.settingsJson = true;
-        if (blobDebug) console.log("[✔]", "settingsJson: ", settingsJson);
-      } else {
-        parsed.settingsJson = false;
-        if (blobDebug) console.log("[e]", "settingsJson parse error");
-      }
-    }
-    if (header === "ssidli") {
-      let out = {};
-      if (await getPayloadAsJson(blob, size, out)) {
-        ssidJson = out.json;
-        parsed.ssidJson = true;
-        if (blobDebug) console.log("[✔]", "ssidJson: ", ssidJson);
-      } else {
-        parsed.ssidJson = false;
-        if (blobDebug) console.log("[e]", "ssidJson parse error");
-      }
-    }
-    //прием данных об ошибках
-    if (header === "errors") {
-      let out = {};
-      if (await getPayloadAsJson(blob, size, out)) {
-        errorsJson = out.json;
-        parsed.errorsJson = true;
-        if (blobDebug) console.log("[✔]", "errorsJson: ", errorsJson);
-      } else {
-        parsed.errorsJson = false;
-        if (blobDebug) console.log("[e]", "errorsJson parse error");
-      }
-    }
-    //приход списка устройств
-    if (header === "devlis") {
-      let out = {};
-      if (await getPayloadAsJson(blob, size, out)) {
-        incDeviceList = [];
-        incDeviceList = out.json;
-        parsed.incDeviceList = true;
-        if (blobDebug) console.log("[✔]", "incDeviceList: ", incDeviceList);
-        await initDevList();
-      } else {
-        parsed.incDeviceList = false;
-        if (blobDebug) console.log("[e]", "incDeviceList parse error");
-      }
-    }
-    //приход профиля
-    if (header === "prfile") {
-      let out = {};
-      if (await getPayloadAsJson(blob, size, out)) {
-        flashProfileJson = out.json;
-        parsed.flashProfileJson = true;
-        if (blobDebug) console.log("[✔]", "flashProfileJson: ", flashProfileJson);
-      } else {
-        parsed.flashProfileJson = false;
-        if (blobDebug) console.log("[e]", "flashProfileJson parse error");
-      }
-    }
-
-    if (header === "otaupd") {
-      let out = {};
-      if (await getPayloadAsJson(blob, size, out)) {
-        otaJson = out.json;
-        parsed.otaJson = true;
-        if (blobDebug) console.log("[✔]", "otaJson: ", otaJson);
-      } else {
-        parsed.otaJson = false;
-        if (blobDebug) console.log("[e]", "otaJson parse error");
-      }
-    }
-
-    if (header === "corelg") {
-      let txt = await getPayloadAsTxt(blob, size);
-      //console.log("[--]", ws, txt);
-      addCoreMsg(txt);
-    }
-
-    await onParced();
+    await blobProtocol.parseBlob(blob, ws, blobHandlers);
   }
+
+  const allBlobHandlers = {
+    updateWidget: (v) => updateWidget(v),
+    combineLayoutsInOne: (ws, layout) => combineLayoutsInOne(ws, layout),
+    mergeParams: (devParams) => {
+      paramsJson = { ...paramsJson, ...devParams };
+      paramsJson = paramsJson;
+    },
+    updateAllStatuses: (ws) => updateAllStatuses(ws),
+    onParced: () => onParced(),
+    apdateWidgetByArray: (v) => apdateWidgetByArray(v),
+  };
 
   async function parseAllBlob(blob, ws) {
-    //получаем заголовок
-    var blobHeader = blob.slice(0, 6);
-    let header = await blobHeader.text();
-    //console.log("header: ", header);
-    //получаем размер
-    var blobSize = blob.slice(7, 11);
-    let size = await blobSize.text();
-    //console.log("size: ", size);
-
-    if (header === "status") {
-      let out = {};
-      if (await getPayloadAsJson(blob, size, out)) {
-        let statusJson = out.json;
-        updateWidget(statusJson);
-        //if (blobDebug)
-        console.log("[✔]", "statusJson: ", statusJson);
-      } else {
-        if (blobDebug) console.log("[e]", "statusJson parse error");
-      }
-    }
-    if (header === "layout") {
-      let out = {};
-      if (await getPayloadAsJson(blob, size, out)) {
-        let devLayout = out.json;
-        combineLayoutsInOne(ws, devLayout);
-        if (blobDebug) console.log("[✔]", "devLayout: ", devLayout);
-      } else {
-        if (blobDebug) console.log("[e]", "devLayout parse error");
-      }
-    }
-    if (header === "params") {
-      let out = {};
-      if (await getPayloadAsJson(blob, size, out)) {
-        let devParams = out.json;
-        paramsJson = {
-          ...paramsJson,
-          ...devParams,
-        };
-        paramsJson = paramsJson;
-        updateAllStatuses(ws);
-        onParced();
-        if (blobDebug) console.log("[✔]", "devParams: ", devParams);
-      } else {
-        if (blobDebug) console.log("[e]", "devParams parse error");
-      }
-    }
-    if (header === "charta") {
-      let txt = await getPayloadAsTxt(blob, size);
-      txt = "[" + txt.substring(0, txt.length - 1) + "]";
-      let chartJson;
-      try {
-        chartJson = JSON.parse(txt);
-        if (blobDebug) console.log("[i]", "chart data json: ", chartJson);
-      } catch (e) {
-        if (blobDebug) console.log("[e]", "chart json data parce error, return");
-        return;
-      }
-      let out = {};
-      let addJson = {};
-      if (await getJsonAsJson(blob, size, out)) {
-        addJson = out.json;
-        if (blobDebug) console.log("[i]", "chart add json: ", addJson);
-      } else {
-        if (blobDebug) console.log("[e]", "chart json add-ns parce error, return");
-        return;
-      }
-      let finalDataJson = {};
-      finalDataJson.status = chartJson;
-
-      finalDataJson = {
-        ...finalDataJson,
-        ...addJson,
-      };
-      if (blobDebug) console.log("[✔]", "chartJson: ", finalDataJson);
-      apdateWidgetByArray(finalDataJson);
-    }
-    if (header === "chartb") {
-      let out = {};
-      if (await getPayloadAsJson(blob, size, out)) {
-        let status = out.json;
-        apdateWidgetByArray(status);
-        if (blobDebug) console.log("[✔]", "chart status: ", status);
-      } else {
-        if (blobDebug) console.log("[e]", "status parse error");
-      }
-    }
-  }
-
-  async function getJsonAsJson(blob, size, out) {
-    let partBlob = blob.slice(12, size);
-    let txt = await partBlob.text();
-    try {
-      out.json = JSON.parse(txt);
-      out.parse = true;
-    } catch (e) {
-      if (debug) console.log("[e]", "json parce error: ", txt);
-      out.parse = false;
-    }
-    return out.parse;
-  }
-
-  async function getPayloadAsJson(blob, size, out) {
-    let partBlob = blob.slice(size, blob.length);
-    let txt = await partBlob.text();
-    try {
-      out.json = JSON.parse(txt);
-      out.parse = true;
-    } catch (e) {
-      if (debug) console.log("[e]", "json parse error: ", txt);
-      out.parse = false;
-    }
-    return out.parse;
-  }
-
-  async function getPayloadAsTxt(blob, size) {
-    let txtBlob = blob.slice(size, blob.length);
-    let txt = await txtBlob.text();
-    return txt;
+    await blobProtocol.parseAllBlob(blob, ws, allBlobHandlers);
   }
 
   async function onParced() {
@@ -636,43 +395,18 @@
   }
 
   const getModInfo = async () => {
-    try {
-      let res = await fetch("https://portal.iotmanager.org/compiler/allmodinfo", {
-        mode: "cors",
-        method: "GET",
-      });
-      if (res.ok) {
-        allmodeinfo = await res.json();
-        allmodeinfo = allmodeinfo.message;
-      } else {
-        console.log("error", res.statusText);
-      }
-    } catch (e) {
-      console.log("error", e);
-    }
+    const res = await portal.getModInfo();
+    if (res.ok) allmodeinfo = res.allmodeinfo;
+    else console.log("error", "getModInfo");
   };
 
   const getProfile = async () => {
-    try {
-      const JWT = Cookies.get("token_iotm2");
-      let res = await fetch("https://portal.iotmanager.org/compiler/profile", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${JWT}`,
-        },
-        mode: "cors",
-        method: "GET",
-      });
-      if (res.ok) {
-        profile = await res.json();
-        profile = profile.message;
-        await markProfileAsPerThisDevProfile();
-      } else {
-        console.log("error", res.statusText);
-      }
-    } catch (e) {
-      console.log("error", e);
-    }
+    const JWT = Cookies.get("token_iotm2");
+    const res = await portal.getProfile(JWT);
+    if (res.ok) {
+      profile = res.profile;
+      await markProfileAsPerThisDevProfile();
+    } else console.log("error", "getProfile");
   };
 
   const markProfileAsPerThisDevProfile = async () => {
@@ -692,52 +426,18 @@
     }
   };
 
-  async function initDevList() {
-    if (firstDevListRequest) {
-      //при первом запросе листа устройств запишем его целеком
-      devListOverride();
-    } else {
-      //при последующих прилетах списка устройств мы переписываем в массиве только то что изменилось
-      devListCombine();
-    }
-    firstDevListRequest = false;
-    deviceList = deviceList;
-    parsed.deviceListJson = true;
-    if (blobDebug) console.log("[✔]", "deviceList parced");
-    onParced();
-    selectedDeviceDataRefresh();
-    //затем подключимся к всему полученному списку устройств
-    connectToAllDevices();
-  }
-
-  //перезапись листа устройств
-  async function devListOverride() {
-    deviceList = incDeviceList;
-    sortList(deviceList);
-    //установим заведомо статус уже присутствующего устроства в true для того что бы предотвратить повторное подключение!!!
-    deviceList[0].status = true;
+  function devListOverride() {
+    deviceList = deviceListManager.devListOverride(incDeviceList);
     console.log("[i]", "[devlist]", "devlist overrided");
   }
 
-  //добавление только новых элементов в лист устройств (если такого ip не было)
-  async function devListCombine() {
-    deviceList = combineArrays(deviceList, incDeviceList);
-    sortList(deviceList);
+  function devListCombine() {
+    deviceList = deviceListManager.devListCombine(deviceList, incDeviceList);
     console.log("[i]", "[devlist]", "devlist combined");
   }
 
-  function sortList(list) {
-    let firstDev = list.shift();
-    list.sort(function (a, b) {
-      if (a.name < b.name) {
-        return -1;
-      }
-      if (a.name > b.name) {
-        return 1;
-      }
-      return 0;
-    });
-    list.unshift(firstDev);
+  function combineArrays(A, B) {
+    return deviceListManager.combineArrays(A, B);
   }
 
   //***********************************************************dashboard***************************************************************/
@@ -1029,67 +729,31 @@
     wsSendMsg(ws, "/control|" + key + "/" + status);
   }
 
-  function scale(number, inMin, inMax, outMin, outMax) {
-    return ((number - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
-  }
+  const ack = wsReconnect.createAck({
+    markDeviceStatus,
+    getDeviceList: () => deviceList,
+    setDeviceList: (list) => (deviceList = list),
+    waitingAckTimeout,
+  });
 
-  //тикер который тикает каждую секунду и на каждую 0 секунду запускает проверку соединения
-  function wsTestMsgTask() {
-    tickerTask = setTimeout(wsTestMsgTask, 1000);
-    if (!preventReconnect) {
-      remainingTimeout--;
-      if (rebootOrUpdateProcess && socketConnected) {
-        rebootOrUpdateProcess = false;
-        showAwaitingCircle = false;
-        reconnectTimeout = 60;
-        remainingTimeout = reconnectTimeout;
-      }
-      percent = scale(remainingTimeout, reconnectTimeout, 0, 0, 100);
-      if (remainingTimeout <= 0) {
-        if (debug) console.log("[i]", "----timer tick----");
-        printAllCreatedWs();
-        remainingTimeout = reconnectTimeout;
-        deviceList.forEach((device) => {
-          if (device.status === false || device.status === undefined) {
-            wsConnect(device.ws);
-            wsEventAdd(device.ws);
-          } else {
-            wsSendMsg(device.ws, "/tst|");
-            ack(device.ws, false);
-          }
-        });
-      }
-    }
-  }
-
-  function ack(ws, st) {
-    if (!st) {
-      startMillis[ws] = Date.now();
-      ackTimeoutsArr[ws] = setTimeout(function () {
-        markDeviceStatus(ws, false);
-      }, waitingAckTimeout);
-    } else {
-      if (ackTimeoutsArr[ws]) clearTimeout(ackTimeoutsArr[ws]);
-      if (startMillis[ws]) {
-        ping[ws] = Date.now() - startMillis[ws];
-      }
-      for (let i = 0; i < deviceList.length; i++) {
-        if (deviceList[i].ws === ws) {
-          deviceList[i].ping = ping[ws];
-        }
-      }
-      deviceList = deviceList;
-    }
-  }
-
-  function wsSendMsg(ws, msg) {
-    if (socket[ws] && socket[ws].readyState === 1) {
-      socket[ws].send(msg);
-      if (debug) console.log("[i]", getIP(ws), ws, "msg send success", msg);
-    } else {
-      if (debug) console.log("[e]", getIP(ws), ws, "msg not send");
-    }
-  }
+  const wsTestMsgTask = wsReconnect.createWsTestMsgTask({
+    getDeviceList: () => deviceList,
+    send: wsSendMsg,
+    markDeviceStatus,
+    connectDevice: (ws) => createConnection(ws, getIP(ws)),
+    ack,
+    getRemainingTimeout: () => remainingTimeout,
+    setRemainingTimeout: (v) => (remainingTimeout = v),
+    reconnectTimeout,
+    getPreventReconnect: () => preventReconnect,
+    setPercent: (v) => (percent = v),
+    getRebootOrUpdateProcess: () => rebootOrUpdateProcess,
+    setRebootOrUpdateProcess: (v) => (rebootOrUpdateProcess = v),
+    getSocketConnected: () => socketConnected,
+    setShowAwaitingCircle: (v) => (showAwaitingCircle = v),
+    setReconnectTimeout: (v) => (reconnectTimeout = v),
+    printAllCreatedWs,
+  });
 
   function sendToAllDevices(msg) {
     deviceList.forEach((device) => {
@@ -1123,12 +787,6 @@
   };
 
   //***********************************************************dev list******************************************************************/
-
-  function combineArrays(A, B) {
-    var ids = new Set(A.map((d) => d.ip));
-    let output = [...A, ...B.filter((d) => !ids.has(d.ip))];
-    return output;
-  }
 
   //всякий раз когда список устройств был обновлен
   function selectedDeviceDataRefresh() {
@@ -1252,30 +910,14 @@
 
   async function getVersionsList() {
     versionsList = {};
-    if (settingsJson.serverip) {
-      try {
-        let url = settingsJson.serverip + "/iotm/ver.json";
-        console.log("url", url);
-        let res = await fetch(url, {
-          mode: "cors",
-          method: "GET",
-        });
-        if (res.ok) {
-          versionsList = await res.json();
-          versionsList = versionsList[errorsJson.bn];
-          choosingVersion = errorsJson.bver;
-          console.log(JSON.stringify(versionsList));
-        } else {
-          choosingVersion = undefined;
-          console.log("error, versions list not received", res.statusText);
-        }
-      } catch (e) {
-        choosingVersion = undefined;
-        console.log("error, versions list not received");
-        console.log(e);
-      }
+    const res = await firmware.getVersionsList(settingsJson.serverip);
+    if (res.ok && res.data) {
+      versionsList = res.data[errorsJson.bn];
+      choosingVersion = errorsJson.bver;
+      console.log(JSON.stringify(versionsList));
     } else {
-      console.log("error, server missing");
+      choosingVersion = undefined;
+      if (settingsJson.serverip) console.log("error, versions list not received");
     }
   }
 
@@ -1302,70 +944,14 @@
     <ModalPass checkPassword={(pass) => checkPassword(pass)} />
   {/if}-->
 
-  <header class="h-10 w-full bg-gray-100 overflow-auto shadow-md">
-    <div class="flex content-center items-center justify-end">
-      {#if showDropdown}
-        <div class="px-15 py-1">
-          <select class="border border-indigo-500 border-1" bind:value={selectedWs} on:change={() => devicesDropdownChange()}>
-            {#each deviceList as device}
-              <option value={device.ws}>
-                {device.name}
-              </option>
-            {/each}
-          </select>
-        </div>
-      {/if}
-
-      <!--<div class="pl-4 pr-1 py-1">-->
-      <!--<BookIcon color={socketConnected === true ? "text-green-500" : "text-red-500"} />-->
-      <!--</div>-->
-      <div class="pl-4 pr-4 py-1">
-        <CloudIcon color={socketConnected === true ? "text-green-500" : "text-red-500"} />
-      </div>
-    </div>
-  </header>
-
-  <nav class="flex">
-    <input class="w-0 h-0" bind:checked={opened} on:change={() => onCheck()} id="menu__toggle" type="checkbox" />
-
-    <label class="menu__btn" for="menu__toggle">
-      <span />
-    </label>
-
-    <ul class="menu__box">
-      <li>
-        <a class="menu__item" href="/">{"Управление"}</a>
-      </li>
-      <li>
-        <a class="menu__item" href="/config">{"Конфигуратор"}</a>
-      </li>
-      <li>
-        <a class="menu__item" href="/connection">{"Подключение"}</a>
-      </li>
-      <li>
-        <a class="menu__item" href="/system">{"Системные"}</a>
-      </li>
-      <li>
-        <a class="menu__item" href="/list">{"Устройства"}</a>
-      </li>
-      {#if userdata}
-        <li>
-          <a class="menu__item" href="/profile">{"Модули"}</a>
-        </li>
-      {:else}
-        <li>
-          <a class="menu__item" href="/login">{"Вход"}</a>
-        </li>
-      {/if}
-      <li class="flex flex-col pl-6 pt-3 w-full h-screen">
-        <!--<select class="border border-indigo-500 border-1 h-6 w-12" bind:value={$locale}>
-          {#each locales as l}
-            <option value={l}>{l}</option>
-          {/each}
-        </select>-->
-      </li>
-    </ul>
-  </nav>
+  <AppHeader
+    {deviceList}
+    bind:selectedWs
+    {showDropdown}
+    {socketConnected}
+    {devicesDropdownChange}
+  />
+  <AppNav bind:opened onCheck={() => onCheck()} {userdata} />
 
   <main class="flex-1 overflow-y-auto p-0 {opened === true && !preventMove ? 'ml-36' : 'ml-0'}">
     <ul class="menu__main">
@@ -1400,9 +986,7 @@
     </ul>
   </main>
 
-  <footer class="h-4 bg-gray-100 border-gray-300 shadow-lg">
-    <div class="flex justify-center content-center text-xxs text-gray-500">Developed by Dmitry Borisenko</div>
-  </footer>
+  <AppFooter />
 </div>
 
 <style lang="postcss" global>
