@@ -1,5 +1,6 @@
 <script>
   import Card from "../components/Card.svelte";
+  import ScenarioEditor from "../components/ScenarioEditor.svelte";
   import CrossIcon from "../svg/Cross.svelte";
   import OpenIcon from "../svg/Open.svelte";
   import Alarm from "../components/Alarm.svelte";
@@ -337,7 +338,7 @@
       </Card>
 
       <Card title="Сценарии">
-        <textarea bind:value={scenarioTxt} rows={height} class="px-2 bg-gray-50 border-2 border-gray-200 rounded text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-indigo-500 w-full" />
+        <ScenarioEditor bind:value={scenarioTxt} rows={height} />
       </Card>
     </div>
   </div>

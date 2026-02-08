@@ -8,6 +8,7 @@ import * as deviceConnection from "./deviceConnection.js";
 import * as deviceListManager from "./deviceListManager.js";
 import * as blobProtocol from "./blobProtocol.js";
 import * as wsReconnect from "./wsReconnect.js";
+import { sanitizeScenario } from "./scenarioUtils.js";
 import { eventEmitter } from "../eventEmitter.js";
 
 const LOG_MAX_MESSAGES = 100;
@@ -536,7 +537,7 @@ export default class WebSocketManager {
     this.wsSendMsg(this.selectedWs, "/tuoyal|" + JSON.stringify(this.generateLayout()));
     this._modify();
     this.wsSendMsg(this.selectedWs, "/gifnoc|" + JSON.stringify(this.configJson));
-    this.wsSendMsg(this.selectedWs, "/oiranecs|" + this.scenarioTxt);
+    this.wsSendMsg(this.selectedWs, "/oiranecs|" + sanitizeScenario(this.scenarioTxt));
     this.clearData();
     this.sendCurrentPageNameToSelectedWs();
   }
