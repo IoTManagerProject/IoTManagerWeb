@@ -4,6 +4,7 @@
   import { t, locale, locales } from "../i18n";
   import { router } from "tinro";
   import Cookies from "js-cookie";
+  import * as portal from "../api/portal.js";
   export let show = true;
   export let serverOnline;
 
@@ -12,25 +13,12 @@
 
   const login = async (user) => {
     errors = [];
-    try {
-      let res = await fetch("https://portal.iotmanager.org/api/auth/login", {
-        mode: "cors",
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(user),
-      });
-      const content = await res.json();
-      if (res.ok) {
-        errors = [{ msg: "ok_success_login" }];
-        saveToken(content.message);
-      } else {
-        errors = content.message;
-      }
-    } catch (e) {
-      console.log(e);
+    const res = await portal.login(user);
+    if (res.ok && res.data && res.data.message) {
+      errors = [{ msg: "ok_success_login" }];
+      saveToken(res.data.message);
+    } else if (res.data && res.data.message) {
+      errors = res.data.message;
     }
   };
 

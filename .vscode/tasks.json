@@ -1,0 +1,38 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run frontend (dev)",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {}
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run scripts (mock backend)",
+      "type": "shell",
+      "command": "if [ -d .venv-mock ]; then .venv-mock/bin/python scripts/mock_backend.py --host 0.0.0.0 --ws-port 81 --http-port 8081; else python3 -m venv .venv-mock && .venv-mock/bin/pip install -r scripts/requirements-mock.txt && .venv-mock/bin/python scripts/mock_backend.py --host 0.0.0.0 --ws-port 81 --http-port 8081; fi",
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {}
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

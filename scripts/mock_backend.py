@@ -112,6 +112,43 @@ def get_layout(device_slot: int) -> list:
 # Per-slot state for controls; keys = last segment of topic (id). Merged into get_params.
 _params_state: dict = {}  # slot -> { topic_id: value }
 
+def _topic_id(topic: str) -> str:
+    """Last segment of topic (e.g. /mock/d0/relay1 -> relay1)."""
+    if not topic or "/" not in topic:
+        return topic or ""
+    return topic.rstrip("/").split("/")[-1]
+
+
+def _ensure_params_for_layout(slot: int, layout: list) -> None:
+    """Add missing topic ids from layout to _params_state[slot] so added widgets get data."""
+    state = _get_params_state(slot)
+    for w in layout:
+        topic = w.get("topic") or ""
+        wid = _topic_id(topic)
+        if not wid or wid in state:
+            continue
+        widget_type = (w.get("widget") or "").lower()
+        if "chart" in widget_type:
+            state[wid] = ""
+        elif "toggle" in widget_type:
+            state[wid] = "0"
+        elif "range" in widget_type:
+            state[wid] = str(w.get("min", 0) if isinstance(w.get("min"), (int, float)) else 50)
+        elif "input" in widget_type:
+            itype = w.get("type") or "number"
+            if itype == "number":
+                state[wid] = "20"
+            elif itype == "text":
+                state[wid] = "Room"
+            elif itype == "time":
+                state[wid] = "08:00"
+            elif itype == "date":
+                state[wid] = "2025-01-01"
+            else:
+                state[wid] = "0"
+        else:
+            state[wid] = "0"
+
 
 def _get_params_state(slot: int) -> dict:
     if slot not in _params_state:
@@ -126,9 +163,12 @@ def _get_params_state(slot: int) -> dict:
     return _params_state[slot]
 
 
-def get_params(device_slot: int) -> dict:
-    """Params JSON: topic id -> value (for layout widgets)."""
-    return dict(_get_params_state(device_slot))
+def get_params(device_slot: int, layout: Optional[list] = None) -> dict:
+    """Params JSON: topic id -> value (for layout widgets). If layout given, ensure all its topic ids have state."""
+    state = _get_params_state(device_slot)
+    if layout:
+        _ensure_params_for_layout(device_slot, layout)
+    return dict(state)
 
 
 def get_chart_data(topic: str, points: int = 20, base_val: float = 20.0, amplitude: float = 5.0) -> dict:
@@ -151,7 +191,7 @@ _settings_store: dict = {}  # slot -> dict
 def get_settings(http_host: str, http_port: int, slot: int = 0) -> dict:
     """Settings JSON; serverip must point to mock HTTP for ver.json. System page needs timezone, wg, log, mqttin, i2c, pinSCL, pinSDA, i2cFreq."""
     base = {
-        "name": "MockDevice",
+        "name": f"MockDevice-{slot}",
         "apssid": "IoTmanager",
         "appass": "",
         "routerssid": "",
@@ -182,23 +222,25 @@ def get_settings(http_host: str, http_port: int, slot: int = 0) -> dict:
     return base
 
 
-def get_errors() -> dict:
-    """Errors JSON for System page: bn, bt, bver, wver, timenow, upt, uptm, uptw, rssi, heap, freeBytes, fl, rst."""
+def get_errors(slot: int = 0) -> dict:
+    """Errors JSON for System page (per device): bn, bt, bver, wver, timenow, upt, uptm, uptw, rssi, heap, freeBytes, fl, rst."""
     import time
+    ts = int(time.time())
+    # Different system info per device slot so UI shows which device is selected
     return {
-        "bn": "esp32",
-        "bt": "2024-01-01 12:00",
-        "bver": "1.0.0",
-        "wver": "4.2.0",
-        "timenow": str(int(time.time())),
-        "upt": "1d 02:30",
-        "uptm": "1d 02:30",
-        "uptw": "1d 02:30",
-        "rssi": 5,
-        "heap": "120000",
-        "freeBytes": "2.1M",
-        "fl": "1024",
-        "rst": "Software reset",
+        "bn": f"esp32-d{slot}",
+        "bt": f"2024-0{1 + slot}-0{1 + slot} 12:00",
+        "bver": f"1.0.{slot}",
+        "wver": f"4.2.{slot}",
+        "timenow": str(ts),
+        "upt": f"{1 + slot}d 0{2 + slot}:{30 + slot * 5}",
+        "uptm": f"{1 + slot}d 0{2 + slot}:{30 + slot * 5}",
+        "uptw": f"{1 + slot}d 0{2 + slot}:{30 + slot * 5}",
+        "rssi": -65 + slot * 10,
+        "heap": str(120000 - slot * 10000),
+        "freeBytes": f"{2 - slot * 0.2:.1f}M",
+        "fl": str(1024 + slot * 512),
+        "rst": "Software reset" if slot == 0 else "Power-on reset",
     }
 
 
@@ -239,15 +281,41 @@ def get_devlist(host: str) -> list:
 
 # Saved device list from /tsil| (reversed "list"). When udps=0 backend returns from "file", else from "heap" (default).
 _saved_devlist: Optional[list] = None
+# Configurator: saved layout/config/scenario per slot (from /tuoyal|, /gifnoc|, /oiranecs|)
+_saved_layout: dict = {}  # slot -> list (layout JSON array)
+_saved_config: dict = {}  # slot -> list (config JSON array)
+_saved_scenario: dict = {}  # slot -> str (scenario text)
 
 
 def get_items_json() -> list:
-    """Minimal items list."""
+    """Items list covering all widget types (anydata, chart, toggle, range, input)."""
     return [
         {"name": "Выберите элемент", "num": 0},
         {"header": "virtual_elments"},
-        {"global": 0, "name": "Temp", "type": "Reading", "subtype": "AnalogAdc", "id": "temp", "widget": "anydataTmp", "page": "Сенсоры", "descr": "Temperature", "num": 1},
-        {"global": 0, "name": "Graph", "type": "Writing", "subtype": "Loging", "id": "log", "widget": "chart2", "page": "Графики 1", "descr": "Temperature", "num": 2, "points": 100},
+        # anydata
+        {"global": 0, "name": "Text", "type": "Reading", "subtype": "Variable", "id": "text", "widget": "anydataDef", "page": "Сенсоры", "descr": "Text", "num": 1},
+        {"global": 0, "name": "Temperature", "type": "Reading", "subtype": "AnalogAdc", "id": "temp", "widget": "anydataTmp", "page": "Сенсоры", "descr": "Temperature", "num": 2},
+        {"global": 0, "name": "Humidity", "type": "Reading", "subtype": "Variable", "id": "hum", "widget": "anydataDef", "page": "Сенсоры", "descr": "Humidity", "num": 3},
+        {"global": 0, "name": "Pressure", "type": "Reading", "subtype": "Variable", "id": "pressure", "widget": "anydataDef", "page": "Сенсоры", "descr": "Pressure", "num": 4},
+        {"global": 0, "name": "Voltage", "type": "Reading", "subtype": "Variable", "id": "voltage", "widget": "anydataDef", "page": "Сенсоры", "descr": "Voltage", "num": 5},
+        {"global": 0, "name": "Power", "type": "Reading", "subtype": "Variable", "id": "power", "widget": "anydataDef", "page": "Сенсоры", "descr": "Power", "num": 6},
+        {"global": 0, "name": "RSSI", "type": "Reading", "subtype": "Variable", "id": "rssi", "widget": "anydataDef", "page": "Сенсоры", "descr": "WiFi RSSI", "num": 7},
+        # chart
+        {"global": 0, "name": "Chart line", "type": "Writing", "subtype": "Loging", "id": "log", "widget": "chart2", "page": "Графики 1", "descr": "Chart", "num": 10, "points": 100},
+        {"global": 0, "name": "Chart bar", "type": "Writing", "subtype": "Loging", "id": "logBar", "widget": "chartBar", "page": "Графики 2", "descr": "Bar chart", "num": 11, "points": 100},
+        # toggle
+        {"global": 0, "name": "Toggle", "type": "Writing", "subtype": "ButtonOut", "id": "relay", "widget": "toggleDef", "page": "Реле и свет", "descr": "Relay", "num": 20},
+        {"global": 0, "name": "Light", "type": "Writing", "subtype": "ButtonOut", "id": "light", "widget": "toggleDef", "page": "Реле и свет", "descr": "Light", "num": 21},
+        {"global": 0, "name": "Fan", "type": "Writing", "subtype": "ButtonOut", "id": "fan", "widget": "toggleDef", "page": "Реле и свет", "descr": "Fan", "num": 22},
+        # range
+        {"global": 0, "name": "Dimmer", "type": "Writing", "subtype": "Variable", "id": "dimmer", "widget": "rangeDef", "page": "Параметры", "descr": "Dimmer", "num": 30},
+        {"global": 0, "name": "Volume", "type": "Writing", "subtype": "Variable", "id": "volume", "widget": "rangeDef", "page": "Параметры", "descr": "Volume", "num": 31},
+        {"global": 0, "name": "Setpoint", "type": "Writing", "subtype": "Variable", "id": "setpoint", "widget": "rangeDef", "page": "Параметры", "descr": "Setpoint", "num": 32},
+        # input
+        {"global": 0, "name": "Input number", "type": "Reading", "subtype": "Variable", "id": "settemp", "widget": "inputNumber", "page": "Параметры", "descr": "Number", "num": 40},
+        {"global": 0, "name": "Input text", "type": "Reading", "subtype": "Variable", "id": "label", "widget": "inputText", "page": "Параметры", "descr": "Label", "num": 41},
+        {"global": 0, "name": "Input time", "type": "Reading", "subtype": "Variable", "id": "alarmtime", "widget": "inputTime", "page": "Параметры", "descr": "Time", "num": 42},
+        {"global": 0, "name": "Input date", "type": "Reading", "subtype": "Variable", "id": "eventdate", "widget": "inputDate", "page": "Параметры", "descr": "Date", "num": 43},
     ]
 
 
@@ -303,11 +371,12 @@ def assign_slot() -> int:
 
 async def handle_ws_message(ws, message: str, slot: int) -> None:
     """Handle text command from frontend and send responses."""
-    global _saved_devlist
+    global _saved_devlist, _saved_layout, _saved_config, _saved_scenario
     if "|" not in message:
         return
     cmd = message.split("|")[0] + "|"
 
+    # Heartbeat/ping: same as original IoTManager WsServer.cpp — reply immediately so frontend can measure RTT (device.ping)
     if cmd == "/tst|":
         await ws.send("/tstr|")
         return
@@ -320,19 +389,20 @@ async def handle_ws_message(ws, message: str, slot: int) -> None:
         return ws.send(make_binary_frame(header, payload))
 
     if cmd == "/|":
-        layout = get_layout(slot)
+        layout = _saved_layout.get(slot) if slot in _saved_layout else get_layout(slot)
         await send_bin("layout", json.dumps(layout))
-        # Send params immediately so front has data (front also requests /params| after layout; both trigger updateAllStatuses)
-        await send_bin("params", json.dumps(get_params(slot)))
+        # Send params immediately so front has data (incl. for saved-layout widgets)
+        await send_bin("params", json.dumps(get_params(slot, layout)))
         return
 
     if cmd == "/params|":
-        params = get_params(slot)
+        layout = _saved_layout.get(slot) if slot in _saved_layout else get_layout(slot)
+        params = get_params(slot, layout)
         await send_bin("params", json.dumps(params))
         return
 
     if cmd == "/charts|":
-        layout = get_layout(slot)
+        layout = _saved_layout.get(slot) if slot in _saved_layout else get_layout(slot)
         for w in layout:
             if w.get("widget") != "chart" or not w.get("topic"):
                 continue
@@ -350,8 +420,10 @@ async def handle_ws_message(ws, message: str, slot: int) -> None:
     if cmd == "/config|":
         await send_bin("itemsj", json.dumps(get_items_json()))
         await send_bin("widget", json.dumps(get_widgets_json()))
-        await send_bin("config", json.dumps(get_config_json()))
-        await send_bin("scenar", "// mock scenario\n")
+        config_data = _saved_config[slot] if slot in _saved_config else get_config_json()
+        await send_bin("config", json.dumps(config_data))
+        scenario_txt = _saved_scenario.get(slot, "// mock scenario\n")
+        await send_bin("scenar", scenario_txt if isinstance(scenario_txt, str) else "// mock scenario\n")
         await send_bin("settin", json.dumps(get_settings(HTTP_HOST, HTTP_PORT, slot)))
         return
 
@@ -360,7 +432,7 @@ async def handle_ws_message(ws, message: str, slot: int) -> None:
         await send_bin("config", json.dumps(get_config_json()))
         await send_bin("settin", json.dumps(get_settings(HTTP_HOST, HTTP_PORT, slot)))
         await send_bin("ssidli", json.dumps(get_ssid_list()))
-        await send_bin("errors", json.dumps(get_errors()))
+        await send_bin("errors", json.dumps(get_errors(slot)))
         return
 
     if cmd == "/list|":
@@ -380,12 +452,12 @@ async def handle_ws_message(ws, message: str, slot: int) -> None:
         return
 
     if cmd == "/system|":
-        await send_bin("errors", json.dumps(get_errors()))
+        await send_bin("errors", json.dumps(get_errors(slot)))
         await send_bin("settin", json.dumps(get_settings(HTTP_HOST, HTTP_PORT, slot)))
         return
 
     if cmd == "/dev|":
-        await send_bin("errors", json.dumps(get_errors()))
+        await send_bin("errors", json.dumps(get_errors(slot)))
         await send_bin("settin", json.dumps(get_settings(HTTP_HOST, HTTP_PORT, slot)))
         await send_bin("config", json.dumps(get_config_json()))
         await send_bin("itemsj", json.dumps(get_items_json()))
@@ -414,7 +486,7 @@ async def handle_ws_message(ws, message: str, slot: int) -> None:
             try:
                 data = json.loads(payload)
                 _settings_store[slot] = data
-                await send_bin("errors", json.dumps(get_errors()))
+                await send_bin("errors", json.dumps(get_errors(slot)))
             except json.JSONDecodeError:
                 pass
         return
@@ -440,8 +512,34 @@ async def handle_ws_message(ws, message: str, slot: int) -> None:
         # Reboot (no-op in mock)
         return
 
-    # Save commands: no-op
-    if cmd in ("/gifnoc|", "/tuoyal|", "/oiranecs|"):
+    # Save configurator data (layout, config, scenario) per slot
+    if cmd == "/tuoyal|":
+        payload = message[len(cmd) :].strip()
+        if payload:
+            try:
+                data = json.loads(payload)
+                if isinstance(data, list):
+                    _saved_layout[slot] = data
+                    _ensure_params_for_layout(slot, data)
+                    print(f"[mock] layout saved for slot {slot}, {len(data)} widget(s)")
+            except json.JSONDecodeError:
+                pass
+        return
+    if cmd == "/gifnoc|":
+        payload = message[len(cmd) :].strip()
+        if payload:
+            try:
+                data = json.loads(payload)
+                if isinstance(data, list):
+                    _saved_config[slot] = data
+                    print(f"[mock] config saved for slot {slot}, {len(data)} item(s)")
+            except json.JSONDecodeError:
+                pass
+        return
+    if cmd == "/oiranecs|":
+        payload = message[len(cmd) :].strip()
+        _saved_scenario[slot] = payload if payload is not None else ""
+        print(f"[mock] scenario saved for slot {slot}")
         return
 
 

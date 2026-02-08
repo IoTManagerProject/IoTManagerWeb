@@ -131,8 +131,8 @@
 
   export let errorsJson;
 
-  //export let versionsList;
-  //export let choosingVersion;
+  export let versionsList = {};
+  export let choosingVersion;
   export let coreMessages;
   export let settingsJson;
 
@@ -147,7 +147,10 @@
 
   let reboot = false;
 
-  //export let cancelAlarm = (alarmKey) => {};
+  export let cancelAlarm = (alarmKey) => {};
+
+  // Referenced by parent (App); used in commented-out template blocks (versions dropdown, alarm close)
+  $: __propsRef = { versionsList, choosingVersion, cancelAlarm };
 </script>
 
 {#if show}

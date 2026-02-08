@@ -57,7 +57,7 @@
                 <Range bind:value={widget.status} widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
               {/if}
               {#if widget.widget === "chart"}
-                <Chart bind:value={widget.status} widget={widget} />
+                <Chart widget={widget} />
               {/if}
             {/if}
           {/each}
