@@ -148,13 +148,18 @@ export async function parseBlob(blob, ws, handlers) {
  */
 export async function parseAllBlob(blob, ws, handlers) {
   const { header, size } = await readHeader(blob);
+  console.log("[layout] parseAllBlob header:", header, "ws:", ws);
   const out = {};
 
   if (header === "status") {
     if (await getPayloadAsJson(blob, size, out)) handlers.updateWidget(out.json);
   }
   if (header === "layout") {
-    if (await getPayloadAsJson(blob, size, out)) handlers.combineLayoutsInOne(ws, out.json);
+    if (await getPayloadAsJson(blob, size, out)) {
+      const arr = Array.isArray(out.json) ? out.json : [];
+      console.log("[layout] blob header=layout", "ws:", ws, "payload length:", arr.length);
+      handlers.combineLayoutsInOne(ws, out.json);
+    }
   }
   if (header === "params") {
     if (await getPayloadAsJson(blob, size, out)) {

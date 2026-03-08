@@ -78,34 +78,34 @@ def make_binary_frame(header: str, payload: str) -> bytes:
 
 
 def get_layout(device_slot: int) -> list:
-    """Layout: 4 pages by meaning (Sensors, Charts, Relays/Light, Params). All 5 widget types."""
+    """Widgets distributed across 3 devices so dashboard shows each widget exactly once (4+4+3)."""
     prefix = f"/mock/d{device_slot}"
+    if device_slot == 0:
+        return [
+            {"ws": device_slot, "topic": f"{prefix}/anydata1", "page": "Сенсоры", "widget": "anydata", "descr": "Temperature", "status": "22.5", "after": "°C", "sent": False},
+            {"ws": device_slot, "topic": f"{prefix}/chart1", "page": "Сенсоры", "widget": "chart", "descr": "Chart", "status": [], "maxCount": 100},
+            {"ws": device_slot, "topic": f"{prefix}/toggle1", "page": "Сенсоры", "widget": "toggle", "descr": "Toggle", "status": "0", "sent": False},
+            {"ws": device_slot, "topic": f"{prefix}/range1", "page": "Сенсоры", "widget": "range", "descr": "Range", "status": "50", "min": 0, "max": 100, "after": "%", "sent": False},
+            {"ws": device_slot, "topic": f"{prefix}/num0", "page": "Управление", "widget": "input-number", "descr": "Number (int)", "status": "50", "mode": "int", "min": 0, "max": 100, "step": 1, "sent": False},
+            {"ws": device_slot, "topic": f"{prefix}/date0", "page": "Управление", "widget": "input-date", "descr": "Date", "status": "03.01.2025", "mode": "date", "sent": False},
+            {"ws": device_slot, "topic": f"{prefix}/time0", "page": "Управление", "widget": "input-date", "descr": "Time", "status": "08:30", "mode": "time", "timePrecision": "hm", "sent": False},
+        ]
+    if device_slot == 1:
+        return [
+            {"ws": device_slot, "topic": f"{prefix}/input1", "page": "Управление", "widget": "input-number", "descr": "Number (int)", "status": "50", "mode": "int", "min": 0, "max": 100, "step": 1, "sent": False},
+            {"ws": device_slot, "topic": f"{prefix}/num2", "page": "Управление", "widget": "input-number", "descr": "Number (float)", "status": "3.14", "mode": "float", "min": 0, "max": 10, "step": 0.1, "decimals": 2, "sent": False},
+            {"ws": device_slot, "topic": f"{prefix}/input2", "page": "Управление", "widget": "input", "descr": "Text", "status": "Room", "type": "text", "sent": False},
+            {"ws": device_slot, "topic": f"{prefix}/input3", "page": "Управление", "widget": "input-date", "descr": "Date", "status": "03.01.2025", "mode": "date", "sent": False},
+            {"ws": device_slot, "topic": f"{prefix}/input4", "page": "Управление", "widget": "input-date", "descr": "Time", "status": "08:30", "mode": "time", "timePrecision": "hm", "sent": False},
+            {"ws": device_slot, "topic": f"{prefix}/date2", "page": "Управление", "widget": "input-date", "descr": "Date & time", "status": "03.01.2025 12:00", "mode": "datetime", "timePrecision": "hm", "sent": False},
+            {"ws": device_slot, "topic": f"{prefix}/btn1", "page": "Управление", "widget": "btn", "descr": "Button", "status": "OK", "sent": False},
+            {"ws": device_slot, "topic": f"{prefix}/progressline1", "page": "Управление", "widget": "progress-line", "descr": "Progress line", "status": "65", "min": 0, "max": 100, "before": "", "after": "%"},
+            {"ws": device_slot, "topic": f"{prefix}/progressround1", "page": "Управление", "widget": "progress-round", "descr": "Progress round", "status": "75", "min": 0, "max": 100, "after": "%", "semicircle": "1", "stroke": 10, "color": "#6366f1"},
+        ]
     return [
-        # --- 1. Сенсоры: read-only anydata ---
-        {"ws": device_slot, "topic": f"{prefix}/temp", "page": "Сенсоры", "widget": "anydata", "descr": "Temperature", "status": "22.5", "after": "°C"},
-        {"ws": device_slot, "topic": f"{prefix}/hum", "page": "Сенсоры", "widget": "anydata", "descr": "Humidity", "status": "45", "after": "%"},
-        {"ws": device_slot, "topic": f"{prefix}/pressure", "page": "Сенсоры", "widget": "anydata", "descr": "Pressure", "status": "1013", "after": " hPa"},
-        {"ws": device_slot, "topic": f"{prefix}/voltage", "page": "Сенсоры", "widget": "anydata", "descr": "Voltage", "status": "3.28", "after": " V"},
-        {"ws": device_slot, "topic": f"{prefix}/power", "page": "Сенсоры", "widget": "anydata", "descr": "Power", "status": "120", "after": " W", "color": [{"level": 0, "value": ""}, {"level": 200, "value": "#009933"}, {"level": 2000, "value": "#FF9900"}]},
-        {"ws": device_slot, "topic": f"{prefix}/rssi", "page": "Сенсоры", "widget": "anydata", "descr": "WiFi RSSI", "status": "-65", "after": " dBm"},
-        # --- 2. Графики 1 и 2 (two cards) ---
-        {"ws": device_slot, "topic": f"{prefix}/log", "page": "Графики 1", "widget": "chart", "descr": "Temperature log", "status": [], "maxCount": 100},
-        {"ws": device_slot, "topic": f"{prefix}/log2", "page": "Графики 1", "widget": "chart", "descr": "Humidity log", "status": [], "maxCount": 100},
-        {"ws": device_slot, "topic": f"{prefix}/log3", "page": "Графики 2", "widget": "chart", "descr": "Power log", "status": [], "maxCount": 100},
-        {"ws": device_slot, "topic": f"{prefix}/logBar", "page": "Графики 2", "widget": "chart", "type": "bar", "descr": "Bar chart", "status": [], "maxCount": 100},
-        # --- 3. Реле и свет: toggles + dimmer ---
-        {"ws": device_slot, "topic": f"{prefix}/relay1", "page": "Реле и свет", "widget": "toggle", "descr": "Relay 1", "status": "0", "sent": False},
-        {"ws": device_slot, "topic": f"{prefix}/relay2", "page": "Реле и свет", "widget": "toggle", "descr": "Relay 2", "status": "1", "sent": False},
-        {"ws": device_slot, "topic": f"{prefix}/relay3", "page": "Реле и свет", "widget": "toggle", "descr": "Light", "status": "0", "sent": False},
-        {"ws": device_slot, "topic": f"{prefix}/fan", "page": "Реле и свет", "widget": "toggle", "descr": "Fan", "status": "0", "sent": False},
-        {"ws": device_slot, "topic": f"{prefix}/dimmer", "page": "Реле и свет", "widget": "range", "descr": "Dimmer", "status": "50", "min": 0, "max": 100, "after": "%", "sent": False},
-        # --- 4. Параметры: range + inputs ---
-        {"ws": device_slot, "topic": f"{prefix}/volume", "page": "Параметры", "widget": "range", "descr": "Volume", "status": "70", "min": 0, "max": 100, "after": "%", "sent": False},
-        {"ws": device_slot, "topic": f"{prefix}/setpoint", "page": "Параметры", "widget": "range", "descr": "Setpoint", "status": "21", "min": 15, "max": 30, "after": "°C", "sent": False},
-        {"ws": device_slot, "topic": f"{prefix}/settemp", "page": "Параметры", "widget": "input", "descr": "Set temp", "status": "20.5", "type": "number", "sent": False},
-        {"ws": device_slot, "topic": f"{prefix}/label", "page": "Параметры", "widget": "input", "descr": "Label", "status": "Room 1", "type": "text", "sent": False},
-        {"ws": device_slot, "topic": f"{prefix}/alarmtime", "page": "Параметры", "widget": "input", "descr": "Alarm time", "status": "08:30", "type": "time", "sent": False},
-        {"ws": device_slot, "topic": f"{prefix}/eventdate", "page": "Параметры", "widget": "input", "descr": "Event date", "status": "2025-02-06", "type": "date", "sent": False},
+        {"ws": device_slot, "topic": f"{prefix}/select1", "page": "Индикаторы", "widget": "select", "descr": "Select", "status": "1", "options": ["Option A", "Option B", "Option C"], "sent": False},
+        {"ws": device_slot, "topic": f"{prefix}/doughnut1", "page": "Индикаторы", "widget": "doughnut", "descr": "Doughnut", "status": "60", "max": 100, "before": "", "after": "%", "stroke": 12, "color": "#10b981"},
+        {"ws": device_slot, "topic": f"{prefix}/fillgauge1", "page": "Индикаторы", "widget": "fillgauge", "descr": "Fill gauge", "status": "40", "min": 0, "max": 100, "before": "", "after": "%", "color": "#3b82f6"},
     ]
 
 
@@ -129,11 +129,22 @@ def _ensure_params_for_layout(slot: int, layout: list) -> None:
             continue
         widget_type = (w.get("widget") or "").lower()
         if "chart" in widget_type:
-            state[wid] = ""
+            # Chart is updated only via chartb; do not add to state so params never overwrite its status
+            continue
         elif "toggle" in widget_type:
             state[wid] = "0"
         elif "range" in widget_type:
             state[wid] = str(w.get("min", 0) if isinstance(w.get("min"), (int, float)) else 50)
+        elif widget_type == "input-number":
+            state[wid] = str(w.get("status", "0") if w.get("status") not in (None, "") else "0")
+        elif widget_type == "input-date":
+            mode = (w.get("mode") or "date").lower()
+            if mode == "time":
+                state[wid] = w.get("status") or "08:30"
+            elif mode == "datetime":
+                state[wid] = w.get("status") or "01.01.2025 12:00"
+            else:
+                state[wid] = w.get("status") or "01.01.2025"
         elif "input" in widget_type:
             itype = w.get("type") or "number"
             if itype == "number":
@@ -146,19 +157,42 @@ def _ensure_params_for_layout(slot: int, layout: list) -> None:
                 state[wid] = "2025-01-01"
             else:
                 state[wid] = "0"
+        elif "btn" in widget_type:
+            state[wid] = "OK"
+        elif "progress-line" in widget_type:
+            state[wid] = str(w.get("status", 50) if w.get("status") not in (None, "") else 50)
+        elif "progress-round" in widget_type:
+            state[wid] = str(w.get("status", 50) if w.get("status") not in (None, "") else 50)
+        elif "select" in widget_type:
+            state[wid] = "0"
+        elif "doughnut" in widget_type:
+            state[wid] = str(w.get("status", 50) if w.get("status") not in (None, "") else 50)
+        elif "fillgauge" in widget_type:
+            state[wid] = str(w.get("status", 50) if w.get("status") not in (None, "") else 50)
+        elif "anydata" in widget_type:
+            state[wid] = str(w.get("status", ""))
         else:
             state[wid] = "0"
 
 
 def _get_params_state(slot: int) -> dict:
     if slot not in _params_state:
-        prefix = f"/mock/d{slot}"
         _params_state[slot] = {
-            "temp": "22.5", "hum": "45", "pressure": "1013", "voltage": "3.28", "power": "120", "rssi": "-65",
-            "relay1": "0", "relay2": "1", "relay3": "0", "fan": "0",
-            "dimmer": "50", "volume": "70", "setpoint": "21",
-            "settemp": "20.5", "label": "Room 1", "alarmtime": "08:30", "eventdate": "2025-02-06",
-            "log": "", "log2": "", "log3": "", "logBar": "",
+            "anydata1": "22.5",
+            "toggle1": "0",
+            "range1": "50",
+            "input1": "50",
+            "num2": "3.14",
+            "input2": "Room",
+            "input3": "03.01.2025",
+            "input4": "08:30",
+            "date2": "03.01.2025 12:00",
+            "btn1": "OK",
+            "progressline1": "65",
+            "progressround1": "75",
+            "select1": "1",
+            "doughnut1": "60",
+            "fillgauge1": "40",
         }
     return _params_state[slot]
 
@@ -272,10 +306,11 @@ def _normalize_devlist(arr: list, default_ip: str = "127.0.0.1") -> list:
 
 
 def get_devlist(host: str) -> list:
-    """Default device list from 'heap' (udps!=0). First entry = this device (IP we're connected to); frontend sets deviceList[0].status=true. Rest = other devices; frontend connects to each."""
+    """Three IoT Manager devices (same firmware); frontend connects to each, each returns same layout protocol."""
     return _normalize_devlist([
-        {"name": "Mock Device 1", "ip": host, "id": "mock-dev-1", "status": False, "fv": "1.0.0", "wg": "group1"},
-        {"name": "Mock Device 2", "ip": host, "id": "mock-dev-2", "status": False, "fv": "1.0.0", "wg": "group1"},
+        {"name": "IoTManager 1", "ip": host, "id": "iotm-1", "status": False, "fv": "1.0.0", "wg": "group1"},
+        {"name": "IoTManager 2", "ip": host, "id": "iotm-2", "status": False, "fv": "1.0.0", "wg": "group1"},
+        {"name": "IoTManager 3", "ip": host, "id": "iotm-3", "status": False, "fv": "1.0.0", "wg": "group1"},
     ], host)
 
 
@@ -320,7 +355,7 @@ def get_items_json() -> list:
 
 
 def get_widgets_json() -> list:
-    """All frontend widget types: anydata, chart (line + bar), toggle, range, input (number, text, time, date)."""
+    """All frontend widget types. input-number and input-date are separate (same as app collection)."""
     return [
         {"name": "anydataDef", "label": "Text", "widget": "anydata", "icon": ""},
         {"name": "anydataTmp", "label": "Temperature", "widget": "anydata", "after": "°C", "icon": "speedometer"},
@@ -328,10 +363,12 @@ def get_widgets_json() -> list:
         {"name": "chartBar", "label": "Chart bar", "widget": "chart", "type": "bar", "icon": ""},
         {"name": "toggleDef", "label": "Toggle", "widget": "toggle", "icon": ""},
         {"name": "rangeDef", "label": "Range", "widget": "range", "min": 0, "max": 100, "icon": ""},
-        {"name": "inputNumber", "label": "Number", "widget": "input", "type": "number", "icon": ""},
         {"name": "inputText", "label": "Text", "widget": "input", "type": "text", "icon": ""},
-        {"name": "inputTime", "label": "Time", "widget": "input", "type": "time", "icon": ""},
-        {"name": "inputDate", "label": "Date", "widget": "input", "type": "date", "icon": ""},
+        {"name": "inputNumberInt", "label": "Input number (int)", "widget": "input-number", "mode": "int", "min": 0, "max": 100, "step": 1, "icon": ""},
+        {"name": "inputNumberFloat", "label": "Input number (float)", "widget": "input-number", "mode": "float", "min": 0, "max": 10, "step": 0.1, "decimals": 2, "icon": ""},
+        {"name": "inputDateDate", "label": "Input date", "widget": "input-date", "mode": "date", "icon": ""},
+        {"name": "inputDateTime", "label": "Input time", "widget": "input-date", "mode": "time", "timePrecision": "hm", "icon": ""},
+        {"name": "inputDateDatetime", "label": "Input date & time", "widget": "input-date", "mode": "datetime", "timePrecision": "hm", "icon": ""},
     ]
 
 
@@ -362,9 +399,10 @@ _connections: list = []  # list of (websocket, slot)
 
 
 def assign_slot() -> int:
+    """Assign slot 0, 1, 2 for 3 devices so each connection gets a unique layout (no duplicate widgets)."""
     global _next_slot
     with _slot_lock:
-        s = _next_slot % 2
+        s = _next_slot % 3
         _next_slot += 1
         return s
 
@@ -551,27 +589,30 @@ async def _send_bin(ws, header: str, payload: str) -> None:
 
 
 def _tick_sensor_values() -> None:
-    """Update read-only sensor values in _params_state (like backend sensors in loop)."""
+    """Update read-only widget values in _params_state (anydata, progress, doughnut, fillgauge)."""
     t = time.time()
     for slot in list(_params_state.keys()):
         s = _params_state[slot]
-        # Small variation around base values
-        s["temp"] = f"{22 + 3 * math.sin(t * 0.5):.1f}"
-        s["hum"] = str(int(45 + 10 * math.sin(t * 0.3)))
-        s["pressure"] = str(1012 + int(5 * math.sin(t * 0.2)))
-        s["voltage"] = f"{3.2 + 0.1 * math.sin(t):.2f}"
-        s["power"] = str(int(120 + 30 * math.sin(t * 0.4)))
-        s["rssi"] = str(int(-65 + 5 * math.sin(t * 0.5)))
+        if "anydata1" in s:
+            s["anydata1"] = f"{22 + 3 * math.sin(t * 0.5):.1f}"
+        if "progressline1" in s:
+            s["progressline1"] = str(int(50 + 20 * math.sin(t * 0.3)))
+        if "progressround1" in s:
+            s["progressround1"] = str(int(50 + 25 * math.sin(t * 0.25)))
+        if "doughnut1" in s:
+            s["doughnut1"] = str(int(50 + 30 * math.sin(t * 0.2)))
+        if "fillgauge1" in s:
+            s["fillgauge1"] = str(int(40 + 25 * math.sin(t * 0.35)))
 
 
 # Interval (seconds): backend sends status on sensor change (publishStatusWs); we emulate same.
 PARAMS_INTERVAL = 3
 
-# Param keys that are widget values (not chart). Front updateWidget(topic, status) matches layout by full topic.
+# Param keys for widgets that receive status blob (chart1 is updated only via chartb).
 _PARAM_IDS = [
-    "temp", "hum", "pressure", "voltage", "power", "rssi",
-    "relay1", "relay2", "relay3", "fan", "dimmer", "volume", "setpoint",
-    "settemp", "label", "alarmtime", "eventdate",
+    "anydata1", "toggle1", "range1", "num0", "date0", "time0",
+    "input1", "num2", "input2", "input3", "input4", "date2", "btn1",
+    "progressline1", "progressround1", "select1", "doughnut1", "fillgauge1",
 ]
 
 
@@ -600,16 +641,17 @@ async def _periodic_broadcast() -> None:
                     await _send_bin(ws, "status", payload)
             except Exception:
                 pass
-        # Chart points: backend Loging::publishValue sends chartb with one point; front apdateWidgetByArray merges into layout
+        # Chart points: only slot 0 has chart widget in layout; skip chartb for other slots to avoid "topic not found"
         now = int(time.time())
         for (ws, slot) in list(_connections):
+            if slot != 0:
+                continue
             try:
                 prefix = f"/mock/d{slot}"
-                for topic_suf, base, amp in [("log", 20.0, 5.0), ("log2", 45.0, 15.0), ("log3", 100.0, 50.0), ("logBar", 30.0, 10.0)]:
-                    topic = f"{prefix}/{topic_suf}"
-                    val = base + amp * math.sin(now * 0.1)
-                    point = {"topic": topic, "maxCount": 100, "status": [{"x": now, "y1": round(val, 2)}]}
-                    await _send_bin(ws, "chartb", json.dumps(point))
+                topic = f"{prefix}/chart1"
+                val = 20.0 + 5.0 * math.sin(now * 0.1)
+                point = {"topic": topic, "maxCount": 100, "status": [{"x": now, "y1": round(val, 2)}]}
+                await _send_bin(ws, "chartb", json.dumps(point))
             except Exception:
                 pass
 

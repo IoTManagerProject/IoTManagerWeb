@@ -1,10 +1,10 @@
 import App from './App.svelte';
 
+console.log("[layout] IoTManagerWeb loaded — layout debug logs enabled");
+
 const app = new App({
 	target: document.body,
-	props: {
-		name: 'world'
-	}
+	props: {}
 });
 
 export default app;

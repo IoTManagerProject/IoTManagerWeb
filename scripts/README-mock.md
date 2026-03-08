@@ -4,8 +4,14 @@ Emulates the IoTManager ESP backend: WebSocket on port 81, HTTP for `/iotm/ver.j
 
 ## Run
 
+**Option A — from `scripts/` (venv already in scripts):**
 ```bash
-# From IoTManagerWeb root
+cd IoTManagerWeb/scripts
+.venv/bin/python mock_backend.py
+```
+
+**Option B — from project root:**
+```bash
 python3 -m venv .venv-mock
 .venv-mock/bin/pip install -r scripts/requirements-mock.txt
 .venv-mock/bin/python scripts/mock_backend.py --host 0.0.0.0 --ws-port 81 --http-port 8081

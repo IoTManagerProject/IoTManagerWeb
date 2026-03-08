@@ -42,18 +42,20 @@ export default {
     file: "public/build/bundle.js",
   },
   plugins: [
-    terser({
-      ecma: 2020,
-      mangle: { toplevel: true },
-      compress: {
-        module: true,
-        toplevel: true,
-        unsafe_arrows: true,
-        drop_console: true,
-        drop_debugger: true,
-      },
-      output: { quote_style: 1 },
-    }),
+    // Minify and drop console only in production (npm run build); in dev (npm run dev) keep console
+    production &&
+      terser({
+        ecma: 2020,
+        mangle: { toplevel: true },
+        compress: {
+          module: true,
+          toplevel: true,
+          unsafe_arrows: true,
+          drop_console: true,
+          drop_debugger: true,
+        },
+        output: { quote_style: 1 },
+      }),
     svelte({
       compilerOptions: {
         // enable run-time checks when not in production
@@ -87,9 +89,6 @@ export default {
     // browser on changes when not in production
     !production && livereload("public"),
 
-    // If we're building for production (npm run build
-    // instead of npm run dev), minify
-    production && terser(),
   ],
   watch: {
     clearScreen: false,

@@ -103,6 +103,7 @@
 
   onMount(async () => {
     console.log("[i]", "mounted");
+    console.log("[layout] Layout debug ON. Open dashboard (/) to see layout logs.");
     const JWT = Cookies.get("token_iotm2");
     const res = await portal.getUser(JWT);
     if (res.ok) {
@@ -267,14 +268,14 @@
     }
     /*=============================================card and items inside===============================================*/
     .crd-itm-psn {
-      @apply flex mb-2 h-6 items-center;
+      @apply flex min-h-[2.25rem] mb-4 items-center;
     }
     .wgt-dscr-stl {
       @apply pr-4 text-gray-500 font-bold;
     }
     /*====================================================others=====================================================*/
     .btn-i {
-      @apply py-2 px-4 bg-indigo-500 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75;
+      @apply py-2 px-4 bg-blue-100 hover:bg-blue-200 text-gray-700 font-semibold rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75;
     }
     .wgt-adt-stl {
       @apply text-center text-gray-500 font-bold;

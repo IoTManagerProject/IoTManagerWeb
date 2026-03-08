@@ -2,15 +2,18 @@
   import Chart from "svelte-frappe-charts";
   export let widget;
 
-  let datachart = {
-    labels: ["0", "0"],
-    datasets: [
-      {
-        name: (widget && widget.descr) ? widget.descr : "",
-        values: [0, 0],
-      },
-    ],
-  };
+  function safeDatachart(labels, values, descr) {
+    const lab = Array.isArray(labels) && labels.length > 0 ? labels : ["0", "0"];
+    let vals = Array.isArray(values) && values.length > 0 ? values : [[0], [0]];
+    // Ensure all numbers are finite (frappe-charts throws on NaN)
+    vals = vals.map((row) => (Array.isArray(row) ? row : [row]).map((v) => (Number.isFinite(Number(v)) ? Number(v) : 0)));
+    if (vals.length === 0) vals = [[0], [0]];
+    return {
+      labels: lab,
+      datasets: [{ name: descr || "Chart", values: vals }],
+    };
+  }
+  let datachart = safeDatachart([], [], widget && widget.descr);
 
   let prevStatus = {};
 
@@ -21,7 +24,7 @@
 
   let axisOptions = { xAxisMode: "tick", xIsSeries: true, xIsSeries: true };
   let lineOptions;
-  if (widget.pointRadius == "0") {
+  if (widget && widget.pointRadius == "0") {
     lineOptions = { regionFill: 1, hideDots: 1, spline: 1 };
   } else {
     lineOptions = { regionFill: 1, dotSize: 3, spline: 1 };
@@ -65,15 +68,7 @@
 
         labels = safeLabels;
         values = safeValues;
-        datachart = {
-          labels: labels,
-          datasets: [
-            {
-              name: widget.descr || "",
-              values: values,
-            },
-          ],
-        };
+        datachart = safeDatachart(labels, values, widget.descr);
       }
     }
     firstTime = false;
@@ -96,12 +91,7 @@
     if (widget) widget.status = [];
     labels = [];
     values = [];
-    datachart = {
-      labels: ["0", "0"],
-      datasets: [
-        { name: (widget && widget.descr) ? widget.descr : "", values: [0, 0] },
-      ],
-    };
+    datachart = safeDatachart([], [], widget && widget.descr);
   }
 </script>
 
@@ -109,4 +99,6 @@
   <p class="inline-block italic truncate align-top text-center text-{widget.descrColor ? widget.descrColor : 'gray'}-500 txt-sz">{!widget.descr ? "" : widget.descr}</p>
 </div>
 
-<Chart id={"notes"} data={datachart} type={type} title={""} lineOptions={lineOptions} axisOptions={axisOptions} height="150" padding="0px" margin="0px" />
+{#if widget && datachart && datachart.datasets && datachart.datasets[0] && Array.isArray(datachart.datasets[0].values) && datachart.datasets[0].values.length > 0}
+  <Chart id={widget.topic || "chart"} data={datachart} type={type} title={""} lineOptions={lineOptions} axisOptions={axisOptions} height={150} />
+{/if}

@@ -1,10 +1,18 @@
 <script>
   import Card from "../components/Card.svelte";
   import Input from "../widgets/Input.svelte";
+  import InputNumber from "../widgets/InputNumber.svelte";
+  import InputDate from "../widgets/InputDate.svelte";
   import Range from "../widgets/Range.svelte";
   import Chart from "../widgets/Chart.svelte";
   import Toggle from "../widgets/Toggle.svelte";
   import Anydata from "../widgets/Anydata.svelte";
+  import Btn from "../widgets/Btn.svelte";
+  import ProgressLine from "../widgets/ProgressLine.svelte";
+  import ProgressRound from "../widgets/ProgressRound.svelte";
+  import Select from "../widgets/Select.svelte";
+  import Doughnut from "../widgets/Doughnut.svelte";
+  import Fillgauge from "../widgets/Fillgauge.svelte";
   import Alarm from "../components/Alarm.svelte";
 
   export let layoutJson;
@@ -47,6 +55,12 @@
               {#if widget.widget === "input"}
                 <Input bind:value={widget.status} widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
               {/if}
+              {#if widget.widget === "input-number"}
+                <InputNumber widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
+              {/if}
+              {#if widget.widget === "input-date"}
+                <InputDate widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
+              {/if}
               {#if widget.widget === "toggle"}
                 <Toggle bind:value={widget.status} widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
               {/if}
@@ -58,6 +72,24 @@
               {/if}
               {#if widget.widget === "chart"}
                 <Chart widget={widget} />
+              {/if}
+              {#if widget.widget === "btn"}
+                <Btn widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
+              {/if}
+              {#if widget.widget === "progress-line"}
+                <ProgressLine widget={widget} />
+              {/if}
+              {#if widget.widget === "progress-round"}
+                <ProgressRound widget={widget} />
+              {/if}
+              {#if widget.widget === "select"}
+                <Select widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
+              {/if}
+              {#if widget.widget === "doughnut"}
+                <Doughnut widget={widget} />
+              {/if}
+              {#if widget.widget === "fillgauge"}
+                <Fillgauge widget={widget} />
               {/if}
             {/if}
           {/each}

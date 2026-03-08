@@ -14,7 +14,7 @@ const sockets = new Map();
 export function createConnection(wsIndex, ip, callbacks) {
   const url = "ws://" + ip + ":81";
   const socket = new WebSocket(url);
-  socket.binaryType = "blob"; // fix: set on instance, not on array
+  socket.binaryType = "blob";
   sockets.set(wsIndex, socket);
 
   socket.addEventListener("open", () => {
@@ -25,11 +25,15 @@ export function createConnection(wsIndex, ip, callbacks) {
     if (callbacks.onMessage) callbacks.onMessage(wsIndex, event.data);
   });
 
-  socket.addEventListener("close", () => {
+  socket.addEventListener("close", (ev) => {
+    if (socket.readyState !== 1) {
+      console.warn("[WS] closed before open", "url:", url, "wsIndex:", wsIndex, "code:", ev.code, "reason:", ev.reason || "");
+    }
     if (callbacks.onClose) callbacks.onClose(wsIndex);
   });
 
   socket.addEventListener("error", () => {
+    console.warn("[WS] error connecting to", url, "wsIndex:", wsIndex, "- is mock_backend.py running on port 81?");
     if (callbacks.onError) callbacks.onError(wsIndex);
   });
 }

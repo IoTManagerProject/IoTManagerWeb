@@ -20,6 +20,7 @@ export default class WebSocketManager {
   constructor(initialDeviceList, options = {}) {
     this.options = options;
     this.debug = options.debug !== false && debug;
+    console.log("[layout] debug: layout console logs enabled (binary blobs, combineLayoutsInOne)");
 
     // State (mirror of App.svelte)
     this.deviceList = Array.isArray(initialDeviceList) ? [...initialDeviceList] : [];
@@ -208,6 +209,7 @@ export default class WebSocketManager {
       return;
     }
     if (data instanceof Blob) {
+      console.log("[layout] binary blob received", "ws:", ws, "page:", this.currentPageName, "layoutJson.length:", this.layoutJson.length);
       if (ws === this.selectedWs) this.parseBlob(data, ws);
       if (this.currentPageName === "/|") this.parseAllBlob(data, ws);
     }
@@ -350,11 +352,17 @@ export default class WebSocketManager {
   }
 
   async combineLayoutsInOne(ws, devLayout) {
+    const beforeLen = this.layoutJson.length;
+    const forThisWs = this.layoutJson.filter((item) => item.ws === ws).length;
+    // Replace layout for this device (avoid duplicates when layout is sent more than once)
+    this.layoutJson = this.layoutJson.filter((item) => item.ws !== ws);
+    const afterFilterLen = this.layoutJson.length;
     for (let i = 0; i < devLayout.length; i++) {
       devLayout[i].ws = ws;
     }
     this.layoutJson = this.layoutJson.concat(devLayout);
-    console.log("[2]", ws, "devLayout pushed to layout");
+    const topics = (devLayout || []).map((w) => (w.topic || "").split("/").pop()).join(", ");
+    console.log("[layout] combineLayoutsInOne", "ws:", ws, "devLayout.length:", (devLayout || []).length, "| layoutJson: before:", beforeLen, "forThisWs:", forThisWs, "afterFilter:", afterFilterLen, "afterConcat:", this.layoutJson.length, "| topics:", topics);
     this.sortingLayout(ws);
   }
 
