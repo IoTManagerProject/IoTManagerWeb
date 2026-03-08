@@ -8,6 +8,7 @@
   import Toggle from "../widgets/Toggle.svelte";
   import Anydata from "../widgets/Anydata.svelte";
   import Btn from "../widgets/Btn.svelte";
+  import BtnSwitch from "../widgets/BtnSwitch.svelte";
   import ProgressLine from "../widgets/ProgressLine.svelte";
   import ProgressRound from "../widgets/ProgressRound.svelte";
   import Select from "../widgets/Select.svelte";
@@ -75,6 +76,9 @@
               {/if}
               {#if widget.widget === "btn"}
                 <Btn widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
+              {/if}
+              {#if widget.widget === "btn-switch"}
+                <BtnSwitch widget={widget} wsPush={(ws, topic, status) => wsPush(ws, topic, status)} />
               {/if}
               {#if widget.widget === "progress-line"}
                 <ProgressLine widget={widget} />

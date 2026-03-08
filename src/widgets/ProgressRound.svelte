@@ -18,7 +18,7 @@
 </script>
 
 <div class="crd-itm-psn flex flex-col items-center h-auto mb-4">
-  <p class="pr-4 truncate text-{widget.descrColor ? widget.descrColor : 'gray'}-500 font-bold">{!widget.descr ? "" : widget.descr}</p>
+  <p class="w-full text-center truncate text-{widget.descrColor ? widget.descrColor : 'gray'}-500 font-bold mb-2">{!widget.descr ? "" : widget.descr}</p>
   <div class="relative inline-flex items-center justify-center" style="width: 100px; height: 60px;">
     <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100" style="overflow: visible;">
       <circle

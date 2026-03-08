@@ -20,7 +20,7 @@
     <button
       type="button"
       on:click={onClick}
-      class="btn-i {widget.sent ? 'ring-2 ring-red-400' : ''}"
+      class="btn-i h-7 min-h-7 flex items-center {widget.sent ? 'ring-2 ring-red-400' : ''}"
     >
       {widget.status !== undefined && widget.status !== null && widget.status !== "" ? widget.status : "OK"}
     </button>

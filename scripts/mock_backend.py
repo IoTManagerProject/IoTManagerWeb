@@ -99,12 +99,14 @@ def get_layout(device_slot: int) -> list:
             {"ws": device_slot, "topic": f"{prefix}/input4", "page": "Управление", "widget": "input-date", "descr": "Time", "status": "08:30", "mode": "time", "timePrecision": "hm", "sent": False},
             {"ws": device_slot, "topic": f"{prefix}/date2", "page": "Управление", "widget": "input-date", "descr": "Date & time", "status": "03.01.2025 12:00", "mode": "datetime", "timePrecision": "hm", "sent": False},
             {"ws": device_slot, "topic": f"{prefix}/btn1", "page": "Управление", "widget": "btn", "descr": "Button", "status": "OK", "sent": False},
+            {"ws": device_slot, "topic": f"{prefix}/btnswitch1", "page": "Управление", "widget": "btn-switch", "descr": "Btn-switch (toggle)", "status": "0", "mode": "toggle", "sent": False},
+            {"ws": device_slot, "topic": f"{prefix}/btnswitch2", "page": "Управление", "widget": "btn-switch", "descr": "Btn-switch (momentary)", "status": "0", "mode": "momentary", "sent": False},
             {"ws": device_slot, "topic": f"{prefix}/progressline1", "page": "Управление", "widget": "progress-line", "descr": "Progress line", "status": "65", "min": 0, "max": 100, "before": "", "after": "%"},
             {"ws": device_slot, "topic": f"{prefix}/progressround1", "page": "Управление", "widget": "progress-round", "descr": "Progress round", "status": "75", "min": 0, "max": 100, "after": "%", "semicircle": "1", "stroke": 10, "color": "#6366f1"},
         ]
     return [
         {"ws": device_slot, "topic": f"{prefix}/select1", "page": "Индикаторы", "widget": "select", "descr": "Select", "status": "1", "options": ["Option A", "Option B", "Option C"], "sent": False},
-        {"ws": device_slot, "topic": f"{prefix}/doughnut1", "page": "Индикаторы", "widget": "doughnut", "descr": "Doughnut", "status": "60", "max": 100, "before": "", "after": "%", "stroke": 12, "color": "#10b981"},
+        {"ws": device_slot, "topic": f"{prefix}/doughnut1", "page": "Индикаторы", "widget": "doughnut", "descr": "Doughnut", "status": [10, 50, 40], "labels": ["Error", "Success", "Warning"]},
         {"ws": device_slot, "topic": f"{prefix}/fillgauge1", "page": "Индикаторы", "widget": "fillgauge", "descr": "Fill gauge", "status": "40", "min": 0, "max": 100, "before": "", "after": "%", "color": "#3b82f6"},
     ]
 
@@ -145,6 +147,8 @@ def _ensure_params_for_layout(slot: int, layout: list) -> None:
                 state[wid] = w.get("status") or "01.01.2025 12:00"
             else:
                 state[wid] = w.get("status") or "01.01.2025"
+        elif widget_type == "btn-switch":
+            state[wid] = "0"
         elif "input" in widget_type:
             itype = w.get("type") or "number"
             if itype == "number":
@@ -166,7 +170,8 @@ def _ensure_params_for_layout(slot: int, layout: list) -> None:
         elif "select" in widget_type:
             state[wid] = "0"
         elif "doughnut" in widget_type:
-            state[wid] = str(w.get("status", 50) if w.get("status") not in (None, "") else 50)
+            st = w.get("status")
+            state[wid] = st if isinstance(st, list) else [st] if st not in (None, "") else [10, 50, 40]
         elif "fillgauge" in widget_type:
             state[wid] = str(w.get("status", 50) if w.get("status") not in (None, "") else 50)
         elif "anydata" in widget_type:
@@ -191,7 +196,7 @@ def _get_params_state(slot: int) -> dict:
             "progressline1": "65",
             "progressround1": "75",
             "select1": "1",
-            "doughnut1": "60",
+            "doughnut1": [10, 50, 40],
             "fillgauge1": "40",
         }
     return _params_state[slot]
@@ -369,6 +374,8 @@ def get_widgets_json() -> list:
         {"name": "inputDateDate", "label": "Input date", "widget": "input-date", "mode": "date", "icon": ""},
         {"name": "inputDateTime", "label": "Input time", "widget": "input-date", "mode": "time", "timePrecision": "hm", "icon": ""},
         {"name": "inputDateDatetime", "label": "Input date & time", "widget": "input-date", "mode": "datetime", "timePrecision": "hm", "icon": ""},
+        {"name": "btnSwitchToggle", "label": "Btn-switch (toggle)", "widget": "btn-switch", "mode": "toggle", "icon": ""},
+        {"name": "btnSwitchMomentary", "label": "Btn-switch (momentary)", "widget": "btn-switch", "mode": "momentary", "icon": ""},
     ]
 
 
@@ -600,7 +607,11 @@ def _tick_sensor_values() -> None:
         if "progressround1" in s:
             s["progressround1"] = str(int(50 + 25 * math.sin(t * 0.25)))
         if "doughnut1" in s:
-            s["doughnut1"] = str(int(50 + 30 * math.sin(t * 0.2)))
+            s["doughnut1"] = [
+                int(10 + 15 * math.sin(t * 0.2)),
+                int(50 + 20 * math.sin(t * 0.25)),
+                int(40 + 25 * math.sin(t * 0.3)),
+            ]
         if "fillgauge1" in s:
             s["fillgauge1"] = str(int(40 + 25 * math.sin(t * 0.35)))
 
@@ -611,7 +622,7 @@ PARAMS_INTERVAL = 3
 # Param keys for widgets that receive status blob (chart1 is updated only via chartb).
 _PARAM_IDS = [
     "anydata1", "toggle1", "range1", "num0", "date0", "time0",
-    "input1", "num2", "input2", "input3", "input4", "date2", "btn1",
+    "input1", "num2", "input2", "input3", "input4", "date2", "btn1", "btnswitch1", "btnswitch2",
     "progressline1", "progressround1", "select1", "doughnut1", "fillgauge1",
 ]
 
